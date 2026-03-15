@@ -15,6 +15,8 @@ class FormSession:
     owner_image_file_ids: list[str] = field(default_factory=list)
     tenant_image_file_ids: list[str] = field(default_factory=list)
 
+    upload_status_message_id: Optional[int] = None
+
     # Stores concatenated OCR text between extraction and parsing stages.
     raw_ocr_text: str = ""
 
@@ -29,6 +31,10 @@ class FormSession:
 
     # Handler-controlled routing to the next workflow stage.
     next_stage: Optional[str] = None
+
+    # One-level edit stack for returning from edit input.
+    edit_return_state: Optional[str] = None
+    edit_return_person: Optional[str] = None
 
     # Set by the pipeline engine whenever a stage fails.
     last_error: Optional[str] = None

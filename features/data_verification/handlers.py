@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -14,6 +16,7 @@ from infrastructure.session_store import SessionStore
 from utils.payload_accessor import PayloadAccessor
 
 router = Router(name=__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 async def _next_step(message: Message, state: FSMContext, session_store: SessionStore, user_id: int) -> None:
@@ -52,7 +55,9 @@ async def _next_step(message: Message, state: FSMContext, session_store: Session
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(message, state)
     if result == "missing":
-        await state.update_data(return_state=(await state.get_state()))
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
@@ -69,9 +74,11 @@ async def edit_field(callback: CallbackQuery, state: FSMContext, session_store: 
 
     field_path = callback.data.split(":", 1)[1]
     session.current_editing_field = field_path
-    await state.update_data(return_state=(await state.get_state()), pending_double_confirm=None)
-    await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
+    session.edit_return_state = await state.get_state()
+    session.edit_return_person = session.current_confirming_person
     await session_store.save(session)
+    await state.update_data(pending_double_confirm=None)
+    await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await callback.message.answer(f"Please type new value for {field_path}.")
     await callback.answer()
 
@@ -173,11 +180,19 @@ async def receive_edit_input(message: Message, state: FSMContext, session_store:
     PayloadAccessor.set(session.payload, session.current_editing_field, message.text.strip())
     session.current_editing_field = None
 
-    fsm_data = await state.get_data()
-    return_state = fsm_data.get("return_state", DataVerificationStates.CONFIRMING_FIELD.state)
-    await state.set_state(return_state)
+    if session.edit_return_state is None:
+        LOGGER.warning(
+            "Missing edit_return_state for user %s; falling back to confirmation state.",
+            message.from_user.id,
+        )
+        return_state = DataVerificationStates.CONFIRMING_FIELD.state
+    else:
+        return_state = session.edit_return_state
 
+    session.edit_return_state = None
+    session.edit_return_person = None
     await session_store.save(session)
+    await state.set_state(return_state)
     await _next_step(message, state, session_store, message.from_user.id)
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery, Message
@@ -39,22 +39,9 @@ def _extract_image_file_id(message: Message) -> str | None:
     return None
 
 
-@router.message(F.text == "/start")
-async def start(message: Message, state: FSMContext, session_store: SessionStore) -> None:
-    if not message.from_user:
-        return
-    session = FormSession(telegram_user_id=message.from_user.id)
-    await session_store.save(session)
-    await state.set_state(IdentityCollectionStates.OWNER_UPLOAD)
-    await message.answer(
-        "Upload owner ID images, then tap Done.",
-        reply_markup=done_upload_keyboard(),
-    )
-
-
 @router.message(IdentityCollectionStates.OWNER_UPLOAD, F.photo)
 @router.message(IdentityCollectionStates.OWNER_UPLOAD, F.document)
-async def collect_owner_photo(message: Message, session_store: SessionStore) -> None:
+async def collect_owner_photo(message: Message, session_store: SessionStore, bot: Bot) -> None:
     if not message.from_user:
         return
 
@@ -66,7 +53,15 @@ async def collect_owner_photo(message: Message, session_store: SessionStore) -> 
     session = await _get_or_create_session(message.from_user.id, session_store)
     session.owner_image_file_ids.append(file_id)
     await session_store.save(session)
-    await message.answer("Owner image saved.")
+
+    if session.upload_status_message_id:
+        count = len(session.owner_image_file_ids)
+        await bot.edit_message_text(
+            chat_id=message.chat.id,
+            message_id=session.upload_status_message_id,
+            text=f"{count} image(s) received. Tap Done when finished.",
+            reply_markup=done_upload_keyboard(),
+        )
 
 
 @router.callback_query(StateFilter(IdentityCollectionStates.OWNER_UPLOAD), F.data == "upload_done")
@@ -88,6 +83,8 @@ async def owner_upload_done(
         return
 
     session.current_confirming_person = "owner"
+    session.upload_status_message_id = None
+    await session_store.save(session)
     await callback.message.answer("Processing owner ID images. Please wait...")
     try:
         session = await asyncio.wait_for(owner_engine.run(session), timeout=120)
@@ -108,14 +105,16 @@ async def owner_upload_done(
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(callback.message, state)
     if result == "missing":
-        await state.update_data(return_state=(await state.get_state()))
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
 
 @router.message(IdentityCollectionStates.TENANT_UPLOAD, F.photo)
 @router.message(IdentityCollectionStates.TENANT_UPLOAD, F.document)
-async def collect_tenant_photo(message: Message, session_store: SessionStore) -> None:
+async def collect_tenant_photo(message: Message, session_store: SessionStore, bot: Bot) -> None:
     if not message.from_user:
         return
 
@@ -127,7 +126,15 @@ async def collect_tenant_photo(message: Message, session_store: SessionStore) ->
     session = await _get_or_create_session(message.from_user.id, session_store)
     session.tenant_image_file_ids.append(file_id)
     await session_store.save(session)
-    await message.answer("Tenant image saved.")
+
+    if session.upload_status_message_id:
+        count = len(session.tenant_image_file_ids)
+        await bot.edit_message_text(
+            chat_id=message.chat.id,
+            message_id=session.upload_status_message_id,
+            text=f"{count} image(s) received. Tap Done when finished.",
+            reply_markup=done_upload_keyboard(),
+        )
 
 
 @router.callback_query(StateFilter(IdentityCollectionStates.TENANT_UPLOAD), F.data == "upload_done")
@@ -149,6 +156,8 @@ async def tenant_upload_done(
         return
 
     session.current_confirming_person = "tenant"
+    session.upload_status_message_id = None
+    await session_store.save(session)
     await callback.message.answer("Processing tenant ID images. Please wait...")
     try:
         session = await asyncio.wait_for(tenant_engine.run(session), timeout=120)
@@ -169,7 +178,9 @@ async def tenant_upload_done(
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(callback.message, state)
     if result == "missing":
-        await state.update_data(return_state=(await state.get_state()))
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 

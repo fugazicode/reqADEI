@@ -33,10 +33,12 @@ async def set_owner_occupation(callback: CallbackQuery, state: FSMContext, sessi
 
     await session_store.save(session)
     await state.set_state(IdentityCollectionStates.TENANT_UPLOAD)
-    await callback.message.answer(
+    response = await callback.message.answer(
         "Upload tenant ID images, then tap Done.",
         reply_markup=done_upload_keyboard(),
     )
+    session.upload_status_message_id = response.message_id
+    await session_store.save(session)
     await callback.answer()
 
 
@@ -132,7 +134,9 @@ async def receive_tenanted_address(
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(message, state)
     if result == "missing":
-        await state.update_data(return_state=(await state.get_state()))
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
@@ -164,7 +168,9 @@ async def pick_station(callback: CallbackQuery, state: FSMContext, session_store
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(callback.message, state)
     if result == "missing":
-        await state.update_data(return_state=(await state.get_state()))
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
     await callback.answer()
