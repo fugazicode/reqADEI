@@ -5,7 +5,6 @@ import io
 from aiogram import Bot
 
 from core.stage_interface import PipelineStage
-from features.data_verification.confirmation_flow import ConfirmationFlow
 from infrastructure.groq_parser import GroqParser
 from infrastructure.vision_client import VisionClient
 from shared.models.session import FormSession
@@ -68,5 +67,4 @@ class IdParsingStage(PipelineStage):
         ):
             PayloadAccessor.set(session.payload, "tenant.address_verification_doc_type", "Aadhar Card")
 
-        ConfirmationFlow.build_queue(session)
         return session

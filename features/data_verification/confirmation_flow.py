@@ -48,13 +48,11 @@ class ConfirmationFlow:
         value = PayloadAccessor.get(self.session.payload, field_path)
         if value is None or value == "":
             self.session.current_editing_field = field_path
-            await state.update_data(return_state=(await state.get_state()))
-            await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
             await message.answer(f"{field_path} is missing. Please type the value.")
-            return field_path
+            return "missing"
 
         await message.answer(
             f"Please confirm:\n{field_path}: {value}",
             reply_markup=confirm_edit_keyboard(field_path),
         )
-        return field_path
+        return "confirm"

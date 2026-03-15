@@ -9,9 +9,6 @@ from features.data_verification.friction import HIGH_FRICTION_FIELDS
 from features.data_verification.keyboards import double_confirm_keyboard
 from features.data_verification.states import DataVerificationStates
 from features.extras_collection.keyboards import owner_occupation_keyboard, tenant_purpose_keyboard
-from features.extras_collection.states import ExtrasCollectionStates
-from features.identity_collection.keyboards import done_upload_keyboard
-from features.identity_collection.states import IdentityCollectionStates
 from features.submission.states import SubmissionStates
 from infrastructure.session_store import SessionStore
 from utils.payload_accessor import PayloadAccessor
@@ -26,28 +23,37 @@ async def _next_step(message: Message, state: FSMContext, session_store: Session
         return
 
     if not session.confirmation_queue:
-        current_state = await state.get_state()
-        if current_state == ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM.state:
+        if session.next_stage == "submission":
             if session.payload.is_submittable():
-                await state.set_state(SubmissionStates.COMPLETE)
+                await state.set_state("SubmissionStates:COMPLETE")
                 await message.answer("Submission complete. Playwright phase is queued.")
             else:
                 await message.answer("Some required fields are still missing.")
             await session_store.save(session)
             return
 
-        if session.current_confirming_person == "owner":
-            await state.set_state(ExtrasCollectionStates.OWNER_OCCUPATION)
+        if session.next_stage == "owner_extras":
+            session.next_stage = None
+            await state.set_state("ExtrasCollectionStates:OWNER_OCCUPATION")
             await message.answer("Select owner occupation.", reply_markup=owner_occupation_keyboard())
-        else:
-            await state.set_state(ExtrasCollectionStates.TENANT_EXTRAS)
+            await session_store.save(session)
+            return
+
+        if session.next_stage == "tenant_extras":
+            session.next_stage = None
+            await state.set_state("ExtrasCollectionStates:TENANT_EXTRAS")
             await message.answer("Select tenancy purpose.", reply_markup=tenant_purpose_keyboard())
+            await session_store.save(session)
+            return
 
         await session_store.save(session)
         return
 
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(message, state)
+    result = await flow.show_next_field(message, state)
+    if result == "missing":
+        await state.update_data(return_state=(await state.get_state()))
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
 
@@ -94,6 +100,7 @@ async def confirm_field(callback: CallbackQuery, state: FSMContext, session_stor
         return
 
     if field_path in HIGH_FRICTION_FIELDS and pending_double != field_path:
+        # High-friction fields defer queue popping to confirm2 for double-acknowledgement.
         await state.update_data(pending_double_confirm=field_path)
         await callback.message.answer(
             f"Please reconfirm {field_path}.",
@@ -132,6 +139,9 @@ async def confirm_field_second(callback: CallbackQuery, state: FSMContext, sessi
     if pending_double != field_path:
         await callback.answer("This confirmation is no longer active.", show_alert=True)
         return
+    assert (
+        session.confirmation_queue and session.confirmation_queue[0] == field_path
+    ), f"Double confirm out of sync for {field_path}."
     if session.confirmation_queue and session.confirmation_queue[0] == field_path:
         session.confirmation_queue.pop(0)
 
@@ -139,6 +149,11 @@ async def confirm_field_second(callback: CallbackQuery, state: FSMContext, sessi
     await session_store.save(session)
     await callback.answer("Confirmed")
     await _next_step(callback.message, state, session_store, callback.from_user.id)
+
+
+@router.message(DataVerificationStates.CONFIRMING_FIELD)
+async def confirm_field_hint(message: Message) -> None:
+    await message.answer("Please use the buttons to confirm or edit the field.")
 
 
 @router.message(DataVerificationStates.AWAITING_EDIT_INPUT)

@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from features.data_verification.confirmation_flow import ConfirmationFlow
+from features.data_verification.states import DataVerificationStates
 from features.extras_collection.keyboards import district_station_keyboard, tenant_purpose_keyboard
 from features.extras_collection.states import ExtrasCollectionStates
 from features.identity_collection.keyboards import done_upload_keyboard
@@ -117,6 +118,7 @@ async def receive_tenanted_address(
         "tenant.tenanted_address.pincode",
     ]
 
+    session.next_stage = "submission"
     await session_store.save(session)
     await state.set_state(ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM)
 
@@ -128,7 +130,10 @@ async def receive_tenanted_address(
         return
 
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(message, state)
+    result = await flow.show_next_field(message, state)
+    if result == "missing":
+        await state.update_data(return_state=(await state.get_state()))
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
 
@@ -157,6 +162,14 @@ async def pick_station(callback: CallbackQuery, state: FSMContext, session_store
         await callback.message.answer("Continuing without pre-selecting police station.")
 
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(callback.message, state)
+    result = await flow.show_next_field(callback.message, state)
+    if result == "missing":
+        await state.update_data(return_state=(await state.get_state()))
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
     await callback.answer()
+
+
+@router.message(ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM)
+async def tenanted_address_confirm_hint(message: Message) -> None:
+    await message.answer("Please use the buttons to confirm or edit the address fields.")

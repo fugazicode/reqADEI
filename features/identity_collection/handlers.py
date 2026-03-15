@@ -99,12 +99,17 @@ async def owner_upload_done(
         await callback.message.answer(f"Owner extraction failed: {session.last_error}")
         return
 
+    session.next_stage = "owner_extras"
+
     if not session.confirmation_queue:
         ConfirmationFlow.build_queue(session)
 
     await state.set_state(DataVerificationStates.CONFIRMING_FIELD)
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(callback.message, state)
+    result = await flow.show_next_field(callback.message, state)
+    if result == "missing":
+        await state.update_data(return_state=(await state.get_state()))
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
 
@@ -155,12 +160,17 @@ async def tenant_upload_done(
         await callback.message.answer(f"Tenant extraction failed: {session.last_error}")
         return
 
+    session.next_stage = "tenant_extras"
+
     if not session.confirmation_queue:
         ConfirmationFlow.build_queue(session)
 
     await state.set_state(DataVerificationStates.CONFIRMING_FIELD)
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(callback.message, state)
+    result = await flow.show_next_field(callback.message, state)
+    if result == "missing":
+        await state.update_data(return_state=(await state.get_state()))
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
 

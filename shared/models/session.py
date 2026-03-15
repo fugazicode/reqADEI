@@ -27,5 +27,8 @@ class FormSession:
     # Must be set by handlers before triggering a pipeline run.
     current_confirming_person: str = "owner"
 
+    # Handler-controlled routing to the next workflow stage.
+    next_stage: Optional[str] = None
+
     # Set by the pipeline engine whenever a stage fails.
     last_error: Optional[str] = None
