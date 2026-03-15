@@ -54,14 +54,19 @@ class FormSession:
     # Set by the pipeline engine whenever a stage fails.
     last_error: Optional[str] = None
 
+    # These properties are intentionally excluded from dataclasses.fields() and dataclasses.asdict().
+    # If FormSession is ever serialized using dataclass introspection tools, owner and tenant file IDs
+    # will not be included. Use session.image_records directly for serialization.
     @property
     def owner_image_file_ids(self) -> list[str]:
         return [record.image_id for record in self.image_records if record.person == "owner"]
 
     @owner_image_file_ids.setter
     def owner_image_file_ids(self, file_ids: list[str]) -> None:
-        self.image_records = [record for record in self.image_records if record.person != "owner"]
+        existing_ids = {record.image_id for record in self.image_records if record.person == "owner"}
         for file_id in file_ids:
+            if file_id in existing_ids:
+                continue
             self.image_records.append(
                 ImageRecord(
                     image_id=file_id,
@@ -76,8 +81,10 @@ class FormSession:
 
     @tenant_image_file_ids.setter
     def tenant_image_file_ids(self, file_ids: list[str]) -> None:
-        self.image_records = [record for record in self.image_records if record.person != "tenant"]
+        existing_ids = {record.image_id for record in self.image_records if record.person == "tenant"}
         for file_id in file_ids:
+            if file_id in existing_ids:
+                continue
             self.image_records.append(
                 ImageRecord(
                     image_id=file_id,

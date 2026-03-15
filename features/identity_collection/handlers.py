@@ -116,13 +116,18 @@ async def owner_upload_done(
     await callback.answer()
 
     session = await _get_or_create_session(callback.from_user.id, session_store)
+    if session.consent_given_at is None:
+        await callback.answer(
+            "Please agree to the data collection terms first. Send /start to begin.",
+            show_alert=True,
+        )
+        return
     if not session.owner_image_file_ids:
         await callback.message.answer("Please upload at least one image first.")
         return
 
     session.current_confirming_person = "owner"
     session.upload_status_message_id = None
-    await session_store.save(session)
     await callback.message.answer("Processing owner ID images. Please wait...")
     try:
         session = await asyncio.wait_for(owner_engine.run(session), timeout=120)
@@ -134,10 +139,6 @@ async def owner_upload_done(
         await callback.message.answer(f"Owner extraction failed: {session.last_error}")
         return
 
-    for record in session.image_records:
-        if record.person == "owner":
-            record.image_id = "redacted"
-
     session.next_stage = "owner_extras"
 
     if not session.confirmation_queue:
@@ -147,10 +148,13 @@ async def owner_upload_done(
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(callback.message, state)
     if result == "missing":
-        session.edit_return_state = await state.get_state()
+        session.edit_return_state = DataVerificationStates.CONFIRMING_FIELD.state
         session.edit_return_person = session.current_confirming_person
-        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
+
+    for record in session.image_records:
+        if record.person == "owner":
+            record.image_id = "redacted"
     await session_store.save(session)
 
 
@@ -213,7 +217,6 @@ async def tenant_upload_done(
 
     session.current_confirming_person = "tenant"
     session.upload_status_message_id = None
-    await session_store.save(session)
     await callback.message.answer("Processing tenant ID images. Please wait...")
     try:
         session = await asyncio.wait_for(tenant_engine.run(session), timeout=120)
@@ -225,10 +228,6 @@ async def tenant_upload_done(
         await callback.message.answer(f"Tenant extraction failed: {session.last_error}")
         return
 
-    for record in session.image_records:
-        if record.person == "tenant":
-            record.image_id = "redacted"
-
     session.next_stage = "tenant_extras"
 
     if not session.confirmation_queue:
@@ -238,10 +237,13 @@ async def tenant_upload_done(
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(callback.message, state)
     if result == "missing":
-        session.edit_return_state = await state.get_state()
+        session.edit_return_state = DataVerificationStates.CONFIRMING_FIELD.state
         session.edit_return_person = session.current_confirming_person
-        await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
+
+    for record in session.image_records:
+        if record.person == "tenant":
+            record.image_id = "redacted"
     await session_store.save(session)
 
 

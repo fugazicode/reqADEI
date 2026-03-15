@@ -81,13 +81,15 @@ class ImageExtractionStage(PipelineStage):
             record for record in person_records if record.extracted_aadhaar_suffix is not None
         ]
         unique_suffixes = {record.extracted_aadhaar_suffix for record in suffix_records}
-        if len(suffix_records) >= 2 and len(unique_suffixes) == len(suffix_records):
+        if len(unique_suffixes) > 1 and all(
+            record.ocr_confidence >= 0.85 for record in suffix_records
+        ):
             masked = []
             seen = set()
             for record in suffix_records:
                 suffix = record.extracted_aadhaar_suffix
                 if suffix and suffix not in seen:
-                    masked.append(mask_aadhaar(f"00000000{suffix}"))
+                    masked.append(mask_aadhaar(suffix))
                     seen.add(suffix)
             session.last_error = (
                 "Two different Aadhaar documents were detected for the same person ("

@@ -3,6 +3,9 @@ from __future__ import annotations
 import re
 
 
+# Verhoeff algorithm tables as published in Verhoeff, J. (1969). Error Detecting Decimal Codes.
+# These values must not be modified. The multiplication table d is 10x10, the permutation table p
+# is 8x10 (indexed by position mod 8), and inv is the dihedral group inverse table.
 d = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
@@ -76,8 +79,14 @@ def extract_aadhaar_from_text(ocr_text: str) -> list[str]:
     seen: set[str] = set()
 
     for raw in candidates:
-        for i in range(0, len(raw) - 11):
-            candidate = raw[i : i + 12]
+        if len(raw) == 12:
+            windows = [raw]
+        else:
+            start = raw[:12]
+            end = raw[-12:]
+            windows = [start, end] if start != end else [start]
+
+        for candidate in windows:
             is_valid, cleaned = validate_aadhaar(candidate)
             if is_valid and cleaned not in seen:
                 found.append(cleaned)
@@ -87,7 +96,10 @@ def extract_aadhaar_from_text(ocr_text: str) -> list[str]:
 
 
 def mask_aadhaar(number: str) -> str:
+    """Accept a full 12-digit Aadhaar or a 4-digit suffix."""
     cleaned = re.sub(r"[\s-]+", "", number)
+    if len(cleaned) == 4 and cleaned.isdigit():
+        return f"XXXX-XXXX-{cleaned}"
     if len(cleaned) == 12 and cleaned.isdigit():
         return f"XXXX-XXXX-{cleaned[-4:]}"
     return "XXXX-XXXX-XXXX"
@@ -109,8 +121,11 @@ def classify_side(ocr_text: str, qr_decoded: bool) -> str:
         "pin",
     ]
 
-    lowered = ocr_text.lower()
-    indicator_hits = sum(1 for indicator in indicators if indicator in lowered)
+    indicator_hits = sum(
+        1
+        for indicator in indicators
+        if re.search(r"\b" + re.escape(indicator) + r"\b", ocr_text, re.IGNORECASE)
+    )
 
     dob_pattern = re.compile(r"\b(\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})\b")
     name_pattern = re.compile(r"\b[A-Z][a-zA-Z]{1,}(?:\s+[A-Z][a-zA-Z]{1,})+\b")

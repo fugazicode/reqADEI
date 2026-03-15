@@ -134,7 +134,7 @@ async def receive_tenanted_address(
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(message, state)
     if result == "missing":
-        session.edit_return_state = await state.get_state()
+        session.edit_return_state = ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM.state
         session.edit_return_person = session.current_confirming_person
         await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
@@ -168,7 +168,7 @@ async def pick_station(callback: CallbackQuery, state: FSMContext, session_store
     flow = ConfirmationFlow(session)
     result = await flow.show_next_field(callback.message, state)
     if result == "missing":
-        session.edit_return_state = await state.get_state()
+        session.edit_return_state = ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM.state
         session.edit_return_person = session.current_confirming_person
         await session_store.save(session)
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)

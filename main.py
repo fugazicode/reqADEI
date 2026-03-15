@@ -120,7 +120,11 @@ async def run() -> None:
     dp.include_router(identity_collection_router)
     dp.include_router(data_verification_router)
     dp.include_router(extras_collection_router)
-    asyncio.create_task(_session_cleanup_loop(session_store))
+
+    async def on_startup() -> None:
+        asyncio.create_task(_session_cleanup_loop(session_store))
+
+    dp.startup.register(on_startup)
     await dp.start_polling(bot)
 
 

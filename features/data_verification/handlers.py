@@ -11,6 +11,7 @@ from features.data_verification.friction import HIGH_FRICTION_FIELDS
 from features.data_verification.keyboards import double_confirm_keyboard
 from features.data_verification.states import DataVerificationStates
 from features.extras_collection.keyboards import owner_occupation_keyboard, tenant_purpose_keyboard
+from features.extras_collection.states import ExtrasCollectionStates
 from features.submission.states import SubmissionStates
 from infrastructure.session_store import SessionStore
 from utils.aadhaar import validate_aadhaar
@@ -29,7 +30,7 @@ async def _next_step(message: Message, state: FSMContext, session_store: Session
     if not session.confirmation_queue:
         if session.next_stage == "submission":
             if session.payload.is_submittable():
-                await state.set_state("SubmissionStates:COMPLETE")
+                await state.set_state(SubmissionStates.COMPLETE)
                 await message.answer("Submission complete. Playwright phase is queued.")
             else:
                 await message.answer("Some required fields are still missing.")
@@ -38,14 +39,14 @@ async def _next_step(message: Message, state: FSMContext, session_store: Session
 
         if session.next_stage == "owner_extras":
             session.next_stage = None
-            await state.set_state("ExtrasCollectionStates:OWNER_OCCUPATION")
+            await state.set_state(ExtrasCollectionStates.OWNER_OCCUPATION)
             await message.answer("Select owner occupation.", reply_markup=owner_occupation_keyboard())
             await session_store.save(session)
             return
 
         if session.next_stage == "tenant_extras":
             session.next_stage = None
-            await state.set_state("ExtrasCollectionStates:TENANT_EXTRAS")
+            await state.set_state(ExtrasCollectionStates.TENANT_EXTRAS)
             await message.answer("Select tenancy purpose.", reply_markup=tenant_purpose_keyboard())
             await session_store.save(session)
             return

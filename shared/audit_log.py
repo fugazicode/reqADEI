@@ -1,9 +1,21 @@
 from __future__ import annotations
 
 import json
+import logging
+from pathlib import Path
 import time
 
 from shared.models.session import ImageRecord
+
+
+_audit_log_path = Path(__file__).resolve().parent.parent / "audit.log"
+_audit_logger = logging.getLogger("audit")
+_audit_logger.setLevel(logging.DEBUG)
+if not _audit_logger.handlers:
+    _handler = logging.FileHandler(_audit_log_path, encoding="utf-8")
+    _handler.setLevel(logging.DEBUG)
+    _handler.setFormatter(logging.Formatter("%(message)s"))
+    _audit_logger.addHandler(_handler)
 
 
 def write_audit_event(event_type: str, person: str, image_id: str, record: ImageRecord) -> None:
@@ -21,6 +33,4 @@ def write_audit_event(event_type: str, person: str, image_id: str, record: Image
         "linked_to_image_id": record.linked_to_image_id,
     }
 
-    with open("audit.log", "a", encoding="utf-8") as handle:
-        handle.write(json.dumps(event))
-        handle.write("\n")
+    _audit_logger.info(json.dumps(event))
