@@ -13,6 +13,7 @@ from features.data_verification.states import DataVerificationStates
 from features.extras_collection.keyboards import owner_occupation_keyboard, tenant_purpose_keyboard
 from features.submission.states import SubmissionStates
 from infrastructure.session_store import SessionStore
+from utils.aadhaar import validate_aadhaar
 from utils.payload_accessor import PayloadAccessor
 
 router = Router(name=__name__)
@@ -177,7 +178,17 @@ async def receive_edit_input(message: Message, state: FSMContext, session_store:
         await message.answer("No field is currently set for editing.")
         return
 
-    PayloadAccessor.set(session.payload, session.current_editing_field, message.text.strip())
+    value = message.text.strip()
+    if session.current_editing_field.endswith("address_verification_doc_no"):
+        is_valid, cleaned = validate_aadhaar(value)
+        if not is_valid:
+            await message.answer(
+                "The Aadhaar number you entered appears to be invalid. Please check it and type it again."
+            )
+            return
+        value = cleaned
+
+    PayloadAccessor.set(session.payload, session.current_editing_field, value)
     session.current_editing_field = None
 
     if session.edit_return_state is None:

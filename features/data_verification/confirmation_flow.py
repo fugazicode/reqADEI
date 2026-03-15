@@ -6,6 +6,7 @@ from aiogram.types import Message
 from features.data_verification.keyboards import confirm_edit_keyboard
 from features.data_verification.states import DataVerificationStates
 from shared.models.session import FormSession
+from utils.aadhaar import mask_aadhaar
 from utils.payload_accessor import PayloadAccessor
 
 
@@ -51,8 +52,12 @@ class ConfirmationFlow:
             await message.answer(f"{field_path} is missing. Please type the value.")
             return "missing"
 
+        display_value = value
+        if field_path.endswith("address_verification_doc_no"):
+            display_value = mask_aadhaar(str(value))
+
         await message.answer(
-            f"Please confirm:\n{field_path}: {value}",
+            f"Please confirm:\n{field_path}: {display_value}",
             reply_markup=confirm_edit_keyboard(field_path),
         )
         return "confirm"

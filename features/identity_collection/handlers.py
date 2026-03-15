@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 
 from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
@@ -15,7 +16,7 @@ from features.extras_collection.states import ExtrasCollectionStates
 from features.identity_collection.keyboards import done_upload_keyboard
 from features.identity_collection.states import IdentityCollectionStates
 from infrastructure.session_store import SessionStore
-from shared.models.session import FormSession
+from shared.models.session import FormSession, ImageRecord
 
 router = Router(name=__name__)
 
@@ -39,6 +40,29 @@ def _extract_image_file_id(message: Message) -> str | None:
     return None
 
 
+@router.callback_query(StateFilter(IdentityCollectionStates.AWAITING_CONSENT), F.data == "consent:agree")
+async def consent_agree(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+) -> None:
+    if not callback.from_user or not callback.message:
+        return
+
+    session = await _get_or_create_session(callback.from_user.id, session_store)
+    session.consent_given_at = time.time()
+    await session_store.save(session)
+
+    await state.set_state(IdentityCollectionStates.OWNER_UPLOAD)
+    response = await callback.message.answer(
+        "Upload owner ID images, then tap Done.",
+        reply_markup=done_upload_keyboard(),
+    )
+    session.upload_status_message_id = response.message_id
+    await session_store.save(session)
+    await callback.answer()
+
+
 @router.message(IdentityCollectionStates.OWNER_UPLOAD, F.photo)
 @router.message(IdentityCollectionStates.OWNER_UPLOAD, F.document)
 async def collect_owner_photo(message: Message, session_store: SessionStore, bot: Bot) -> None:
@@ -51,17 +75,31 @@ async def collect_owner_photo(message: Message, session_store: SessionStore, bot
         return
 
     session = await _get_or_create_session(message.from_user.id, session_store)
-    session.owner_image_file_ids.append(file_id)
+    session.image_records.append(
+        ImageRecord(
+            image_id=file_id,
+            person="owner",
+            upload_timestamp=time.time(),
+        )
+    )
     await session_store.save(session)
+    count = len([record for record in session.image_records if record.person == "owner"])
 
     if session.upload_status_message_id:
-        count = len(session.owner_image_file_ids)
         await bot.edit_message_text(
             chat_id=message.chat.id,
             message_id=session.upload_status_message_id,
             text=f"{count} image(s) received. Tap Done when finished.",
             reply_markup=done_upload_keyboard(),
         )
+        return
+
+    response = await message.answer(
+        f"{count} image(s) received. Tap Done when finished.",
+        reply_markup=done_upload_keyboard(),
+    )
+    session.upload_status_message_id = response.message_id
+    await session_store.save(session)
 
 
 @router.callback_query(StateFilter(IdentityCollectionStates.OWNER_UPLOAD), F.data == "upload_done")
@@ -96,6 +134,10 @@ async def owner_upload_done(
         await callback.message.answer(f"Owner extraction failed: {session.last_error}")
         return
 
+    for record in session.image_records:
+        if record.person == "owner":
+            record.image_id = "redacted"
+
     session.next_stage = "owner_extras"
 
     if not session.confirmation_queue:
@@ -124,17 +166,31 @@ async def collect_tenant_photo(message: Message, session_store: SessionStore, bo
         return
 
     session = await _get_or_create_session(message.from_user.id, session_store)
-    session.tenant_image_file_ids.append(file_id)
+    session.image_records.append(
+        ImageRecord(
+            image_id=file_id,
+            person="tenant",
+            upload_timestamp=time.time(),
+        )
+    )
     await session_store.save(session)
+    count = len([record for record in session.image_records if record.person == "tenant"])
 
     if session.upload_status_message_id:
-        count = len(session.tenant_image_file_ids)
         await bot.edit_message_text(
             chat_id=message.chat.id,
             message_id=session.upload_status_message_id,
             text=f"{count} image(s) received. Tap Done when finished.",
             reply_markup=done_upload_keyboard(),
         )
+        return
+
+    response = await message.answer(
+        f"{count} image(s) received. Tap Done when finished.",
+        reply_markup=done_upload_keyboard(),
+    )
+    session.upload_status_message_id = response.message_id
+    await session_store.save(session)
 
 
 @router.callback_query(StateFilter(IdentityCollectionStates.TENANT_UPLOAD), F.data == "upload_done")
@@ -168,6 +224,10 @@ async def tenant_upload_done(
     if session.last_error:
         await callback.message.answer(f"Tenant extraction failed: {session.last_error}")
         return
+
+    for record in session.image_records:
+        if record.person == "tenant":
+            record.image_id = "redacted"
 
     session.next_stage = "tenant_extras"
 
