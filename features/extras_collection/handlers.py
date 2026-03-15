@@ -9,9 +9,8 @@ from features.extras_collection.keyboards import district_station_keyboard, tena
 from features.extras_collection.states import ExtrasCollectionStates
 from features.identity_collection.keyboards import done_upload_keyboard
 from features.identity_collection.states import IdentityCollectionStates
-from infrastructure.groq_parser import GroqParser
+from infrastructure.groq_parser import GroqParser, GroqParsingError
 from infrastructure.session_store import SessionStore
-from shared.models.form_payload import AddressData
 from utils.payload_accessor import PayloadAccessor
 from utils.station_lookup import StationLookup
 
@@ -80,10 +79,11 @@ async def receive_tenanted_address(
         await message.answer("Session expired. Send /start.")
         return
 
-    parsed = await groq_parser.parse(message.text, "address_parsing")
-
-    if PayloadAccessor.get(session.payload, "tenant.tenanted_address") is None:
-        PayloadAccessor.set(session.payload, "tenant.tenanted_address", AddressData())
+    try:
+        parsed = await groq_parser.parse(message.text, "address_parsing")
+    except GroqParsingError:
+        await message.answer("Address parsing failed. Please re-enter the tenanted address.")
+        return
 
     for key, value in parsed.items():
         PayloadAccessor.set(session.payload, f"tenant.tenanted_address.{key}", value)

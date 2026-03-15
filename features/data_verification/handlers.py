@@ -19,11 +19,8 @@ from utils.payload_accessor import PayloadAccessor
 router = Router(name=__name__)
 
 
-async def _next_step(message: Message, state: FSMContext, session_store: SessionStore) -> None:
-    if not message.from_user:
-        return
-
-    session = await session_store.get(message.from_user.id)
+async def _next_step(message: Message, state: FSMContext, session_store: SessionStore, user_id: int) -> None:
+    session = await session_store.get(user_id)
     if session is None:
         await message.answer("Session expired. Send /start to begin again.")
         return
@@ -84,8 +81,17 @@ async def confirm_field(callback: CallbackQuery, state: FSMContext, session_stor
         return
 
     field_path = callback.data.split(":", 1)[1]
+    expected_field = session.confirmation_queue[0] if session.confirmation_queue else None
+    if expected_field is None or expected_field != field_path:
+        await callback.answer("This confirmation is no longer active.", show_alert=True)
+        return
+
     fsm_data = await state.get_data()
     pending_double = fsm_data.get("pending_double_confirm")
+
+    if pending_double and pending_double != field_path:
+        await callback.answer("This confirmation is no longer active.", show_alert=True)
+        return
 
     if field_path in HIGH_FRICTION_FIELDS and pending_double != field_path:
         await state.update_data(pending_double_confirm=field_path)
@@ -102,7 +108,7 @@ async def confirm_field(callback: CallbackQuery, state: FSMContext, session_stor
     await state.update_data(pending_double_confirm=None)
     await session_store.save(session)
     await callback.answer("Confirmed")
-    await _next_step(callback.message, state, session_store)
+    await _next_step(callback.message, state, session_store, callback.from_user.id)
 
 
 @router.callback_query(F.data.startswith("confirm2:"))
@@ -116,13 +122,23 @@ async def confirm_field_second(callback: CallbackQuery, state: FSMContext, sessi
         return
 
     field_path = callback.data.split(":", 1)[1]
+    expected_field = session.confirmation_queue[0] if session.confirmation_queue else None
+    if expected_field is None or expected_field != field_path:
+        await callback.answer("This confirmation is no longer active.", show_alert=True)
+        return
+
+    fsm_data = await state.get_data()
+    pending_double = fsm_data.get("pending_double_confirm")
+    if pending_double != field_path:
+        await callback.answer("This confirmation is no longer active.", show_alert=True)
+        return
     if session.confirmation_queue and session.confirmation_queue[0] == field_path:
         session.confirmation_queue.pop(0)
 
     await state.update_data(pending_double_confirm=None)
     await session_store.save(session)
     await callback.answer("Confirmed")
-    await _next_step(callback.message, state, session_store)
+    await _next_step(callback.message, state, session_store, callback.from_user.id)
 
 
 @router.message(DataVerificationStates.AWAITING_EDIT_INPUT)
@@ -147,7 +163,7 @@ async def receive_edit_input(message: Message, state: FSMContext, session_store:
     await state.set_state(return_state)
 
     await session_store.save(session)
-    await _next_step(message, state, session_store)
+    await _next_step(message, state, session_store, message.from_user.id)
 
 
 @router.message(SubmissionStates.COMPLETE)

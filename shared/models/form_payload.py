@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class AddressData(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
     house_no: Optional[str] = None
     street_name: Optional[str] = None
     colony_locality_area: Optional[str] = None
@@ -19,6 +20,7 @@ class AddressData(BaseModel):
 
 
 class OwnerData(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     relative_name: Optional[str] = None
@@ -30,6 +32,7 @@ class OwnerData(BaseModel):
 
 
 class TenantData(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     relative_name: Optional[str] = None
@@ -44,6 +47,7 @@ class TenantData(BaseModel):
 
 
 class FormPayload(BaseModel):
+    model_config = ConfigDict(validate_assignment=True)
     owner: Optional[OwnerData] = None
     tenant: Optional[TenantData] = None
 

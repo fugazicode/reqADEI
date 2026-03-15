@@ -48,7 +48,7 @@ class PayloadAccessor:
                     raise AttributeError(f"Nested path segment is not a model field: {part}")
 
                 next_value = model_type()
-                object.__setattr__(current, part, next_value)
+                setattr(current, part, next_value)
             current = next_value
 
-        object.__setattr__(current, parts[-1], value)
+        setattr(current, parts[-1], value)
