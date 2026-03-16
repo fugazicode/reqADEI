@@ -5,13 +5,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from features.data_verification.confirmation_flow import ConfirmationFlow
+from features.data_verification.states import DataVerificationStates
 from features.extras_collection.keyboards import district_station_keyboard, tenant_purpose_keyboard
 from features.extras_collection.states import ExtrasCollectionStates
 from features.identity_collection.keyboards import done_upload_keyboard
 from features.identity_collection.states import IdentityCollectionStates
-from infrastructure.groq_parser import GroqParser
+from infrastructure.groq_parser import GroqParser, GroqParsingError
 from infrastructure.session_store import SessionStore
-from shared.models.form_payload import AddressData
 from utils.payload_accessor import PayloadAccessor
 from utils.station_lookup import StationLookup
 
@@ -33,10 +33,12 @@ async def set_owner_occupation(callback: CallbackQuery, state: FSMContext, sessi
 
     await session_store.save(session)
     await state.set_state(IdentityCollectionStates.TENANT_UPLOAD)
-    await callback.message.answer(
+    response = await callback.message.answer(
         "Upload tenant ID images, then tap Done.",
         reply_markup=done_upload_keyboard(),
     )
+    session.upload_status_message_id = response.message_id
+    await session_store.save(session)
     await callback.answer()
 
 
@@ -80,10 +82,11 @@ async def receive_tenanted_address(
         await message.answer("Session expired. Send /start.")
         return
 
-    parsed = await groq_parser.parse(message.text, "address_parsing")
-
-    if PayloadAccessor.get(session.payload, "tenant.tenanted_address") is None:
-        PayloadAccessor.set(session.payload, "tenant.tenanted_address", AddressData())
+    try:
+        parsed = await groq_parser.parse(message.text, "address_parsing")
+    except GroqParsingError:
+        await message.answer("Address parsing failed. Please re-enter the tenanted address.")
+        return
 
     for key, value in parsed.items():
         PayloadAccessor.set(session.payload, f"tenant.tenanted_address.{key}", value)
@@ -117,6 +120,7 @@ async def receive_tenanted_address(
         "tenant.tenanted_address.pincode",
     ]
 
+    session.next_stage = "submission"
     await session_store.save(session)
     await state.set_state(ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM)
 
@@ -128,7 +132,12 @@ async def receive_tenanted_address(
         return
 
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(message, state)
+    result = await flow.show_next_field(message, state)
+    if result == "missing":
+        session.edit_return_state = ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM.state
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
 
 
@@ -157,6 +166,16 @@ async def pick_station(callback: CallbackQuery, state: FSMContext, session_store
         await callback.message.answer("Continuing without pre-selecting police station.")
 
     flow = ConfirmationFlow(session)
-    await flow.show_next_field(callback.message, state)
+    result = await flow.show_next_field(callback.message, state)
+    if result == "missing":
+        session.edit_return_state = ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM.state
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
     await session_store.save(session)
     await callback.answer()
+
+
+@router.message(ExtrasCollectionStates.TENANTED_ADDRESS_CONFIRM)
+async def tenanted_address_confirm_hint(message: Message) -> None:
+    await message.answer("Please use the buttons to confirm or edit the address fields.")

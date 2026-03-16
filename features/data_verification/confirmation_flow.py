@@ -6,6 +6,7 @@ from aiogram.types import Message
 from features.data_verification.keyboards import confirm_edit_keyboard
 from features.data_verification.states import DataVerificationStates
 from shared.models.session import FormSession
+from utils.aadhaar import mask_aadhaar
 from utils.payload_accessor import PayloadAccessor
 
 
@@ -48,13 +49,15 @@ class ConfirmationFlow:
         value = PayloadAccessor.get(self.session.payload, field_path)
         if value is None or value == "":
             self.session.current_editing_field = field_path
-            await state.update_data(return_state=(await state.get_state()))
-            await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
             await message.answer(f"{field_path} is missing. Please type the value.")
-            return field_path
+            return "missing"
+
+        display_value = value
+        if field_path.endswith("address_verification_doc_no"):
+            display_value = mask_aadhaar(str(value))
 
         await message.answer(
-            f"Please confirm:\n{field_path}: {value}",
+            f"Please confirm:\n{field_path}: {display_value}",
             reply_markup=confirm_edit_keyboard(field_path),
         )
-        return field_path
+        return "confirm"

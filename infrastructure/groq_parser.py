@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from groq import AsyncGroq
@@ -41,8 +42,16 @@ class GroqParser:
     @staticmethod
     def _parse_json(content: str) -> dict:
         stripped = content.strip()
-        if stripped.startswith("```"):
-            stripped = stripped.strip("`")
-            if stripped.startswith("json"):
-                stripped = stripped[4:].strip()
+        fenced_match = re.match(r"^```(?:json)?\s*([\s\S]*?)\s*```$", stripped, re.IGNORECASE)
+        if fenced_match:
+            stripped = fenced_match.group(1).strip()
+
+        start_candidates = [idx for idx in (stripped.find("{"), stripped.find("[")) if idx != -1]
+        end_candidates = [idx for idx in (stripped.rfind("}"), stripped.rfind("]")) if idx != -1]
+        if start_candidates and end_candidates:
+            start = min(start_candidates)
+            end = max(end_candidates)
+            if end > start:
+                stripped = stripped[start : end + 1]
+
         return json.loads(stripped)

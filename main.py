@@ -4,13 +4,18 @@ import asyncio
 import logging
 from pathlib import Path
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F, Router
+from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
+from aiogram.types import Message
 
 from core.engine import PipelineEngine
 from core.pipeline_stages import IdParsingStage, ImageExtractionStage
 from features.data_verification.handlers import router as data_verification_router
 from features.extras_collection.handlers import router as extras_collection_router
 from features.identity_collection.handlers import router as identity_collection_router
+from features.identity_collection.keyboards import consent_keyboard
+from features.identity_collection.states import IdentityCollectionStates
 from infrastructure.groq_parser import GroqParser
 from infrastructure.session_store import SessionStore
 from infrastructure.vision_client import (
@@ -20,10 +25,42 @@ from infrastructure.vision_client import (
 )
 from shared.config import load_settings
 from shared.logger import configure_logger
+from shared.models.session import FormSession
 from utils.station_lookup import StationLookup
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+root_router = Router(name="root")
+
+
+@root_router.message(StateFilter("*"), F.text == "/start")
+async def start_root(message: Message, state: FSMContext, session_store: SessionStore) -> None:
+    if not message.from_user:
+        return
+
+    await state.clear()
+    await session_store.delete(message.from_user.id)
+
+    session = FormSession(telegram_user_id=message.from_user.id)
+    await session_store.save(session)
+
+    await message.answer(
+        "This bot collects Aadhaar data solely for rental verification. Your data will not be shared or stored beyond this session. You may cancel at any time by sending /cancel. Do you agree to proceed?",
+        reply_markup=consent_keyboard(),
+    )
+    await state.set_state(IdentityCollectionStates.AWAITING_CONSENT)
+
+
+@root_router.message(StateFilter("*"), F.text == "/cancel")
+async def cancel_root(message: Message, state: FSMContext, session_store: SessionStore) -> None:
+    if not message.from_user:
+        return
+
+    await state.clear()
+    await session_store.delete(message.from_user.id)
+    await message.answer("Form cancelled. Send /start to begin again.")
 
 
 def _build_pipeline(vision_client: VisionClient, groq_parser: GroqParser, bot: Bot) -> PipelineEngine:
@@ -42,6 +79,12 @@ async def _preflight_ocr(vision_client: VisionClient) -> None:
         LOGGER.warning("OCR preflight skipped due to service/network issue: %s", exc)
     except VisionConfigurationError:
         raise
+
+
+async def _session_cleanup_loop(session_store: SessionStore) -> None:
+    while True:
+        await asyncio.sleep(3600)
+        session_store.cleanup_expired()
 
 
 async def run() -> None:
@@ -71,11 +114,17 @@ async def run() -> None:
     dp["tenant_engine"] = tenant_engine
     dp["groq_parser"] = groq_parser
     dp["station_lookup"] = station_lookup
+    dp["bot"] = bot
 
+    dp.include_router(root_router)
     dp.include_router(identity_collection_router)
     dp.include_router(data_verification_router)
     dp.include_router(extras_collection_router)
 
+    async def on_startup() -> None:
+        asyncio.create_task(_session_cleanup_loop(session_store))
+
+    dp.startup.register(on_startup)
     await dp.start_polling(bot)
 
 
