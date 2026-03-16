@@ -74,7 +74,8 @@ def validate_aadhaar(number: str) -> tuple[bool, str]:
 
 def extract_aadhaar_from_text(ocr_text: str) -> list[str]:
     substituted = _apply_ocr_substitutions(ocr_text)
-    candidates = re.findall(r"\d{12,}", substituted)
+    stripped = re.sub(r"[\s-]+", "", substituted)
+    candidates = re.findall(r"\d{12,}", stripped)
     found: list[str] = []
     seen: set[str] = set()
 
