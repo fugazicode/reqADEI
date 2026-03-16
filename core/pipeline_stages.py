@@ -98,11 +98,27 @@ class ImageExtractionStage(PipelineStage):
             )
             return session
 
+        media_group_records = [
+            record for record in person_records if record.media_group_id is not None
+        ]
+        media_group_map: dict[str, list[ImageRecord]] = {}
+        for record in media_group_records:
+            media_group_map.setdefault(record.media_group_id, []).append(record)
+        for records in media_group_map.values():
+            if len(records) == 2:
+                first, second = records
+                first.linked_to_image_id = second.image_id
+                second.linked_to_image_id = first.image_id
+
         fronts = [record for record in person_records if record.side == "front"]
         backs = [record for record in person_records if record.side == "back"]
         used_back_ids: set[str] = set()
         for front in fronts:
+            if front.linked_to_image_id:
+                continue
             for back in backs:
+                if back.linked_to_image_id:
+                    continue
                 if back.image_id in used_back_ids:
                     continue
                 if (

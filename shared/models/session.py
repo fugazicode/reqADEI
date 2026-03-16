@@ -18,6 +18,7 @@ class ImageRecord:
     qr_decoded: bool = False
     extraction_warnings: list[str] = field(default_factory=list)
     linked_to_image_id: Optional[str] = None
+    media_group_id: Optional[str] = None
 
 
 @dataclass

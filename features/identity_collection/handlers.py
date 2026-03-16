@@ -18,6 +18,8 @@ from features.identity_collection.states import IdentityCollectionStates
 from infrastructure.session_store import SessionStore
 from shared.models.session import FormSession, ImageRecord
 
+_pending_edit_tasks: dict[int, asyncio.Task] = {}
+
 router = Router(name=__name__)
 
 
@@ -80,26 +82,41 @@ async def collect_owner_photo(message: Message, session_store: SessionStore, bot
             image_id=file_id,
             person="owner",
             upload_timestamp=time.time(),
+            media_group_id=message.media_group_id,
         )
     )
     await session_store.save(session)
     count = len([record for record in session.image_records if record.person == "owner"])
 
-    if session.upload_status_message_id:
-        await bot.edit_message_text(
-            chat_id=message.chat.id,
-            message_id=session.upload_status_message_id,
-            text=f"{count} image(s) received. Tap Done when finished.",
-            reply_markup=done_upload_keyboard(),
-        )
-        return
+    existing_task = _pending_edit_tasks.get(message.from_user.id)
+    if existing_task and not existing_task.done():
+        existing_task.cancel()
+        try:
+            await existing_task
+        except asyncio.CancelledError:
+            pass
 
-    response = await message.answer(
-        f"{count} image(s) received. Tap Done when finished.",
-        reply_markup=done_upload_keyboard(),
-    )
-    session.upload_status_message_id = response.message_id
-    await session_store.save(session)
+    upload_status_message_id = session.upload_status_message_id
+    chat_id = message.chat.id
+    reply_markup = done_upload_keyboard()
+    text = f"{count} image(s) received. Tap Done when finished."
+
+    async def _do_edit() -> None:
+        await asyncio.sleep(0.2)
+        if upload_status_message_id:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=upload_status_message_id,
+                text=text,
+                reply_markup=reply_markup,
+            )
+            return
+
+        response = await message.answer(text, reply_markup=reply_markup)
+        session.upload_status_message_id = response.message_id
+        await session_store.save(session)
+
+    _pending_edit_tasks[message.from_user.id] = asyncio.create_task(_do_edit())
 
 
 @router.callback_query(StateFilter(IdentityCollectionStates.OWNER_UPLOAD), F.data == "upload_done")
@@ -175,26 +192,41 @@ async def collect_tenant_photo(message: Message, session_store: SessionStore, bo
             image_id=file_id,
             person="tenant",
             upload_timestamp=time.time(),
+            media_group_id=message.media_group_id,
         )
     )
     await session_store.save(session)
     count = len([record for record in session.image_records if record.person == "tenant"])
 
-    if session.upload_status_message_id:
-        await bot.edit_message_text(
-            chat_id=message.chat.id,
-            message_id=session.upload_status_message_id,
-            text=f"{count} image(s) received. Tap Done when finished.",
-            reply_markup=done_upload_keyboard(),
-        )
-        return
+    existing_task = _pending_edit_tasks.get(message.from_user.id)
+    if existing_task and not existing_task.done():
+        existing_task.cancel()
+        try:
+            await existing_task
+        except asyncio.CancelledError:
+            pass
 
-    response = await message.answer(
-        f"{count} image(s) received. Tap Done when finished.",
-        reply_markup=done_upload_keyboard(),
-    )
-    session.upload_status_message_id = response.message_id
-    await session_store.save(session)
+    upload_status_message_id = session.upload_status_message_id
+    chat_id = message.chat.id
+    reply_markup = done_upload_keyboard()
+    text = f"{count} image(s) received. Tap Done when finished."
+
+    async def _do_edit() -> None:
+        await asyncio.sleep(0.2)
+        if upload_status_message_id:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=upload_status_message_id,
+                text=text,
+                reply_markup=reply_markup,
+            )
+            return
+
+        response = await message.answer(text, reply_markup=reply_markup)
+        session.upload_status_message_id = response.message_id
+        await session_store.save(session)
+
+    _pending_edit_tasks[message.from_user.id] = asyncio.create_task(_do_edit())
 
 
 @router.callback_query(StateFilter(IdentityCollectionStates.TENANT_UPLOAD), F.data == "upload_done")
