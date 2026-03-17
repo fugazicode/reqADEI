@@ -16,6 +16,7 @@ from features.extras_collection.handlers import router as extras_collection_rout
 from features.identity_collection.handlers import router as identity_collection_router
 from features.identity_collection.keyboards import consent_keyboard
 from features.identity_collection.states import IdentityCollectionStates
+from features.submission.submission_worker import SubmissionWorker
 from infrastructure.groq_parser import GroqParser
 from infrastructure.session_store import SessionStore
 from infrastructure.vision_client import (
@@ -116,6 +117,13 @@ async def run() -> None:
     dp["station_lookup"] = station_lookup
     dp["bot"] = bot
 
+    submission_worker = SubmissionWorker(
+        bot=bot,
+        portal_username=config.portal_username,
+        portal_password=config.portal_password,
+    )
+    dp["submission_worker"] = submission_worker
+
     dp.include_router(root_router)
     dp.include_router(identity_collection_router)
     dp.include_router(data_verification_router)
@@ -123,6 +131,7 @@ async def run() -> None:
 
     async def on_startup() -> None:
         asyncio.create_task(_session_cleanup_loop(session_store))
+        asyncio.create_task(submission_worker.start())
 
     dp.startup.register(on_startup)
     await dp.start_polling(bot)

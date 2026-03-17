@@ -13,6 +13,7 @@ from features.data_verification.states import DataVerificationStates
 from features.extras_collection.keyboards import owner_occupation_keyboard, tenant_purpose_keyboard
 from features.extras_collection.states import ExtrasCollectionStates
 from features.submission.states import SubmissionStates
+from features.submission.submission_worker import SubmissionJob, SubmissionWorker
 from infrastructure.session_store import SessionStore
 from utils.aadhaar import validate_aadhaar
 from utils.payload_accessor import PayloadAccessor
@@ -21,7 +22,13 @@ router = Router(name=__name__)
 LOGGER = logging.getLogger(__name__)
 
 
-async def _next_step(message: Message, state: FSMContext, session_store: SessionStore, user_id: int) -> None:
+async def _next_step(
+    message: Message,
+    state: FSMContext,
+    session_store: SessionStore,
+    user_id: int,
+    submission_worker: "SubmissionWorker | None" = None,
+) -> None:
     session = await session_store.get(user_id)
     if session is None:
         await message.answer("Session expired. Send /start to begin again.")
@@ -30,8 +37,22 @@ async def _next_step(message: Message, state: FSMContext, session_store: Session
     if not session.confirmation_queue:
         if session.next_stage == "submission":
             if session.payload.is_submittable():
-                await state.set_state(SubmissionStates.COMPLETE)
-                await message.answer("Submission complete. Playwright phase is queued.")
+                if submission_worker is not None:
+                    job = SubmissionJob(
+                        telegram_user_id=user_id,
+                        payload=session.payload,
+                        image_bytes=session.tenant_image_bytes or b"",
+                    )
+                    position = await submission_worker.enqueue(job)
+                    await state.set_state(SubmissionStates.COMPLETE)
+                    await message.answer(
+                        f"✅ All data confirmed.\n"
+                        f"Your form is queued at position {position}.\n"
+                        f"You will be notified when submission completes."
+                    )
+                else:
+                    await state.set_state(SubmissionStates.COMPLETE)
+                    await message.answer("Submission complete. Playwright phase is queued.")
             else:
                 await message.answer("Some required fields are still missing.")
             await session_store.save(session)
@@ -86,7 +107,12 @@ async def edit_field(callback: CallbackQuery, state: FSMContext, session_store: 
 
 
 @router.callback_query(F.data.startswith("confirm:"))
-async def confirm_field(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
+async def confirm_field(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+    submission_worker: SubmissionWorker,
+) -> None:
     if not callback.from_user or not callback.message or not callback.data:
         return
 
@@ -124,11 +150,16 @@ async def confirm_field(callback: CallbackQuery, state: FSMContext, session_stor
     await state.update_data(pending_double_confirm=None)
     await session_store.save(session)
     await callback.answer("Confirmed")
-    await _next_step(callback.message, state, session_store, callback.from_user.id)
+    await _next_step(callback.message, state, session_store, callback.from_user.id, submission_worker)
 
 
 @router.callback_query(F.data.startswith("confirm2:"))
-async def confirm_field_second(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
+async def confirm_field_second(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+    submission_worker: SubmissionWorker,
+) -> None:
     if not callback.from_user or not callback.message or not callback.data:
         return
 
@@ -157,7 +188,7 @@ async def confirm_field_second(callback: CallbackQuery, state: FSMContext, sessi
     await state.update_data(pending_double_confirm=None)
     await session_store.save(session)
     await callback.answer("Confirmed")
-    await _next_step(callback.message, state, session_store, callback.from_user.id)
+    await _next_step(callback.message, state, session_store, callback.from_user.id, submission_worker)
 
 
 @router.message(DataVerificationStates.CONFIRMING_FIELD)
@@ -166,7 +197,12 @@ async def confirm_field_hint(message: Message) -> None:
 
 
 @router.message(DataVerificationStates.AWAITING_EDIT_INPUT)
-async def receive_edit_input(message: Message, state: FSMContext, session_store: SessionStore) -> None:
+async def receive_edit_input(
+    message: Message,
+    state: FSMContext,
+    session_store: SessionStore,
+    submission_worker: SubmissionWorker,
+) -> None:
     if not message.from_user or not message.text:
         return
 
@@ -205,7 +241,7 @@ async def receive_edit_input(message: Message, state: FSMContext, session_store:
     session.edit_return_person = None
     await session_store.save(session)
     await state.set_state(return_state)
-    await _next_step(message, state, session_store, message.from_user.id)
+    await _next_step(message, state, session_store, message.from_user.id, submission_worker)
 
 
 @router.message(SubmissionStates.COMPLETE)
