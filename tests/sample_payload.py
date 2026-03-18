@@ -3,7 +3,7 @@ from utils.aadhaar import validate_aadhaar
 
 
 assert validate_aadhaar("499118665246")[0], "Owner test Aadhaar failed Verhoeff — replace it"
-assert validate_aadhaar("234107697848")[0], "Tenant test Aadhaar failed Verhoeff — replace it"
+assert validate_aadhaar("300000000001")[0], "Tenant test Aadhaar failed Verhoeff — replace it"
 
 
 def make_sample_payload() -> FormPayload:
@@ -64,7 +64,7 @@ def make_sample_payload() -> FormPayload:
         relation_type="Father",
         dob="2001-07-22",
         address_verification_doc_type="Aadhar Card",
-        address_verification_doc_no="234107697848",
+        address_verification_doc_no="300000000001",
         purpose_of_tenancy="Residential",
         address=tenant_address_permanent,
         tenanted_address=tenant_address_tenanted,
