@@ -264,7 +264,6 @@ class FormFiller:
         self._logger = logging.getLogger(__name__)
 
     async def fill(self, image_bytes: bytes) -> str:
-        await self._setup_ajax_csrf()
         await self._fill_owner_tab()
         await self._fill_tenant_personal_tab()
         await self._navigate_to_address_subtab()
@@ -322,21 +321,49 @@ class FormFiller:
             )
 
     async def _setup_ajax_csrf(self) -> None:
-        async def inject_csrf(route, request) -> None:
-            token = await self._page.evaluate(
-                """
-                () => decodeURIComponent(
-                    document.cookie
-                        .split('; ')
-                        .find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] || ''
-                )
-                """
-            )
-            headers = {**request.headers, "X-XSRF-TOKEN": token}
-            await route.continue_(headers=headers)
+        token = await self._page.evaluate(
+            """() => {
+                const raw = document.cookie.split('; ')
+                    .find(r => r.startsWith('XSRF-TOKEN='));
+                if (!raw) return '';
+                return decodeURIComponent(raw.split('=')[1] || '');
+            }"""
+        )
+        print(f"[CSRF] Initial token: '{token}'")
+        if not token:
+            self._logger.warning("[CSRF] No XSRF-TOKEN cookie at setup time")
 
+        self._page.on(
+            "response",
+            lambda r: print(f"[CSRF] RESPONSE {r.status} {r.url}")
+            if any(x in r.url for x in ["getstates", "getdistricts", "getpolicestations"])
+            else None,
+        )
+
+        async def inject_csrf(route, request) -> None:
+            try:
+                live_token = await self._page.evaluate(
+                    """() => {
+                        const raw = document.cookie.split('; ')
+                            .find(r => r.startsWith('XSRF-TOKEN='));
+                        if (!raw) return '';
+                        return decodeURIComponent(raw.split('=')[1] || '');
+                    }"""
+                )
+                print(f"[CSRF] Injecting token '{live_token}' for {request.url}")
+                await route.continue_(headers={**request.headers, "X-XSRF-TOKEN": live_token})
+            except Exception as exc:
+                self._logger.warning(
+                    "[CSRF] Route handler failed for %s: %s — continuing without token",
+                    request.url,
+                    exc,
+                )
+                await route.continue_()
+
+        await self._page.route("**/getstates.htm", inject_csrf)
         await self._page.route("**/getdistricts.htm", inject_csrf)
         await self._page.route("**/getpolicestations.htm", inject_csrf)
+        print("[CSRF] Interceptors registered for getstates, getdistricts, getpolicestations")
 
     async def _js_select(self, field_name: str, value: str) -> None:
         await self._page.evaluate(
@@ -390,7 +417,7 @@ class FormFiller:
         try:
             async with self._page.expect_response(
                 lambda r: "getpolicestations" in r.url,
-                    timeout=30000,
+                timeout=30000,
             ) as response_info:
                 await self._js_select(district_field, district_value)
 
@@ -400,6 +427,11 @@ class FormFiller:
                 "District selection did not trigger station load for '%s'",
                 district,
             )
+            if station_value is None:
+                self._logger.warning(
+                    "No station value available for '%s' — hidden station will be blank",
+                    station,
+                )
             await self._page.evaluate(
                 """([hiddenDistrict, hiddenStation, districtVal, stationVal]) => {
                     const d = document.querySelector('[name="' + hiddenDistrict + '"]');
@@ -556,12 +588,9 @@ class FormFiller:
             )
 
     async def _fill_owner_tab(self) -> None:
-        self._page.on(
-            "response",
-            lambda r: print(f"RESPONSE {r.status} {r.url}")
-            if "getdistricts" in r.url or "getpolicestations" in r.url
-            else None,
-        )
+        if not getattr(self, "_csrf_setup_done", False):
+            await self._setup_ajax_csrf()
+            self._csrf_setup_done = True
         await self._page.click("text=Owner Information")
         await self._page.wait_for_selector(
             '[name="ownerFirstName"]',
