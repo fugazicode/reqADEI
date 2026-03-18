@@ -30,6 +30,46 @@ DISTRICT_VALUES: dict[str, str] = {
     "WEST": "8170",
 }
 
+STATE_VALUES: dict[str, str] = {
+    "ANDAMAN & NICOBAR": "1",
+    "ANDHRA PRADESH": "2",
+    "ARUNACHAL PRADESH": "3",
+    "ASSAM": "4",
+    "BIHAR": "5",
+    "CHANDIGARH": "6",
+    "DAMAN & DIU": "7",
+    "DELHI": "8",
+    "DADRA & NAGAR HAVELI": "9",
+    "GOA": "10",
+    "GUJARAT": "11",
+    "HIMACHAL PRADESH": "12",
+    "HARYANA": "13",
+    "JAMMU & KASHMIR": "14",
+    "KERALA": "15",
+    "KARNATAKA": "16",
+    "LAKSHADWEEP": "17",
+    "MEGHALAYA": "18",
+    "MAHARASHTRA": "19",
+    "MANIPUR": "20",
+    "MADHYA PRADESH": "21",
+    "MIZORAM": "22",
+    "NAGALAND": "23",
+    "ODISHA": "24",
+    "PUNJAB": "25",
+    "PUDUCHERRY": "26",
+    "RAJASTHAN": "27",
+    "SIKKIM": "28",
+    "TAMIL NADU": "29",
+    "TRIPURA": "30",
+    "UTTAR PRADESH": "31",
+    "WEST BENGAL": "32",
+    "CHHATTISGARH": "33",
+    "JHARKHAND": "34",
+    "UTTARAKHAND": "35",
+    "TELANGANA": "40",
+    "LADAKH": "41",
+}
+
 
 class FormFiller:
     def __init__(self, page: Page, payload: FormPayload) -> None:
@@ -92,6 +132,42 @@ class FormFiller:
                 "Could not select label '%s' for field '%s'",
                 label,
                 field_name,
+            )
+
+    async def _select_state(self, field_name: str, state_label: str) -> None:
+        """
+        Selects a state by value using STATE_VALUES lookup.
+        After selection, waits for the district dropdown to repopulate
+        because the portal's JavaScript reloads district options on state change.
+        The district field name is inferred from the state field name by convention.
+        """
+        state_value = STATE_VALUES.get(state_label.upper())
+        if not state_value:
+            self._logger.warning(
+                "Unknown state '%s' — attempting label fallback",
+                state_label,
+            )
+            await self._select_by_label(field_name, state_label)
+        else:
+            await self._page.select_option(
+                f'[name="{field_name}"]',
+                value=state_value,
+            )
+
+        # Derive the district field name from the state field name.
+        # Convention: ownerState → ownerDistrict
+        #             tenantPresentState → tenantPresentDistrict
+        #             tenantPermanentState → tenantPermanentDistrict
+        district_field = field_name.replace("State", "District")
+        try:
+            await self._page.wait_for_function(
+                f"document.querySelector('[name=\"{district_field}\"]').options.length > 1",
+                timeout=10000,
+            )
+        except Exception:
+            self._logger.warning(
+                "District dropdown '%s' did not repopulate after state selection",
+                district_field,
             )
 
     async def _select_district_and_station(
@@ -184,7 +260,7 @@ class FormFiller:
             self._payload.tenant.tenanted_address.pincode,
         )
         await self._select_by_label("tenantPresentCountry", "INDIA")
-        await self._select_by_label("tenantPresentState", "DELHI")
+        await self._select_state("tenantPresentState", "DELHI")
 
         await self._select_district_and_station(
             self._payload.tenant.tenanted_address.district,
@@ -231,16 +307,10 @@ class FormFiller:
         await self._select_by_label("tenantPermanentCountry", "INDIA")
 
         if self._payload.tenant.address.state:
-            try:
-                await self._page.select_option(
-                    '[name="tenantPermanentState"]',
-                    label=self._payload.tenant.address.state,
-                )
-            except Exception:
-                self._logger.warning(
-                    "Could not select permanent address state: %s",
-                    self._payload.tenant.address.state,
-                )
+            await self._select_state(
+                "tenantPermanentState",
+                self._payload.tenant.address.state,
+            )
 
         if self._payload.tenant.address.district:
             await self._select_district_and_station(
@@ -297,7 +367,7 @@ class FormFiller:
                 self._payload.owner.address.pincode,
             )
             await self._select_by_label("ownerCountry", "INDIA")
-            await self._select_by_label("ownerState", "DELHI")
+            await self._select_state("ownerState", "DELHI")
             await self._select_district_and_station(
                 self._payload.owner.address.district,
                 self._payload.owner.address.police_station,
