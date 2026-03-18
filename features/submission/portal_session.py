@@ -6,7 +6,6 @@ from playwright.async_api import Browser, Page, Playwright
 
 # Delhi Police Citizen Services Portal
 _LOGIN_URL = "https://cctns.delhipolice.gov.in/citizenservices/"
-_FORM_URL = "https://cctns.delhipolice.gov.in/citizenservices/"  # TODO: confirm form page URL after login
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +41,36 @@ class PortalSession:
 
     async def _login(self, page: Page) -> None:
         await page.goto(_LOGIN_URL, wait_until="networkidle")
+        await page.click('[name="j_username"]')
         await page.fill('[name="j_username"]', self._username)
+
+        await page.click('[name="j_password"]')
         await page.fill('[name="j_password"]', self._password)
-        await page.click('button[type="submit"]')
+        await page.click('#button')
         await page.wait_for_load_state("networkidle")
         self._logger.info("Login submitted — current URL: %s", page.url)
 
     async def _navigate_to_form(self, page: Page) -> None:
-        await page.goto(_FORM_URL, wait_until="networkidle")
-        self._logger.info("Navigated to form — current URL: %s", page.url)
+        # Wait for the dashboard to confirm login succeeded
+        await page.wait_for_selector(
+            "text=Tenant Registration",
+            timeout=30000,
+        )
+        self._logger.info("Dashboard loaded — navigating to form")
+
+        # Navigate through the menu rather than direct goto
+        await page.hover("text=Tenant Registration")
+        await page.wait_for_selector(
+            "text=Add Tenant/PG",
+            state="visible",
+            timeout=10000,
+        )
+        await page.click("text=Add Tenant/PG")
+
+        # Wait for the form to fully load
+        await page.wait_for_selector(
+            '[name="ownerFirstName"]',
+            state="visible",
+            timeout=30000,
+        )
+        self._logger.info("Form page loaded — URL: %s", page.url)
