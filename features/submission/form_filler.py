@@ -4,11 +4,14 @@ import logging
 
 from playwright.async_api import Page
 
+from shared.models.form_payload import FormPayload
+
 
 class FormFiller:
-    def __init__(self, page: Page, logger: logging.Logger | None = None) -> None:
+    def __init__(self, page: Page, payload: FormPayload) -> None:
         self._page = page
-        self._logger = logger or logging.getLogger(__name__)
+        self._payload = payload
+        self._logger = logging.getLogger(__name__)
 
     async def fill(self, image_bytes: bytes) -> str:
         await self._fill_owner_tab()
