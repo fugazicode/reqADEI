@@ -58,14 +58,11 @@ class PortalSession:
         )
         self._logger.info("Dashboard loaded — navigating to form")
 
-        # Navigate through the menu rather than direct goto
-        await page.hover("text=Tenant Registration")
-        await page.wait_for_selector(
-            "text=Add Tenant/PG",
-            state="visible",
-            timeout=10000,
+        # Navigate directly to the form URL now that session is established
+        await page.goto(
+            "https://cctns.delhipolice.gov.in/citizenservices/addtenantpgverification.htm",
+            wait_until="networkidle",
         )
-        await page.click("text=Add Tenant/PG")
 
         # Wait for the form to fully load
         await page.wait_for_selector(

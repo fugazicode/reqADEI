@@ -11,6 +11,26 @@ from playwright.async_api import Page
 from shared.models.form_payload import FormPayload
 
 
+DISTRICT_VALUES: dict[str, str] = {
+    "CENTRAL": "8162",
+    "DWARKA": "8176",
+    "EAST": "8168",
+    "IGI AIRPORT": "8169",
+    "NEW DELHI": "8165",
+    "NORTH": "8166",
+    "NORTH EAST": "8173",
+    "NORTH WEST": "8172",
+    "OUTER DISTRICT": "8174",
+    "OUTER NORTH": "8991",
+    "ROHINI": "8959",
+    "SHAHDARA": "8957",
+    "SOUTH": "8167",
+    "SOUTH WEST": "8171",
+    "SOUTH-EAST": "8955",
+    "WEST": "8170",
+}
+
+
 class FormFiller:
     def __init__(self, page: Page, payload: FormPayload) -> None:
         self._page = page
@@ -90,10 +110,21 @@ class FormFiller:
             lambda r: "getpolicestations" in r.url,
             timeout=15000,
         ) as response_info:
-            await self._page.select_option(
-                f'[name="{district_field}"]',
-                label=district,
-            )
+            district_value = DISTRICT_VALUES.get(district)
+            if not district_value:
+                self._logger.warning(
+                    "Unknown district '%s' — attempting label fallback",
+                    district,
+                )
+                await self._page.select_option(
+                    f'[name="{district_field}"]',
+                    label=district,
+                )
+            else:
+                await self._page.select_option(
+                    f'[name="{district_field}"]',
+                    value=district_value,
+                )
 
         await response_info.value
 
