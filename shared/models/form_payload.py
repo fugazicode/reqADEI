@@ -36,6 +36,7 @@ class OwnerData(BaseModel):
 class TenantData(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
     first_name: Optional[str] = None
+    middle_name: Optional[str] = None
     last_name: Optional[str] = None
     relative_name: Optional[str] = None
     relation_type: Optional[str] = None

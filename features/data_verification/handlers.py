@@ -179,9 +179,8 @@ async def confirm_field_second(
     if pending_double != field_path:
         await callback.answer("This confirmation is no longer active.", show_alert=True)
         return
-    assert (
-        session.confirmation_queue and session.confirmation_queue[0] == field_path
-    ), f"Double confirm out of sync for {field_path}."
+    if not (session.confirmation_queue and session.confirmation_queue[0] == field_path):
+        raise RuntimeError(f"Double confirm out of sync for {field_path}.")
     if session.confirmation_queue and session.confirmation_queue[0] == field_path:
         session.confirmation_queue.pop(0)
 

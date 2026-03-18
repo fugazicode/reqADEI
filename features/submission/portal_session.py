@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from playwright.async_api import Browser, Page, Playwright
+from playwright.async_api import Browser, Error as PlaywrightError, Page, Playwright
 
 # Delhi Police Citizen Services Portal
 _LOGIN_URL = "https://cctns.delhipolice.gov.in/citizenservices/"
@@ -28,7 +28,7 @@ class PortalSession:
         self._browser: Browser | None = None
 
     async def open(self) -> Page:
-        self._browser = await self._pw.firefox.launch(headless=self._headless)
+        self._browser = await self._pw.chromium.launch(headless=self._headless)
         page = await self._browser.new_page()
         await self._login(page)
         await self._navigate_to_form(page)
@@ -36,7 +36,10 @@ class PortalSession:
 
     async def close(self) -> None:
         if self._browser:
-            await self._browser.close()
+            try:
+                await self._browser.close()
+            except PlaywrightError:
+                pass
             self._browser = None
 
     async def _login(self, page: Page) -> None:

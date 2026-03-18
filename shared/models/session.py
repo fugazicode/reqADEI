@@ -36,6 +36,8 @@ class FormSession:
     # Stores concatenated OCR text between extraction and parsing stages.
     raw_ocr_text: str = ""
 
+    tenant_image_bytes: bytes = field(default_factory=bytes)
+
     # Ordered field paths still awaiting user confirmation.
     confirmation_queue: list[str] = field(default_factory=list)
 

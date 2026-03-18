@@ -201,5 +201,5 @@ class IdParsingStage(PipelineStage):
             "tenant.address_verification_doc_type",
         ):
             PayloadAccessor.set(session.payload, "tenant.address_verification_doc_type", "Aadhar Card")
-
+        session.raw_ocr_text = ""
         return session

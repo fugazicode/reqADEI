@@ -6,7 +6,7 @@ import re
 import tempfile
 from datetime import date, datetime
 
-from playwright.async_api import Page
+from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from shared.models.form_payload import FormPayload
 
@@ -28,6 +28,192 @@ DISTRICT_VALUES: dict[str, str] = {
     "SOUTH WEST": "8171",
     "SOUTH-EAST": "8955",
     "WEST": "8170",
+}
+
+POLICE_STATION_VALUES: dict[str, str] = {
+    "ANAND PARBAT": "8162001",
+    "CHANDNI MAHAL": "8162008",
+    "D.B.G. ROAD": "8162038",
+    "DARYA GANJ": "8162010",
+    "EAST PAHARGANJ": "8162011",
+    "HAUZ QAZI": "8162015",
+    "I.P.ESTATE": "8162016",
+    "JAMA MASJID": "8162019",
+    "KAMLA MARKET": "8162023",
+    "KAROL BAGH": "8162026",
+    "NABI KARIM": "8162030",
+    "PAHAR GANJ": "8162041",
+    "PATEL NAGAR": "8162042",
+    "PRASAD NAGAR": "8162040",
+    "RAJINDER NAGAR": "8162045",
+    "RANJIT NAGAR": "8162056",
+    "BABA HARIDAS NAGAR": "8176009",
+    "BINDA PUR": "8176001",
+    "CHHAWALA": "8176007",
+    "DABRI": "8176002",
+    "DWARKA NORTH": "8176004",
+    "DWARKA SOUTH": "8176003",
+    "JAFFARPUR KALAN": "8176006",
+    "MOHAN GARDEN": "8176012",
+    "NAJAF GARH": "8176010",
+    "SECTOR 23 DWARKA": "8176005",
+    "UTTAM NAGAR": "8176008",
+    "GHAZIPUR": "8168010",
+    "KALYANPURI": "8168013",
+    "LAXMI NAGAR": "8168054",
+    "MADHU VIHAR": "8168023",
+    "MANDAWLI FAZAL PUR": "8168024",
+    "MAYUR VIHAR PH-I": "8168026",
+    "NEW ASHOK NAGAR": "8168028",
+    "PANDAV NAGAR": "8168050",
+    "PATPARGANJ INDUSTRIAL AREA": "8168053",
+    "PREET VIHAR": "8168030",
+    "SHAKARPUR": "8168052",
+    "DOMESTIC AIRPORT": "8169001",
+    "I.G.I.AIRPORT": "8169002",
+    "BARAKHAMBA ROAD": "8165002",
+    "CHANKYA PURI": "8165007",
+    "CONNAUGHT PLACE": "8165011",
+    "IITF,Pragati Maidan": "8165012",
+    "KARTAVYA PATH": "8165013",
+    "MANDIR MARG": "8165015",
+    "NORTH AVENUE": "8165038",
+    "PARLIAMENT STREET": "8165022",
+    "SOUTH AVENUE": "8165037",
+    "TILAK MARG": "8165035",
+    "TUGHLAK ROAD": "8165036",
+    "BARA HINDU RAO": "8166004",
+    "BURARI": "8166052",
+    "CIVIL LINES": "8166007",
+    "GULABI BAGH": "8166024",
+    "KASHMERI GATE": "8166016",
+    "KOTWALI": "8166018",
+    "LAHORI GATE": "8166023",
+    "MAURICE NAGAR": "8166010",
+    "ROOP NAGAR": "8166031",
+    "SADAR BAZAR": "8166038",
+    "SARAI ROHILLA": "8166039",
+    "SUBZI MANDI": "8166041",
+    "TIMARPUR": "8166051",
+    "WAZIRABAD": "8166054",
+    "BHAJAN PURA": "8173005",
+    "DAYAL PUR": "8173061",
+    "GOKUL PURI": "8173054",
+    "HARSH VIHAR": "8173055",
+    "JAFRABAD": "8173058",
+    "JYOTI NAGAR": "8173056",
+    "KARAWAL NAGAR": "8173016",
+    "KHAJURI KHAS": "8173015",
+    "NAND NAGRI": "8173025",
+    "NEW USMANPUR": "8173030",
+    "SEELAMPUR": "8173042",
+    "SHASTRI PARK": "8173060",
+    "SONIA VIHAR": "8173057",
+    "WELCOME": "8173045",
+    "ADARSH NAGAR": "8172003",
+    "ASHOK VIHAR": "8172006",
+    "BHARAT NAGAR": "8172007",
+    "JAHANGIR PURI": "8172014",
+    "KESHAV PURAM": "8172025",
+    "MAHENDRA PARK": "8172051",
+    "MAURYA ENCLAVE": "8172049",
+    "MODEL TOWN": "8172017",
+    "MUKHERJEE NAGAR": "8172030",
+    "SHALIMAR BAGH": "8172035",
+    "SUBHASH PLACE": "8172047",
+    "MANGOL PURI": "8174005",
+    "MUNDKA": "8174025",
+    "NANGLOI": "8174021",
+    "NIHAL VIHAR": "8174022",
+    "PASCHIM VIHAR EAST": "8174026",
+    "PASCHIM VIHAR WEST": "8174027",
+    "RAJ PARK": "8174029",
+    "RANHOLA": "8174020",
+    "RANI BAGH": "8174028",
+    "SULTANPURI": "8174011",
+    "ALIPUR": "8991006",
+    "BAWANA": "8991004",
+    "BHALSWA DAIRY": "8991003",
+    "NARELA": "8991007",
+    "NARELA INDUSTRIAL AREA": "8991001",
+    "SAMAIPUR BADLI": "8991008",
+    "SHAHBAD DAIRY": "8991005",
+    "SWAROOP NAGAR": "8991002",
+    "AMAN VIHAR": "8959016",
+    "BEGUM PUR": "8959003",
+    "BUDH VIHAR": "8959014",
+    "K.N. KATJU MARG": "8959007",
+    "KANJHAWALA": "8959015",
+    "NORTH ROHINI": "8959011",
+    "PRASHANT VIHAR": "8959008",
+    "PREM NAGAR": "8959013",
+    "SOUTH ROHINI": "8959010",
+    "VIJAY VIHAR": "8959009",
+    "ANAND VIHAR": "8957002",
+    "FARSH BAZAR": "8957006",
+    "G.T.B. ENCLAVE": "8957009",
+    "GANDHI NAGAR": "8957004",
+    "GEETA COLONY": "8957005",
+    "JAGAT PURI": "8957011",
+    "KRISHNA NAGAR": "8957003",
+    "MANSAROVAR PARK": "8957008",
+    "SEEMAPURI": "8957010",
+    "SHAHDARA": "8957007",
+    "VIVEK VIHAR": "8957001",
+    "AMBEDKAR NAGAR": "8167064",
+    "CHITRANJAN PARK": "8167062",
+    "DEFENCE COLONY": "8167010",
+    "FATEHPUR BERI": "8167012",
+    "GREATER KAILASH": "8167061",
+    "HAUZ KHAS": "8167017",
+    "K.M. PUR": "8167023",
+    "LODI COLONY": "8167028",
+    "MAIDAN GARHI": "8167066",
+    "MALVIYA NAGAR": "8167033",
+    "MEHRAULI": "8167032",
+    "NEB SARAI": "8167057",
+    "SAKET": "8167056",
+    "SANGAM VIHAR": "8167063",
+    "TIGRI": "8167067",
+    "DELHI CANTT": "8171011",
+    "KAPASHERA": "8171030",
+    "KISHAN GARH": "8171066",
+    "PALAM VILLAGE": "8171057",
+    "R. K. PURAM": "8171060",
+    "SAFDARJUNG ENCLAVE": "8171067",
+    "SAGAR PUR": "8171054",
+    "SAROJINI NAGAR": "8171068",
+    "SOUTH CAMPUS": "8171061",
+    "VASANT KUNJ NORTH": "8171062",
+    "VASANT KUNJ SOUTH": "8171063",
+    "VASANT VIHAR": "8171064",
+    "AMAR COLONY": "8955007",
+    "BADARPUR": "8955012",
+    "GOVIND PURI": "8955002",
+    "HAZARAT NIZAMUDDIN": "8955005",
+    "JAIT PUR": "8955001",
+    "JAMIA NAGAR": "8955004",
+    "KALANDI KUNJ": "8955019",
+    "KALKAJI": "8955009",
+    "LAJPAT NAGAR": "8955006",
+    "NEW FRIENDS COLONY": "8955003",
+    "OKHLA INDUSTRIAL AREA": "8955013",
+    "PUL PRAHLAD PUR": "8955017",
+    "SARITA VIHAR": "8955011",
+    "SHAHEEN BAGH": "8955020",
+    "SUNLIGHT COLONY": "8955016",
+    "HARI NAGAR": "8170015",
+    "INDER PURI": "8170064",
+    "JANAK PURI": "8170021",
+    "KHYALA": "8170062",
+    "KIRTI NAGAR": "8170025",
+    "MAYAPURI": "8170028",
+    "MOTI NAGAR": "8170029",
+    "NARAINA": "8170063",
+    "PUNJABI BAGH": "8170043",
+    "RAJOURI GARDEN": "8170037",
+    "TILAK NAGAR": "8170051",
+    "VIKASPURI": "8170060",
 }
 
 STATE_VALUES: dict[str, str] = {
@@ -78,6 +264,7 @@ class FormFiller:
         self._logger = logging.getLogger(__name__)
 
     async def fill(self, image_bytes: bytes) -> str:
+        await self._setup_ajax_csrf()
         await self._fill_owner_tab()
         await self._fill_tenant_personal_tab()
         await self._navigate_to_address_subtab()
@@ -101,7 +288,7 @@ class FormFiller:
         await self._page.wait_for_selector(
             f'[name="{visible_field_name}"]',
             state="visible",
-            timeout=10000,
+            timeout=30000,
         )
 
     async def _navigate_to_address_subtab(self) -> None:
@@ -114,7 +301,7 @@ class FormFiller:
         await self._page.wait_for_selector(
             "text=Tenanted Premises Address",
             state="visible",
-            timeout=10000,
+            timeout=30000,
         )
 
     async def _fill_text(self, field_name: str, value: str | None) -> None:
@@ -134,41 +321,50 @@ class FormFiller:
                 field_name,
             )
 
-    async def _select_state(self, field_name: str, state_label: str) -> None:
-        """
-        Selects a state by value using STATE_VALUES lookup.
-        After selection, waits for the district dropdown to repopulate
-        because the portal's JavaScript reloads district options on state change.
-        The district field name is inferred from the state field name by convention.
-        """
-        state_value = STATE_VALUES.get(state_label.upper())
-        if not state_value:
-            self._logger.warning(
-                "Unknown state '%s' — attempting label fallback",
-                state_label,
+    async def _setup_ajax_csrf(self) -> None:
+        async def inject_csrf(route, request) -> None:
+            token = await self._page.evaluate(
+                """
+                () => decodeURIComponent(
+                    document.cookie
+                        .split('; ')
+                        .find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] || ''
+                )
+                """
             )
-            await self._select_by_label(field_name, state_label)
-        else:
-            await self._page.select_option(
-                f'[name="{field_name}"]',
-                value=state_value,
-            )
+            headers = {**request.headers, "X-XSRF-TOKEN": token}
+            await route.continue_(headers=headers)
 
-        # Derive the district field name from the state field name.
-        # Convention: ownerState → ownerDistrict
-        #             tenantPresentState → tenantPresentDistrict
-        #             tenantPermanentState → tenantPermanentDistrict
-        district_field = field_name.replace("State", "District")
+        await self._page.route("**/getdistricts.htm", inject_csrf)
+        await self._page.route("**/getpolicestations.htm", inject_csrf)
+
+    async def _js_select(self, field_name: str, value: str) -> None:
+        await self._page.evaluate(
+            """([name, val]) => {
+                console.log('js_select', name, val);
+                const el = document.querySelector('[name="' + name + '"]');
+                if (!el) throw new Error('Element not found: ' + name);
+                el.value = val;
+                if (typeof jQuery !== 'undefined') {
+                    jQuery(el).trigger('change');
+                } else {
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }""",
+            [field_name, value],
+        )
+
+    async def _wait_for_options(self, field_name: str, timeout: int = 20000) -> bool:
         try:
             await self._page.wait_for_function(
-                f"document.querySelector('[name=\"{district_field}\"]').options.length > 1",
-                timeout=10000,
+                f"document.querySelector('[name=\"{field_name}\"]') && "
+                f"document.querySelector('[name=\"{field_name}\"]').options.length > 1",
+                timeout=timeout,
             )
+            return True
         except Exception:
-            self._logger.warning(
-                "District dropdown '%s' did not repopulate after state selection",
-                district_field,
-            )
+            self._logger.warning("Options for '%s' did not populate in time", field_name)
+            return False
 
     async def _select_district_and_station(
         self,
@@ -182,45 +378,64 @@ class FormFiller:
         if not district:
             return
 
-        async with self._page.expect_response(
-            lambda r: "getpolicestations" in r.url,
-            timeout=15000,
-        ) as response_info:
-            district_value = DISTRICT_VALUES.get(district)
-            if not district_value:
-                self._logger.warning(
-                    "Unknown district '%s' — attempting label fallback",
-                    district,
-                )
-                await self._page.select_option(
-                    f'[name="{district_field}"]',
-                    label=district,
-                )
-            else:
-                await self._page.select_option(
-                    f'[name="{district_field}"]',
-                    value=district_value,
-                )
+        district_value = DISTRICT_VALUES.get(district)
+        if not district_value:
+            self._logger.warning("Unknown district '%s' — skipping", district)
+            return
 
-        await response_info.value
+        station_value = None
+        if station:
+            station_value = POLICE_STATION_VALUES.get(station.upper())
 
-        await self._page.wait_for_function(
-            f"document.querySelector('[name=\"{station_field}\"]').options.length > 1",
-            timeout=10000,
-        )
+        try:
+            async with self._page.expect_response(
+                lambda r: "getpolicestations" in r.url,
+                    timeout=30000,
+            ) as response_info:
+                await self._js_select(district_field, district_value)
+
+            await response_info.value
+        except PlaywrightTimeoutError:
+            self._logger.warning(
+                "District selection did not trigger station load for '%s'",
+                district,
+            )
+            await self._page.evaluate(
+                """([hiddenDistrict, hiddenStation, districtVal, stationVal]) => {
+                    const d = document.querySelector('[name="' + hiddenDistrict + '"]');
+                    const s = document.querySelector('[name="' + hiddenStation + '"]');
+                    if (d) d.value = districtVal || '';
+                    if (s) s.value = stationVal || '';
+                }""",
+                [
+                    hidden_district_field,
+                    hidden_station_field,
+                    district_value,
+                    station_value,
+                ],
+            )
+            return
+
+        if not await self._wait_for_options(station_field):
+            if district:
+                await self._select_by_label(district_field, district)
+                await self._wait_for_options(station_field)
 
         if station:
-            await self._page.select_option(
-                f'[name="{station_field}"]',
-                label=station,
-            )
+            if station_value:
+                await self._js_select(station_field, station_value)
+            else:
+                self._logger.warning(
+                    "Unknown station '%s' — attempting label fallback",
+                    station,
+                )
+                await self._select_by_label(station_field, station)
 
         hidden_d = await self._page.input_value(f'[name="{hidden_district_field}"]')
         hidden_s = await self._page.input_value(f'[name="{hidden_station_field}"]')
         if not hidden_d or not hidden_s:
             self._logger.warning(
-                "Hidden fields not populated after district/station selection — "
-                "district_field=%s hidden_district=%s hidden_station=%s",
+                "Hidden fields not populated — district_field=%s hidden_district=%s hidden_station=%s",
                 district_field,
                 hidden_d,
                 hidden_s,
@@ -259,8 +474,14 @@ class FormFiller:
             "tenantPresentPincode",
             self._payload.tenant.tenanted_address.pincode,
         )
-        await self._select_by_label("tenantPresentCountry", "INDIA")
-        await self._select_state("tenantPresentState", "DELHI")
+        await self._js_select("tenantPresentCountry", "80")
+        if not await self._wait_for_options("tenantPresentState"):
+            await self._select_by_label("tenantPresentCountry", "INDIA")
+            await self._wait_for_options("tenantPresentState")
+        await self._js_select("tenantPresentState", "8")
+        if not await self._wait_for_options("tenantPresentDistrict"):
+            await self._select_by_label("tenantPresentState", "DELHI")
+            await self._wait_for_options("tenantPresentDistrict")
 
         await self._select_district_and_station(
             self._payload.tenant.tenanted_address.district,
@@ -304,13 +525,25 @@ class FormFiller:
             "tenantPermanentPincode",
             self._payload.tenant.address.pincode,
         )
-        await self._select_by_label("tenantPermanentCountry", "INDIA")
-
+        await self._js_select("tenantPermanentCountry", "80")
+        if not await self._wait_for_options("tenantPermanentState"):
+            await self._select_by_label("tenantPermanentCountry", "INDIA")
+            await self._wait_for_options("tenantPermanentState")
         if self._payload.tenant.address.state:
-            await self._select_state(
-                "tenantPermanentState",
-                self._payload.tenant.address.state,
-            )
+            state_value = STATE_VALUES.get(self._payload.tenant.address.state.upper())
+            if state_value:
+                await self._js_select("tenantPermanentState", state_value)
+                if not await self._wait_for_options("tenantPermanentDistrict"):
+                    await self._select_by_label(
+                        "tenantPermanentState",
+                        self._payload.tenant.address.state,
+                    )
+                    await self._wait_for_options("tenantPermanentDistrict")
+            else:
+                self._logger.warning(
+                    "Unknown permanent address state '%s' — skipping",
+                    self._payload.tenant.address.state,
+                )
 
         if self._payload.tenant.address.district:
             await self._select_district_and_station(
@@ -323,11 +556,17 @@ class FormFiller:
             )
 
     async def _fill_owner_tab(self) -> None:
+        self._page.on(
+            "response",
+            lambda r: print(f"RESPONSE {r.status} {r.url}")
+            if "getdistricts" in r.url or "getpolicestations" in r.url
+            else None,
+        )
         await self._page.click("text=Owner Information")
         await self._page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",
-            timeout=15000,
+            timeout=30000,
         )
 
         await self._fill_text("ownerFirstName", self._payload.owner.first_name)
@@ -366,8 +605,14 @@ class FormFiller:
                 "ownerPincode",
                 self._payload.owner.address.pincode,
             )
-            await self._select_by_label("ownerCountry", "INDIA")
-            await self._select_state("ownerState", "DELHI")
+            await self._js_select("ownerCountry", "80")
+            if not await self._wait_for_options("ownerState"):
+                await self._select_by_label("ownerCountry", "INDIA")
+                await self._wait_for_options("ownerState")
+            await self._js_select("ownerState", "8")
+            if not await self._wait_for_options("ownerDistrict"):
+                await self._select_by_label("ownerState", "DELHI")
+                await self._wait_for_options("ownerDistrict")
             await self._select_district_and_station(
                 self._payload.owner.address.district,
                 self._payload.owner.address.police_station,
@@ -382,7 +627,7 @@ class FormFiller:
         await self._page.wait_for_selector(
             '[name="tenantFirstName"]',
             state="visible",
-            timeout=15000,
+            timeout=30000,
         )
 
         await self._fill_text("tenantFirstName", self._payload.tenant.first_name)
@@ -437,7 +682,7 @@ class FormFiller:
 
     async def _fill_family_member_tab(self) -> None:
         await self._page.click("text=Family Member Information")
-        await self._page.wait_for_selector("#rbno", state="visible", timeout=10000)
+        await self._page.wait_for_selector("#rbno", state="visible", timeout=30000)
         await self._page.click("#rbno")
 
     async def _fill_document_upload(self, image_bytes: bytes) -> None:
@@ -452,14 +697,14 @@ class FormFiller:
             await self._page.set_input_files("#fileField2", tmp.name)
             await self._page.wait_for_selector(
                 "#fileField2 ~ table tbody tr",
-                timeout=15000,
+                timeout=30000,
             )
         finally:
             os.unlink(tmp.name)
 
     async def _fill_affidavit_tab(self) -> None:
         await self._page.click("text=Affidavit")
-        await self._page.wait_for_selector("#allTrue", state="visible", timeout=10000)
+        await self._page.wait_for_selector("#allTrue", state="visible", timeout=30000)
         await self._page.click("#hasAnyCriminalRecord1")
         await self._page.check("#allTrue")
         is_checked = await self._page.is_checked("#allTrue")
@@ -477,7 +722,7 @@ class FormFiller:
 
         await self._page.wait_for_selector(
             "text=Please Wait, Processing Data",
-            timeout=15000,
+            timeout=30000,
         )
         await self._page.wait_for_selector(
             "text=Please Wait, Processing Data",

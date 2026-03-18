@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from aiogram import Bot
 from playwright.async_api import Playwright, async_playwright
 
+from features.submission.form_filler import FormFiller
+from features.submission.portal_session import PortalSession
 from shared.models.form_payload import FormPayload
 
 LOGGER = logging.getLogger(__name__)
@@ -52,4 +54,19 @@ class SubmissionWorker:
                     self._queue.task_done()
 
     async def _process_job(self, job: SubmissionJob, pw: Playwright) -> None:
-        raise NotImplementedError
+        session = PortalSession(self._username, self._password, pw)
+        try:
+            page = await session.open()
+            filler = FormFiller(page, job.payload)
+            request_number = await filler.fill(job.image_bytes)
+            await self._bot.send_message(
+                job.telegram_user_id,
+                f"✅ Submitted. Request Number: {request_number}",
+            )
+        except Exception as exc:
+            await self._bot.send_message(
+                job.telegram_user_id,
+                f"❌ Submission failed: {exc}",
+            )
+        finally:
+            await session.close()
