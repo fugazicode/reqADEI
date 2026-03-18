@@ -13,6 +13,8 @@ class Settings:
     groq_api_key: str
     groq_model: str
     log_level: str
+    portal_username: str
+    portal_password: str
 
 
 
@@ -24,4 +26,6 @@ def load_settings() -> Settings:
         groq_api_key=os.getenv("GROQ_API_KEY", ""),
         groq_model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        portal_username=os.getenv("PORTAL_USERNAME", ""),
+        portal_password=os.getenv("PORTAL_PASSWORD", ""),
     )
