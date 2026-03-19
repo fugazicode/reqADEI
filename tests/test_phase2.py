@@ -1,6 +1,11 @@
 # Run order: test_phase1 → test_phase2 → test_phase3_tenant → test_phase4_addresses → test_full_fill
 # Do not skip ahead. Each phase depends on the previous one passing.
 
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+
 import asyncio
 import os
 import traceback
@@ -39,16 +44,15 @@ async def main() -> None:
             await filler._fill_owner_tab()
             print("Owner tab fill completed.")
 
-            hidden_district = await page.input_value('[name="hiddenownerDistrict"]')
-            hidden_station = await page.input_value('[name="hiddenownerPStation"]')
-            print(f"hiddenownerDistrict = '{hidden_district}'")
-            print(f"hiddenownerPStation  = '{hidden_station}'")
+            district_value = await page.input_value('[name="ownerDistrict"]')
+            station_value = await page.input_value('[name="ownerPoliceStation"]')
+            print(f"ownerDistrict = '{district_value}'")
+            print(f"ownerPoliceStation  = '{station_value}'")
 
-            if hidden_district and hidden_station:
-                print("HIDDEN FIELDS OK — JavaScript sync confirmed working")
+            if district_value and district_value != "0" and station_value and station_value != "0":
+                print("CASCADE OK — district and police station populated")
             else:
-                print("WARNING — one or both hidden fields are empty")
-                print("This means the district/station JavaScript sync did not fire.")
+                print("WARNING — district or police station is empty")
                 print("Check _select_district_and_station in form_filler.py.")
         except Exception:
             print("FAILED")

@@ -407,17 +407,23 @@ class FormFiller:
         )
 
     async def _js_select(self, field_name: str, value: str) -> None:
+        """Set a <select> value by option-value and fire its change event.
+
+        Raises ValueError if the option is not currently in the dropdown.
+        """
         await self._page.evaluate(
             """([name, val]) => {
-                console.log('js_select', name, val);
                 const el = document.querySelector('[name="' + name + '"]');
                 if (!el) throw new Error('Element not found: ' + name);
                 el.value = val;
-                if (typeof jQuery !== 'undefined') {
-                    jQuery(el).trigger('change');
-                } else {
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                if (el.value !== val) {
+                    const available = Array.from(el.options).map(o => o.value).join(', ');
+                    throw new Error(
+                        'Option "' + val + '" not present in <select name="' + name + '">. ' +
+                        'Available values: [' + available + ']'
+                    );
                 }
+                el.dispatchEvent(new Event('change', { bubbles: true }));
             }""",
             [field_name, value],
         )
@@ -547,14 +553,6 @@ class FormFiller:
             "tenantPresentPincode",
             self._payload.tenant.tenanted_address.pincode,
         )
-        await self._js_select("tenantPresentCountry", "80")
-        if not await self._wait_for_options("tenantPresentState"):
-            await self._select_by_label("tenantPresentCountry", "INDIA")
-            await self._wait_for_options("tenantPresentState")
-        await self._js_select("tenantPresentState", "8")
-        if not await self._wait_for_options("tenantPresentDistrict"):
-            await self._select_by_label("tenantPresentState", "DELHI")
-            await self._wait_for_options("tenantPresentDistrict")
 
         await self._select_district_and_station(
             self._payload.tenant.tenanted_address.district,
@@ -598,10 +596,6 @@ class FormFiller:
             "tenantPermanentPincode",
             self._payload.tenant.address.pincode,
         )
-        await self._js_select("tenantPermanentCountry", "80")
-        if not await self._wait_for_options("tenantPermanentState"):
-            await self._select_by_label("tenantPermanentCountry", "INDIA")
-            await self._wait_for_options("tenantPermanentState")
         if self._payload.tenant.address.state:
             state_value = STATE_VALUES.get(self._payload.tenant.address.state.upper())
             if state_value:
@@ -632,6 +626,7 @@ class FormFiller:
         if not getattr(self, "_csrf_setup_done", False):
             await self._setup_ajax_csrf()
             self._csrf_setup_done = True
+
         await self._page.click("text=Owner Information")
         await self._page.wait_for_selector(
             '[name="ownerFirstName"]',
@@ -644,156 +639,43 @@ class FormFiller:
         await self._fill_text("ownerLastName", self._payload.owner.last_name)
         await self._fill_text("ownerRelativeName", self._payload.owner.relative_name)
         await self._select_by_label("ownerOccupation", self._payload.owner.occupation)
-        await self._select_by_label(
-            "ownerRelationType",
-            self._payload.owner.relation_type,
-        )
+        await self._select_by_label("ownerRelationType", self._payload.owner.relation_type)
         await self._fill_text("ownerMobile1", self._payload.owner.mobile_no)
 
-        if self._payload.owner.address:
-            async def _read_select_options(field_name: str) -> dict[str, object]:
-                return await self._page.evaluate(
-                    """(name) => {
-                        const el = document.querySelector('[name="' + name + '"]');
-                        if (!el) return { count: 0, values: [], options: [] };
-                        const options = Array.from(el.options).map(o => ({
-                            value: o.value,
-                            label: (o.textContent || '').trim()
-                        }));
-                        return {
-                            count: el.options.length,
-                            values: options.map(o => o.value),
-                            options
-                        };
-                    }""",
-                    field_name,
-                )
+        if not self._payload.owner.address:
+            return
 
-            async def _read_select_value(field_name: str) -> str:
-                return await self._page.evaluate(
-                    """(name) => {
-                        const el = document.querySelector('[name="' + name + '"]');
-                        return el ? el.value : '';
-                    }""",
-                    field_name,
-                )
+        await self._fill_text("ownerHouseNo", self._payload.owner.address.house_no)
+        await self._fill_text(
+            "ownerStreetName",
+            self._payload.owner.address.street_name,
+        )
+        await self._fill_text(
+            "ownerColony",
+            self._payload.owner.address.colony_locality_area,
+        )
+        await self._fill_text(
+            "ownerVillage",
+            self._payload.owner.address.village_town_city,
+        )
+        await self._fill_text(
+            "ownerTehsil",
+            self._payload.owner.address.tehsil_block_mandal,
+        )
+        await self._fill_text("ownerPincode", self._payload.owner.address.pincode)
 
-            async def _attach_next_getdistricts_body_log() -> None:
-                def _handler(request) -> None:
-                    if "getdistricts" not in request.url:
-                        return
-                    try:
-                        body = request.post_data or ""
-                        print(f"[DIAG] getdistricts POST body: {body}")
-                    finally:
-                        self._page.off("request", _handler)
+        # Country/state are pre-selected in static HTML (India/Delhi).
+        # Changing either triggers checkForOtherCountry and clears downstream selects.
+        # Leave them untouched to preserve district/station options.
 
-                self._page.on("request", _handler)
-
-            await self._fill_text(
-                "ownerHouseNo",
-                self._payload.owner.address.house_no,
-            )
-            await self._fill_text(
-                "ownerStreetName",
-                self._payload.owner.address.street_name,
-            )
-            await self._fill_text(
-                "ownerColony",
-                self._payload.owner.address.colony_locality_area,
-            )
-            await self._fill_text(
-                "ownerVillage",
-                self._payload.owner.address.village_town_city,
-            )
-            await self._fill_text(
-                "ownerTehsil",
-                self._payload.owner.address.tehsil_block_mandal,
-            )
-            await self._fill_text(
-                "ownerPincode",
-                self._payload.owner.address.pincode,
-            )
-            owner_state_start = await _read_select_options("ownerState")
-            print(
-                "[DIAG] ownerState options at start: "
-                f"{owner_state_start['count']} options, values: {owner_state_start['values']}"
-            )
-
-            owner_state_preloaded = owner_state_start["count"] > 1
-            if not owner_state_preloaded:
-                await self._js_select("ownerCountry", "80")
-                if not await self._wait_for_options("ownerState"):
-                    print(
-                        "[DIAG] ownerState options did not appear after country selection"
-                    )
-                    owner_state_after_country = await _read_select_options("ownerState")
-                    print(
-                        "[DIAG] ownerState options after country selection: "
-                        f"{owner_state_after_country['count']} options, values: "
-                        f"{owner_state_after_country['values']}"
-                    )
-                    await self._select_by_label("ownerCountry", "INDIA")
-                    await self._wait_for_options("ownerState")
-
-            owner_state_check = await self._page.evaluate(
-                """() => {
-                    const el = document.querySelector('[name="ownerState"]');
-                    if (!el) return { exists: false, total: 0, options: [] };
-                    const options = Array.from(el.options).map(o => ({
-                        value: o.value,
-                        label: (o.textContent || '').trim()
-                    }));
-                    return {
-                        exists: options.some(o => o.value === '8'),
-                        total: options.length,
-                        options
-                    };
-                }"""
-            )
-            print(
-                '[DIAG] ownerState option "8" exists: '
-                f"{owner_state_check['exists']}, total options: {owner_state_check['total']}"
-            )
-            if not owner_state_check["exists"]:
-                print(
-                    f"[DIAG] ownerState option values/labels: {owner_state_check['options']}"
-                )
-                await self._select_by_label("ownerState", "DELHI")
-                owner_state_value = await _read_select_value("ownerState")
-                print(
-                    f"[DIAG] ownerState value after label select: '{owner_state_value}'"
-                )
-                if owner_state_value:
-                    STATE_VALUES["DELHI"] = owner_state_value
-            else:
-                await self._js_select("ownerState", "8")
-                owner_state_value = await _read_select_value("ownerState")
-                print(
-                    f"[DIAG] ownerState value after js_select: '{owner_state_value}'"
-                )
-                if owner_state_value != "8":
-                    await self._select_by_label("ownerState", "DELHI")
-                    owner_state_label_value = await _read_select_value("ownerState")
-                    print(
-                        "[DIAG] ownerState value after label select: "
-                        f"'{owner_state_label_value}'"
-                    )
-                    if owner_state_label_value:
-                        STATE_VALUES["DELHI"] = owner_state_label_value
-
-            await _attach_next_getdistricts_body_log()
-            if not await self._wait_for_options("ownerDistrict"):
-                await self._select_by_label("ownerState", "DELHI")
-                await self._wait_for_options("ownerDistrict")
-            await self._select_district_and_station(
-                self._payload.owner.address.district,
-                self._payload.owner.address.police_station,
-                "ownerDistrict",
-                "ownerPoliceStation",
-                "hiddenownerDistrict",
-                "hiddenownerPStation",
-            )
+        await self._select_district_and_station(
+            self._payload.owner.address.district,
+            self._payload.owner.address.police_station,
+            "ownerDistrict",
+            "ownerPoliceStation",
+            "hiddenownerDistrict",
+            "hiddenownerPStation",
+        )
 
     async def _fill_tenant_personal_tab(self) -> None:
         await self._page.click("text=Tenant Information")
