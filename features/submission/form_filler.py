@@ -331,17 +331,37 @@ class FormFiller:
         )
         print(f"[CSRF] Initial token: '{token}'")
         if not token:
-            self._logger.warning("[CSRF] No XSRF-TOKEN cookie at setup time")
+            self._logger.warning(
+                "[CSRF] WARNING — token empty at setup time, will retry per-request"
+            )
 
-        self._page.on(
-            "response",
-            lambda r: print(f"[CSRF] RESPONSE {r.status} {r.url}")
-            if any(x in r.url for x in ["getstates", "getdistricts", "getpolicestations"])
-            else None,
-        )
+        def _response_handler(response) -> None:
+            try:
+                if any(
+                    key in response.url
+                    for key in ["getstates", "getdistricts", "getpolicestations"]
+                ):
+                    print(f"[CSRF] RESPONSE {response.status} {response.url}")
+            except Exception as exc:
+                self._logger.warning(
+                    "[CSRF] WARNING — response handler error: %s",
+                    exc,
+                )
+
+        self._page.on("response", _response_handler)
 
         async def inject_csrf(route, request) -> None:
             try:
+                if self._page.is_closed():
+                    try:
+                        await route.continue_()
+                    except Exception as exc:
+                        self._logger.warning(
+                            "[CSRF] ERROR — route.continue_() failed: %s",
+                            exc,
+                        )
+                    return
+
                 live_token = await self._page.evaluate(
                     """() => {
                         const raw = document.cookie.split('; ')
@@ -351,19 +371,40 @@ class FormFiller:
                     }"""
                 )
                 print(f"[CSRF] Injecting token '{live_token}' for {request.url}")
-                await route.continue_(headers={**request.headers, "X-XSRF-TOKEN": live_token})
+                if "getpolicestations" in request.url:
+                    print("[CSRF] Station request firing")
+
+                if not live_token:
+                    print(
+                        f"[CSRF] WARNING — token empty at intercept time for {request.url}, "
+                        "continuing without header"
+                    )
+                    await route.continue_()
+                    return
+
+                headers = dict(request.headers)
+                headers["X-XSRF-TOKEN"] = live_token
+                await route.continue_(headers=headers)
             except Exception as exc:
                 self._logger.warning(
-                    "[CSRF] Route handler failed for %s: %s — continuing without token",
+                    "[CSRF] ERROR — route handler failed for %s: %s",
                     request.url,
                     exc,
                 )
-                await route.continue_()
+                try:
+                    await route.continue_()
+                except Exception as nested_exc:
+                    self._logger.warning(
+                        "[CSRF] ERROR — route.continue_() also failed: %s",
+                        nested_exc,
+                    )
 
         await self._page.route("**/getstates.htm", inject_csrf)
         await self._page.route("**/getdistricts.htm", inject_csrf)
         await self._page.route("**/getpolicestations.htm", inject_csrf)
-        print("[CSRF] Interceptors registered for getstates, getdistricts, getpolicestations")
+        print(
+            "[CSRF] Interceptors registered for getstates, getdistricts, getpolicestations"
+        )
 
     async def _js_select(self, field_name: str, value: str) -> None:
         await self._page.evaluate(
@@ -610,6 +651,45 @@ class FormFiller:
         await self._fill_text("ownerMobile1", self._payload.owner.mobile_no)
 
         if self._payload.owner.address:
+            async def _read_select_options(field_name: str) -> dict[str, object]:
+                return await self._page.evaluate(
+                    """(name) => {
+                        const el = document.querySelector('[name="' + name + '"]');
+                        if (!el) return { count: 0, values: [], options: [] };
+                        const options = Array.from(el.options).map(o => ({
+                            value: o.value,
+                            label: (o.textContent || '').trim()
+                        }));
+                        return {
+                            count: el.options.length,
+                            values: options.map(o => o.value),
+                            options
+                        };
+                    }""",
+                    field_name,
+                )
+
+            async def _read_select_value(field_name: str) -> str:
+                return await self._page.evaluate(
+                    """(name) => {
+                        const el = document.querySelector('[name="' + name + '"]');
+                        return el ? el.value : '';
+                    }""",
+                    field_name,
+                )
+
+            async def _attach_next_getdistricts_body_log() -> None:
+                def _handler(request) -> None:
+                    if "getdistricts" not in request.url:
+                        return
+                    try:
+                        body = request.post_data or ""
+                        print(f"[DIAG] getdistricts POST body: {body}")
+                    finally:
+                        self._page.off("request", _handler)
+
+                self._page.on("request", _handler)
+
             await self._fill_text(
                 "ownerHouseNo",
                 self._payload.owner.address.house_no,
@@ -634,11 +714,75 @@ class FormFiller:
                 "ownerPincode",
                 self._payload.owner.address.pincode,
             )
-            await self._js_select("ownerCountry", "80")
-            if not await self._wait_for_options("ownerState"):
-                await self._select_by_label("ownerCountry", "INDIA")
-                await self._wait_for_options("ownerState")
-            await self._js_select("ownerState", "8")
+            owner_state_start = await _read_select_options("ownerState")
+            print(
+                "[DIAG] ownerState options at start: "
+                f"{owner_state_start['count']} options, values: {owner_state_start['values']}"
+            )
+
+            owner_state_preloaded = owner_state_start["count"] > 1
+            if not owner_state_preloaded:
+                await self._js_select("ownerCountry", "80")
+                if not await self._wait_for_options("ownerState"):
+                    print(
+                        "[DIAG] ownerState options did not appear after country selection"
+                    )
+                    owner_state_after_country = await _read_select_options("ownerState")
+                    print(
+                        "[DIAG] ownerState options after country selection: "
+                        f"{owner_state_after_country['count']} options, values: "
+                        f"{owner_state_after_country['values']}"
+                    )
+                    await self._select_by_label("ownerCountry", "INDIA")
+                    await self._wait_for_options("ownerState")
+
+            owner_state_check = await self._page.evaluate(
+                """() => {
+                    const el = document.querySelector('[name="ownerState"]');
+                    if (!el) return { exists: false, total: 0, options: [] };
+                    const options = Array.from(el.options).map(o => ({
+                        value: o.value,
+                        label: (o.textContent || '').trim()
+                    }));
+                    return {
+                        exists: options.some(o => o.value === '8'),
+                        total: options.length,
+                        options
+                    };
+                }"""
+            )
+            print(
+                '[DIAG] ownerState option "8" exists: '
+                f"{owner_state_check['exists']}, total options: {owner_state_check['total']}"
+            )
+            if not owner_state_check["exists"]:
+                print(
+                    f"[DIAG] ownerState option values/labels: {owner_state_check['options']}"
+                )
+                await self._select_by_label("ownerState", "DELHI")
+                owner_state_value = await _read_select_value("ownerState")
+                print(
+                    f"[DIAG] ownerState value after label select: '{owner_state_value}'"
+                )
+                if owner_state_value:
+                    STATE_VALUES["DELHI"] = owner_state_value
+            else:
+                await self._js_select("ownerState", "8")
+                owner_state_value = await _read_select_value("ownerState")
+                print(
+                    f"[DIAG] ownerState value after js_select: '{owner_state_value}'"
+                )
+                if owner_state_value != "8":
+                    await self._select_by_label("ownerState", "DELHI")
+                    owner_state_label_value = await _read_select_value("ownerState")
+                    print(
+                        "[DIAG] ownerState value after label select: "
+                        f"'{owner_state_label_value}'"
+                    )
+                    if owner_state_label_value:
+                        STATE_VALUES["DELHI"] = owner_state_label_value
+
+            await _attach_next_getdistricts_body_log()
             if not await self._wait_for_options("ownerDistrict"):
                 await self._select_by_label("ownerState", "DELHI")
                 await self._wait_for_options("ownerDistrict")
