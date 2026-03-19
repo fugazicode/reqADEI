@@ -1,6 +1,11 @@
 # Run order: test_phase1 → test_phase2 → test_phase3_tenant → test_phase4_addresses → test_full_fill
 # Do not skip ahead. Each phase depends on the previous one passing.
 
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+
 import asyncio
 import os
 import traceback
