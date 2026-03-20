@@ -599,13 +599,25 @@ class FormFiller:
         if self._payload.tenant.address.state:
             state_value = STATE_VALUES.get(self._payload.tenant.address.state.upper())
             if state_value:
-                await self._js_select("tenantPermanentState", state_value)
-                if not await self._wait_for_options("tenantPermanentDistrict"):
-                    await self._select_by_label(
-                        "tenantPermanentState",
+                try:
+                    async with self._page.expect_response(
+                        lambda r: "getdistricts" in r.url,
+                        timeout=15000,
+                    ) as response_info:
+                        await self._js_select("tenantPermanentState", state_value)
+                    await response_info.value
+                    await self._wait_for_options("tenantPermanentDistrict")
+                except PlaywrightTimeoutError:
+                    self._logger.warning(
+                        "State selection did not trigger district load for '%s'",
                         self._payload.tenant.address.state,
                     )
-                    await self._wait_for_options("tenantPermanentDistrict")
+                    if not await self._wait_for_options("tenantPermanentDistrict"):
+                        await self._select_by_label(
+                            "tenantPermanentState",
+                            self._payload.tenant.address.state,
+                        )
+                        await self._wait_for_options("tenantPermanentDistrict")
             else:
                 self._logger.warning(
                     "Unknown permanent address state '%s' — skipping",
@@ -620,8 +632,27 @@ class FormFiller:
                     self._payload.tenant.address.district,
                 )
                 return
-            await self._js_select("tenantPermanentDistrict", district_value)
-            await self._wait_for_options("tenantPermanentPoliceStation")
+
+            try:
+                async with self._page.expect_response(
+                    lambda r: "getpolicestations" in r.url,
+                    timeout=15000,
+                ) as response_info:
+                    await self._js_select("tenantPermanentDistrict", district_value)
+
+                await response_info.value
+            except PlaywrightTimeoutError:
+                self._logger.warning(
+                    "District selection did not trigger station load for '%s'",
+                    self._payload.tenant.address.district,
+                )
+
+            if not await self._wait_for_options("tenantPermanentPoliceStation"):
+                self._logger.warning(
+                    "Police stations did not populate for '%s'",
+                    self._payload.tenant.address.district,
+                )
+
             if self._payload.tenant.address.police_station:
                 station_value = POLICE_STATION_VALUES.get(self._payload.tenant.address.police_station.upper())
                 if station_value:
