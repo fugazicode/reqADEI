@@ -296,7 +296,7 @@ class FormFiller:
         Waits for the Tenanted Premises Address button to be visible
         as confirmation that the Address sub-tab content has loaded.
         """
-        await self._page.click("text=Address")
+        await self._page.click('[href="javascript:TabView.switchTab(1,1);"]')
         await self._page.wait_for_selector(
             "text=Tenanted Premises Address",
             state="visible",
