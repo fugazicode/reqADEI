@@ -613,14 +613,28 @@ class FormFiller:
                 )
 
         if self._payload.tenant.address.district:
-            await self._select_district_and_station(
-                self._payload.tenant.address.district,
-                self._payload.tenant.address.police_station,
-                "tenantPermanentDistrict",
-                "tenantPermanentPoliceStation",
-                "hidtenantPermtDistrict",
-                "hidtenantPermPStation",
-            )
+            district_value = DISTRICT_VALUES.get(self._payload.tenant.address.district.upper())
+            if not district_value:
+                self._logger.warning(
+                    "Unknown permanent address district '%s' — skipping",
+                    self._payload.tenant.address.district,
+                )
+                return
+            await self._js_select("tenantPermanentDistrict", district_value)
+            await self._wait_for_options("tenantPermanentPoliceStation")
+            if self._payload.tenant.address.police_station:
+                station_value = POLICE_STATION_VALUES.get(self._payload.tenant.address.police_station.upper())
+                if station_value:
+                    await self._js_select("tenantPermanentPoliceStation", station_value)
+                else:
+                    self._logger.warning(
+                        "Unknown permanent address police station '%s' — fallback to label select",
+                        self._payload.tenant.address.police_station,
+                    )
+                    await self._select_by_label(
+                        "tenantPermanentPoliceStation",
+                        self._payload.tenant.address.police_station,
+                    )
 
     async def _fill_owner_tab(self) -> None:
         if not getattr(self, "_csrf_setup_done", False):

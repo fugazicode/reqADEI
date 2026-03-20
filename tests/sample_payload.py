@@ -32,15 +32,15 @@ def make_sample_payload() -> FormPayload:
     )
 
     tenant_address_permanent = AddressData(
-        house_no="TC 12/445",
-        street_name="Manacaud",
-        colony_locality_area="Pattom",
-        village_town_city="Thiruvananthapuram",
+        house_no="B-22",
+        street_name="Saket Main Road",
+        colony_locality_area="Saket",
+        village_town_city="New Delhi",
         tehsil_block_mandal=None,
-        district=None,
-        police_station=None,
-        pincode="695004",
-        state="Kerala",
+        district="SOUTH",
+        police_station="SAKET",
+        pincode="110017",
+        state="DELHI",
         country="INDIA",
     )
 
