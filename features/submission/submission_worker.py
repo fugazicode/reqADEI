@@ -26,7 +26,7 @@ import time
 from aiogram.types import BufferedInputFile, LabeledPrice, Message, SuccessfulPayment
 from aiogram.fsm.storage.base import StorageKey
 from shared.config import Settings
-from infrastructure.refund_ledger import RefundLedger
+from infrastructure.refund_ledger import RefundLedger, RefundEntry
 from utils.watermark import apply_watermark
 from features.submission.states import SubmissionStates
 
@@ -107,7 +107,7 @@ class SubmissionWorker:
                     BufferedInputFile(clean_bytes, "verification.pdf"),
                     caption="Test mode — clean document delivered without payment."
                 )
-                entry = RefundLedger.RefundEntry(
+                entry = RefundEntry(
                     charge_id=f"TEST-{job.telegram_user_id}-{int(time.time())}",
                     user_id=job.telegram_user_id,
                     request_number=request_number,
