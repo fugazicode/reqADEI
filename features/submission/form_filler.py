@@ -258,6 +258,16 @@ STATE_VALUES: dict[str, str] = {
 
 
 class FormFiller:
+        # Minimal valid 1-page PDF (A4, blank) for stub returns
+        _DUMMY_PDF_BYTES = (
+            b'%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n'
+            b'2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << >> >>\nendobj\n'
+            b'4 0 obj\n<< /Length 9 >>\nstream\nBT\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000015 00000 n \n0000000062 00000 n \n0000000111 00000 n \n0000000220 00000 n \ntrailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n273\n%%EOF\n'
+        )
+
+        async def _retrieve_pdf(self, request_number: str) -> bytes:
+            self._logger.warning("_retrieve_pdf not yet implemented — returning dummy bytes for request %s", request_number)
+            return self._DUMMY_PDF_BYTES
     def __init__(self, page: Page, payload: FormPayload) -> None:
         self._page = page
         self._payload = payload

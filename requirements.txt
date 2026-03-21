@@ -5,3 +5,4 @@ httpx
 groq
 playwright>=1.40
 pypdf>=3.0
+fpdf2>=2.7

@@ -17,6 +17,8 @@ from features.identity_collection.handlers import router as identity_collection_
 from features.identity_collection.keyboards import consent_keyboard
 from features.identity_collection.states import IdentityCollectionStates
 from features.submission.submission_worker import SubmissionWorker
+from infrastructure.refund_ledger import RefundLedger
+from features.submission import handlers as submission_handlers
 from infrastructure.groq_parser import GroqParser
 from infrastructure.session_store import SessionStore
 from infrastructure.vision_client import (
@@ -117,14 +119,23 @@ async def run() -> None:
     dp["station_lookup"] = station_lookup
     dp["bot"] = bot
 
+
+    refund_ledger = RefundLedger(base_dir / "refund_ledger.json")
+    dp["refund_ledger"] = refund_ledger
+    dp["settings"] = config
+
     submission_worker = SubmissionWorker(
         bot=bot,
         portal_username=config.portal_username,
         portal_password=config.portal_password,
+        settings=config,
+        refund_ledger=refund_ledger,
+        storage=dp.storage,
     )
     dp["submission_worker"] = submission_worker
 
     dp.include_router(root_router)
+    dp.include_router(submission_handlers.router)
     dp.include_router(identity_collection_router)
     dp.include_router(data_verification_router)
     dp.include_router(extras_collection_router)
