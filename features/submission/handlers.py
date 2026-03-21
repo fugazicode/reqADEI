@@ -66,6 +66,7 @@ async def test_invoice(message: Message, bot, settings: Settings) -> None:
     if message.from_user.id != settings.admin_telegram_id:
         return
     payload = json.dumps({"user_id": message.from_user.id, "request_number": "TEST-0000", "timestamp": time.time()})
+        submission_worker._pending_deliveries[message.from_user.id] = b"TEST_DOCUMENT_PLACEHOLDER"  # ADD THIS
     await bot.send_invoice(
         chat_id=message.from_user.id,
         title="Test Invoice",
