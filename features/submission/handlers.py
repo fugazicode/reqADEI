@@ -62,7 +62,7 @@ async def handle_successful_payment(
     await state.set_state(SubmissionStates.COMPLETE)
 
 @router.message(F.text == "/test_invoice")
-async def test_invoice(message: Message, bot, settings: Settings, submission_worker: SubmissionWorker) -> None:
+async def test_invoice(message: Message, state: FSMContext, bot, settings: Settings, submission_worker: SubmissionWorker) -> None:
     if message.from_user.id != settings.admin_telegram_id:
         return
     payload = json.dumps({"user_id": message.from_user.id, "request_number": "TEST-0000", "timestamp": time.time()})
@@ -74,8 +74,9 @@ async def test_invoice(message: Message, bot, settings: Settings, submission_wor
         payload=payload,
         provider_token="",
         currency="XTR",
-        prices=[LabeledPrice("Test", 1)],
+        prices=[LabeledPrice(label="Test", amount=1)],
     )
+    await state.set_state(SubmissionStates.AWAITING_PAYMENT)
 
 @router.message(F.text == "/refund")
 async def user_refund(
