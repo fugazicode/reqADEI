@@ -62,11 +62,11 @@ async def handle_successful_payment(
     await state.set_state(SubmissionStates.COMPLETE)
 
 @router.message(F.text == "/test_invoice")
-async def test_invoice(message: Message, bot, settings: Settings) -> None:
+async def test_invoice(message: Message, bot, settings: Settings, submission_worker: SubmissionWorker) -> None:
     if message.from_user.id != settings.admin_telegram_id:
         return
     payload = json.dumps({"user_id": message.from_user.id, "request_number": "TEST-0000", "timestamp": time.time()})
-        submission_worker._pending_deliveries[message.from_user.id] = b"TEST_DOCUMENT_PLACEHOLDER"  # ADD THIS
+    submission_worker._pending_deliveries[message.from_user.id] = b"TEST_DOCUMENT_PLACEHOLDER"
     await bot.send_invoice(
         chat_id=message.from_user.id,
         title="Test Invoice",
