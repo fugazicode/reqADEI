@@ -7,4 +7,10 @@ __pycache__/
 *.py[cod]
 
 # Runtime logs
-audit.logrefund_ledger.json
+audit.log
+
+# Runtime data
+refund_ledger.json
+
+# IDE
+.idea/
