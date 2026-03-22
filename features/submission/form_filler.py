@@ -862,9 +862,17 @@ class FormFiller:
         await self._page.click("#submit123")
 
         await self._page.wait_for_selector(
-            "text=Please Wait, Processing Data",
+            "text=Please Wait, Processing Data, .error, .alert, [class*='error'], [class*='alert']",
             timeout=30000,
         )
+
+        processing_visible = await self._page.evaluate(
+            "() => { const el = document.evaluate(\"//text()[contains(., 'Please Wait, Processing Data')]\", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue; return !!el; }"
+        )
+        if not processing_visible:
+            body_text = await self._page.inner_text("body")
+            raise RuntimeError(f"Portal validation failed: {body_text[:500]}")
+
         await self._page.wait_for_selector(
             "text=Please Wait, Processing Data",
             state="hidden",
