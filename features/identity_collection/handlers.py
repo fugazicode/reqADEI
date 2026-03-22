@@ -235,6 +235,7 @@ async def tenant_upload_done(
     state: FSMContext,
     session_store: SessionStore,
     tenant_engine: PipelineEngine,
+    bot: Bot,
 ) -> None:
     if not callback.from_user or not callback.message:
         return
@@ -272,6 +273,20 @@ async def tenant_upload_done(
         session.edit_return_state = DataVerificationStates.CONFIRMING_FIELD.state
         session.edit_return_person = session.current_confirming_person
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
+
+    front_record = next(
+        (r for r in session.image_records if r.person == "tenant" and r.side == "front"),
+        None,
+    ) or next(
+        (r for r in session.image_records if r.person == "tenant"),
+        None,
+    )
+    if front_record:
+        import io
+
+        buffer = io.BytesIO()
+        await bot.download(front_record.image_id, destination=buffer)
+        session.tenant_image_bytes = buffer.getvalue()
 
     for record in session.image_records:
         if record.person == "tenant":

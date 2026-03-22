@@ -22,10 +22,12 @@ class AddressData(BaseModel):
 class OwnerData(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
     first_name: Optional[str] = None
+    middle_name: Optional[str] = None
     last_name: Optional[str] = None
     relative_name: Optional[str] = None
     relation_type: Optional[str] = None
     dob: Optional[str] = None
+    mobile_no: Optional[str] = None
     address_verification_doc_no: Optional[str] = None
     occupation: Optional[str] = None
     address: Optional[AddressData] = None
@@ -34,6 +36,9 @@ class OwnerData(BaseModel):
 class TenantData(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
     first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    gender: Optional[str] = None
+    occupation: Optional[str] = None
     last_name: Optional[str] = None
     relative_name: Optional[str] = None
     relation_type: Optional[str] = None

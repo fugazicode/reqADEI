@@ -16,6 +16,7 @@ if not _audit_logger.handlers:
     _handler.setLevel(logging.DEBUG)
     _handler.setFormatter(logging.Formatter("%(message)s"))
     _audit_logger.addHandler(_handler)
+    _audit_logger.propagate = False
 
 
 def write_audit_event(event_type: str, person: str, image_id: str, record: ImageRecord) -> None:
