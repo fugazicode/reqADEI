@@ -89,7 +89,7 @@ class SubmissionWorker:
         self._cleanup_tasks.pop(user_id, None)
 
     async def _process_job(self, job: SubmissionJob, pw: Playwright) -> None:
-        session = PortalSession(self._username, self._password, pw)
+        session = PortalSession(self._username, self._password, pw, headless=True)
         try:
             page = await session.open()
             filler = FormFiller(page, job.payload)
