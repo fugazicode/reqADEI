@@ -64,7 +64,7 @@ class PortalSession:
         # Navigate directly to the form URL now that session is established
         await page.goto(
             "https://cctns.delhipolice.gov.in/citizenservices/addtenantpgverification.htm",
-            wait_until="networkidle",
+            wait_until="domcontentloaded",
         )
 
         # Wait for the form to fully load
