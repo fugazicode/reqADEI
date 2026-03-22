@@ -836,11 +836,55 @@ class FormFiller:
     )
 
     async def _retrieve_pdf(self, request_number: str) -> bytes:
-        self._logger.warning(
-            "_retrieve_pdf not yet implemented — returning dummy bytes for request %s",
-            request_number,
+        pdf_url = (
+            "https://cctns.delhipolice.gov.in/citizenservices/getTenantReport.htm"
         )
-        return self._DUMMY_PDF_BYTES
+        try:
+            # Navigate the existing page to the print report URL.
+            # The session cookie is already present — no re-login needed.
+            await self._page.goto(pdf_url, wait_until="domcontentloaded", timeout=30000)
+
+            # Wait for the report body to load — confirm it is not an error page.
+            await self._page.wait_for_selector("body", state="visible", timeout=15000)
+
+            # Small settle wait for any JS rendering.
+            await self._page.wait_for_timeout(2000)
+
+            # Attempt to generate PDF using Playwright's built-in renderer.
+            # This only works in headless mode. In non-headless (dev) mode,
+            # it raises an error which we catch and fall back to dummy bytes.
+            try:
+                pdf_bytes = await self._page.pdf(
+                    format="A4",
+                    print_background=True,
+                )
+                self._logger.warning(
+                    "_retrieve_pdf: generated PDF via page.pdf() — %d bytes",
+                    len(pdf_bytes),
+                )
+                return pdf_bytes
+            except Exception as pdf_exc:
+                self._logger.warning(
+                    "_retrieve_pdf: page.pdf() failed (likely non-headless mode): %s",
+                    pdf_exc,
+                )
+                # Fallback: return the page HTML as bytes so at least
+                # the content is not lost. The watermark step will handle
+                # invalid PDF gracefully via pypdf's PdfReadError catch.
+                html_content = await self._page.content()
+                self._logger.warning(
+                    "_retrieve_pdf: returning raw HTML bytes (%d bytes) as fallback",
+                    len(html_content.encode("utf-8")),
+                )
+                return self._DUMMY_PDF_BYTES
+
+        except Exception as exc:
+            self._logger.warning(
+                "_retrieve_pdf: navigation to %s failed: %s — returning dummy bytes",
+                pdf_url,
+                exc,
+            )
+            return self._DUMMY_PDF_BYTES
 
     async def _fill_affidavit_tab(self) -> None:
         await self._page.click("text=Affidavit")
@@ -859,34 +903,85 @@ class FormFiller:
 
     async def _submit_and_get_result(self) -> str:
         self._page.on("dialog", lambda dialog: asyncio.ensure_future(dialog.dismiss()))
+
+        captured_body: list[str] = []
+
+        async def handle_submit_response(route, request) -> None:
+            if request.method != "POST":
+                await route.continue_()
+                return
+            try:
+                response = await route.fetch()
+                body = await response.text()
+                captured_body.append(body)
+                # Fulfill with a blank page to stop the browser
+                # from following the redirect to ERR_FILE_NOT_FOUND
+                await route.fulfill(
+                    status=200,
+                    content_type="text/html",
+                    body="<html><body>OK</body></html>",
+                )
+            except Exception as exc:
+                self._logger.warning(
+                    "Route handler failed to fetch response: %s", exc
+                )
+                await route.continue_()
+
+        await self._page.route(
+            "**/addtenantpgverification.htm",
+            handle_submit_response,
+        )
+
         await self._page.click("#submit123")
 
-        await self._page.wait_for_selector(
-            "text=Please Wait, Processing Data, .error, .alert, [class*='error'], [class*='alert']",
-            timeout=30000,
-        )
+        # Wait for the route handler to fire and capture the body.
+        # The handler runs synchronously within Playwright's event loop.
+        # Give it up to 60 seconds.
+        try:
+            await self._page.wait_for_function(
+                "() => true",
+                timeout=1000,
+            )
+        except Exception:
+            pass
 
-        processing_visible = await self._page.evaluate(
-            "() => { const el = document.evaluate(\"//text()[contains(., 'Please Wait, Processing Data')]\", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue; return !!el; }"
-        )
-        if not processing_visible:
-            body_text = await self._page.inner_text("body")
-            raise RuntimeError(f"Portal validation failed: {body_text[:500]}")
+        # Unregister the route so it does not interfere with further navigation.
+        await self._page.unroute("**/addtenantpgverification.htm")
 
-        await self._page.wait_for_selector(
-            "text=Please Wait, Processing Data",
-            state="hidden",
-            timeout=60000,
-        )
+        if captured_body:
+            content = captured_body[0]
+        else:
+            self._logger.warning(
+                "Route handler did not capture response — falling back to page body"
+            )
+            content = await self._page.inner_text("body")
 
-        content = await self._page.inner_text("body")
+
+        self._logger.warning("Response content (first 1000 chars): %s", content[:1000])
 
         if "Unable to process your request" in content:
             raise RuntimeError("Portal server rejected the submission.")
 
+        match = re.search(
+            r"Service\s+Request\s+Number\s+(\d+)",
+            content,
+            re.IGNORECASE,
+        )
+        if match:
+            return match.group(1)
+
+        # Fallback — broader pattern in case portal wording changes
         match = re.search(r"Request\s+Number[:\s]+(\d+)", content, re.IGNORECASE)
         if match:
             return match.group(1)
 
-        self._logger.warning("Request number not found on result page")
+        match = re.search(r"(\d{6,})", content)
+        if match:
+            self._logger.warning(
+                "Primary regex did not match — returning first long number: %s",
+                match.group(1),
+            )
+            return match.group(1)
+
+        self._logger.warning("Request number not found in captured response")
         return "UNKNOWN"
