@@ -512,12 +512,31 @@ class FormFiller:
 
         hidden_d = await self._page.input_value(f'[name="{hidden_district_field}"]')
         hidden_s = await self._page.input_value(f'[name="{hidden_station_field}"]')
-        if not hidden_d or not hidden_s:
+        if not hidden_d:
             self._logger.warning(
-                "Hidden fields not populated — district_field=%s hidden_district=%s hidden_station=%s",
-                district_field,
-                hidden_d,
-                hidden_s,
+                "Hidden district field '%s' empty — forcing value '%s'",
+                hidden_district_field,
+                district_value,
+            )
+            await self._page.evaluate(
+                """([name, val]) => {
+                    const el = document.querySelector('[name="' + name + '"]');
+                    if (el) el.value = val;
+                }""",
+                [hidden_district_field, district_value],
+            )
+        if not hidden_s and station_value:
+            self._logger.warning(
+                "Hidden station field '%s' empty — forcing value '%s'",
+                hidden_station_field,
+                station_value,
+            )
+            await self._page.evaluate(
+                """([name, val]) => {
+                    const el = document.querySelector('[name="' + name + '"]');
+                    if (el) el.value = val;
+                }""",
+                [hidden_station_field, station_value],
             )
 
     async def _fill_tenant_address_tenanted(self) -> None:
@@ -787,9 +806,9 @@ class FormFiller:
 
 
     async def _fill_document_upload(self, image_bytes: bytes) -> None:
-        # Step 1: Click Tenant Information tab and wait for Personal Information sub-tab to be visible
+        # Step 1: Click Tenant Information tab and activate Personal Information sub-tab
         await self._page.click("text=Tenant Information")
-        await self._page.wait_for_selector('[name="tenantFirstName"]', state="visible", timeout=30000)
+        await self._click_inner_tab("Personal Information", "tenantFirstName")
         if not image_bytes:
             self._logger.warning("No image bytes provided — skipping document upload")
             return
@@ -806,6 +825,7 @@ class FormFiller:
             )
             # Select fileTypeCd2 = "2" (ScanPhoto) using direct id selector
             await self._page.select_option("#fileTypeCd2", value="2")
+            await self._page.fill("#filedescriptionId2", "Aadhaar Card")
         finally:
             os.unlink(tmp.name)
 
@@ -838,6 +858,7 @@ class FormFiller:
                 )
 
     async def _submit_and_get_result(self) -> str:
+        self._page.on("dialog", lambda dialog: asyncio.ensure_future(dialog.dismiss()))
         await self._page.click("#submit123")
 
         await self._page.wait_for_selector(
