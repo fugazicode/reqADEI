@@ -1,5 +1,5 @@
-from __future__ import annotations
 
+import asyncio  # add this
 import logging
 import os
 import re
