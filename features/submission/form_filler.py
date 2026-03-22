@@ -787,6 +787,9 @@ class FormFiller:
 
 
     async def _fill_document_upload(self, image_bytes: bytes) -> None:
+        # Step 1: Click Tenant Information tab and wait for Personal Information sub-tab to be visible
+        await self._page.click("text=Tenant Information")
+        await self._page.wait_for_selector('[name="tenantFirstName"]', state="visible", timeout=30000)
         if not image_bytes:
             self._logger.warning("No image bytes provided — skipping document upload")
             return
@@ -796,10 +799,13 @@ class FormFiller:
             tmp.write(image_bytes)
             tmp.close()
             await self._page.set_input_files("#fileField2", tmp.name)
-            await self._page.wait_for_selector(
-                "#fileField2 ~ table tbody tr",
-                timeout=30000,
+            # Wait for file input to have a value
+            await self._page.wait_for_function(
+                "document.querySelector('#fileField2') && document.querySelector('#fileField2').value !== ''",
+                timeout=10000,
             )
+            # Select fileTypeCd2 = "2" (ScanPhoto) using direct id selector
+            await self._page.select_option("#fileTypeCd2", value="2")
         finally:
             os.unlink(tmp.name)
 
