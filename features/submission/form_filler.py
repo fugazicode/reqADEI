@@ -836,52 +836,65 @@ class FormFiller:
     )
 
     async def _retrieve_pdf(self, request_number: str) -> bytes:
-        pdf_url = (
-            "https://cctns.delhipolice.gov.in/citizenservices/getTenantReport.htm"
-        )
         try:
-            # Navigate the existing page to the print report URL.
-            # The session cookie is already present — no re-login needed.
-            await self._page.goto(pdf_url, wait_until="domcontentloaded", timeout=30000)
+            # Step 1: Hover over "Tenant Registration" in the top menu
+            await self._page.hover("text=Tenant Registration")
+            await self._page.wait_for_selector(
+                "text=View Tenant Registration Detail",
+                state="visible",
+                timeout=10000,
+            )
 
-            # Wait for the report body to load — confirm it is not an error page.
-            await self._page.wait_for_selector("body", state="visible", timeout=15000)
+            # Step 2: Click "View Tenant Registration Detail" in the dropdown
+            await self._page.click("text=View Tenant Registration Detail")
+            await self._page.wait_for_selector(
+                "text=Search and View the Status of Application",
+                state="visible",
+                timeout=30000,
+            )
 
-            # Small settle wait for any JS rendering.
-            await self._page.wait_for_timeout(2000)
+            # Step 3: Click the "Search" button (no input)
+            await self._page.click("input[value='Search'], button:has-text('Search')")
+            await self._page.wait_for_selector(
+                "text=Most Recent Tenant Registration",
+                state="visible",
+                timeout=30000,
+            )
 
-            # Attempt to generate PDF using Playwright's built-in renderer.
-            # This only works in headless mode. In non-headless (dev) mode,
-            # it raises an error which we catch and fall back to dummy bytes.
+            # Step 4: Find the row with the correct request_number and click it
+            await self._page.click(f"text={request_number}")
+            await self._page.wait_for_selector(
+                "text=View Tenant Registration Detail",
+                state="visible",
+                timeout=30000,
+            )
+
+            # Step 5: Set up download handler, then click Print
+            import tempfile, os
+            async with self._page.expect_download(timeout=60000) as download_info:
+                await self._page.click("text=Print")
+            download = await download_info.value
+
+            tmp_path = tempfile.mktemp(suffix=".pdf")
             try:
-                pdf_bytes = await self._page.pdf(
-                    format="A4",
-                    print_background=True,
-                )
-                self._logger.warning(
-                    "_retrieve_pdf: generated PDF via page.pdf() — %d bytes",
-                    len(pdf_bytes),
-                )
-                return pdf_bytes
-            except Exception as pdf_exc:
-                self._logger.warning(
-                    "_retrieve_pdf: page.pdf() failed (likely non-headless mode): %s",
-                    pdf_exc,
-                )
-                # Fallback: return the page HTML as bytes so at least
-                # the content is not lost. The watermark step will handle
-                # invalid PDF gracefully via pypdf's PdfReadError catch.
-                html_content = await self._page.content()
-                self._logger.warning(
-                    "_retrieve_pdf: returning raw HTML bytes (%d bytes) as fallback",
-                    len(html_content.encode("utf-8")),
-                )
-                return self._DUMMY_PDF_BYTES
+                await download.save_as(tmp_path)
+                with open(tmp_path, "rb") as f:
+                    pdf_bytes = f.read()
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+            self._logger.warning(
+                "_retrieve_pdf: downloaded %d bytes for request_number=%s",
+                len(pdf_bytes),
+                request_number,
+            )
+            return pdf_bytes
 
         except Exception as exc:
             self._logger.warning(
-                "_retrieve_pdf: navigation to %s failed: %s — returning dummy bytes",
-                pdf_url,
+                "_retrieve_pdf failed for request_number=%s: %s",
+                request_number,
                 exc,
             )
             return self._DUMMY_PDF_BYTES
