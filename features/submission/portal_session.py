@@ -59,15 +59,21 @@ class PortalSession:
         return new_page
 
     async def _navigate_to_form(self, page: Page) -> None:
-        # After login, check if form is already loaded
-        try:
-            await page.wait_for_selector('[name="ownerFirstName"]', state="visible", timeout=5000)
-            self._logger.info("Form loaded directly after login — URL: %s", page.url)
-            return
-        except Exception:
-            pass
-        # Otherwise, wait for dashboard and click through
-        await page.wait_for_selector("text=Tenant Registration", state="visible", timeout=30000)
-        await page.click("text=Tenant Registration")
-        await page.wait_for_selector('[name="ownerFirstName"]', state="visible", timeout=30000)
+        await page.wait_for_selector(
+            "text=Tenant Registration",
+            state="visible",
+            timeout=30000,
+        )
+        await page.hover("text=Tenant Registration")
+        await page.wait_for_selector(
+            "text=Add Tenant/PG Registration Detail",
+            state="visible",
+            timeout=10000,
+        )
+        await page.click("text=Add Tenant/PG Registration Detail")
+        await page.wait_for_selector(
+            '[name="ownerFirstName"]',
+            state="visible",
+            timeout=60000,
+        )
         self._logger.info("Form page loaded — URL: %s", page.url)

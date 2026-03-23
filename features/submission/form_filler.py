@@ -932,18 +932,23 @@ class FormFiller:
             handle_submit_response,
         )
 
-        await self._page.click("#submit123")
 
-        # Wait for the route handler to fire and capture the body.
-        # The handler runs synchronously within Playwright's event loop.
-        # Give it up to 60 seconds.
-        try:
-            await self._page.wait_for_function(
-                "() => true",
-                timeout=1000,
+        await self._page.click("#submit123", no_wait_after=True)
+
+        # Poll until the route handler populates captured_body.
+        # The handler fires asynchronously when the server responds to the POST.
+        # Give it up to 60 seconds in 500ms increments.
+        deadline = 60
+        interval = 0.5
+        elapsed = 0.0
+        while not captured_body and elapsed < deadline:
+            await asyncio.sleep(interval)
+            elapsed += interval
+
+        if not captured_body:
+            self._logger.warning(
+                "Route handler did not capture POST response within %ds", deadline
             )
-        except Exception:
-            pass
 
         # Unregister the route so it does not interfere with further navigation.
         await self._page.unroute("**/addtenantpgverification.htm")
