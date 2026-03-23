@@ -911,7 +911,7 @@ class FormFiller:
                 await route.continue_()
                 return
             try:
-                response = await route.fetch()
+                response = await route.fetch(timeout=0)
                 body = await response.text()
                 captured_body.append(body)
                 # Fulfill with a blank page to stop the browser
