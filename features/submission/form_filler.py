@@ -840,13 +840,13 @@ class FormFiller:
             # Step 1: Hover over "Tenant Registration" in the top menu
             await self._page.hover("text=Tenant Registration")
             await self._page.wait_for_selector(
-                "text=View Tenant Registration Detail",
+                'a[href="searchviewtenentverifydetails.htm"]',
                 state="visible",
                 timeout=120000,
             )
 
             # Step 2: Click "View Tenant Registration Detail" in the dropdown
-            await self._page.click("text=View Tenant Registration Detail")
+            await self._page.click('a[href="searchviewtenentverifydetails.htm"]')
             await self._page.wait_for_selector(
                 "text=Search and View the Status of Application",
                 state="visible",

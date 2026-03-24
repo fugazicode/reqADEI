@@ -66,11 +66,11 @@ class PortalSession:
         )
         await page.hover("text=Tenant Registration")
         await page.wait_for_selector(
-            "text=Add Tenant/PG Registration Detail",
+            'a[href="addtenantpgverification.htm"]',
             state="visible",
             timeout=120000,
         )
-        await page.click("text=Add Tenant/PG Registration Detail")
+        await page.click('a[href="addtenantpgverification.htm"]')
         await page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",
