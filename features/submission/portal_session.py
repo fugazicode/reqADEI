@@ -44,17 +44,17 @@ class PortalSession:
 
     async def _login(self, page: Page) -> Page:
         await page.goto("https://delhipolice.gov.in/", wait_until="domcontentloaded")
-        await page.wait_for_selector("text=Domestic Help/Tenant Registration", state="visible", timeout=30000)
+        await page.wait_for_selector("text=Domestic Help/Tenant Registration", state="visible", timeout=300000)
         async with page.context.expect_page() as new_page_info:
             await page.click("text=Domestic Help/Tenant Registration")
         new_page = await new_page_info.value
-        await new_page.wait_for_selector('[name="j_username"]', state="visible", timeout=30000)
+        await new_page.wait_for_selector('[name="j_username"]', state="visible", timeout=300000)
         await new_page.click('[name="j_username"]')
         await new_page.fill('[name="j_username"]', self._username)
         await new_page.click('[name="j_password"]')
         await new_page.fill('[name="j_password"]', self._password)
         await new_page.click('#button')
-        await new_page.wait_for_load_state("domcontentloaded")
+        await new_page.wait_for_load_state("domcontentloaded", timeout=300000)
         self._logger.info("Login submitted — current URL: %s", new_page.url)
         return new_page
 
@@ -62,18 +62,18 @@ class PortalSession:
         await page.wait_for_selector(
             "text=Tenant Registration",
             state="visible",
-            timeout=30000,
+            timeout=300000,
         )
         await page.hover("text=Tenant Registration")
         await page.wait_for_selector(
             "text=Add Tenant/PG Registration Detail",
             state="visible",
-            timeout=10000,
+            timeout=120000,
         )
         await page.click("text=Add Tenant/PG Registration Detail")
         await page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",
-            timeout=60000,
+            timeout=300000,
         )
         self._logger.info("Form page loaded — URL: %s", page.url)

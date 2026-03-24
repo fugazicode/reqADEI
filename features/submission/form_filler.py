@@ -801,7 +801,7 @@ class FormFiller:
 
     async def _fill_family_member_tab(self) -> None:
         await self._page.click("text=Family Member Information")
-        await self._page.wait_for_selector("#rbno", state="visible", timeout=30000)
+        await self._page.wait_for_selector("#rbno", state="visible", timeout=120000)
         await self._page.click("#rbno")
 
 
@@ -821,7 +821,7 @@ class FormFiller:
             # Wait for file input to have a value
             await self._page.wait_for_function(
                 "document.querySelector('#fileField2') && document.querySelector('#fileField2').value !== ''",
-                timeout=10000,
+                timeout=60000,
             )
             # Select fileTypeCd2 = "2" (ScanPhoto) using direct id selector
             await self._page.select_option("#fileTypeCd2", value="2")
@@ -842,7 +842,7 @@ class FormFiller:
             await self._page.wait_for_selector(
                 "text=View Tenant Registration Detail",
                 state="visible",
-                timeout=10000,
+                timeout=120000,
             )
 
             # Step 2: Click "View Tenant Registration Detail" in the dropdown
@@ -850,7 +850,7 @@ class FormFiller:
             await self._page.wait_for_selector(
                 "text=Search and View the Status of Application",
                 state="visible",
-                timeout=30000,
+                timeout=300000,
             )
 
             # Step 3: Click the "Search" button (no input)
@@ -858,7 +858,7 @@ class FormFiller:
             await self._page.wait_for_selector(
                 "text=Most Recent Tenant Registration",
                 state="visible",
-                timeout=30000,
+                timeout=300000,
             )
 
             # Step 4: Find the row with the correct request_number and click it
@@ -866,12 +866,12 @@ class FormFiller:
             await self._page.wait_for_selector(
                 "text=View Tenant Registration Detail",
                 state="visible",
-                timeout=30000,
+                timeout=300000,
             )
 
             # Step 5: Set up download handler, then click Print
             import tempfile, os
-            async with self._page.expect_download(timeout=60000) as download_info:
+            async with self._page.expect_download(timeout=300000) as download_info:
                 await self._page.click("text=Print")
             download = await download_info.value
 
@@ -901,7 +901,7 @@ class FormFiller:
 
     async def _fill_affidavit_tab(self) -> None:
         await self._page.click("text=Affidavit")
-        await self._page.wait_for_selector("#allTrue", state="visible", timeout=30000)
+        await self._page.wait_for_selector("#allTrue", state="visible", timeout=120000)
         await self._page.click("#hasAnyCriminalRecord1")
         await self._page.check("#allTrue")
         is_checked = await self._page.is_checked("#allTrue")
