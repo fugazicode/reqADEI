@@ -835,6 +835,20 @@ class FormFiller:
         b'4 0 obj\n<< /Length 9 >>\nstream\nBT\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000015 00000 n \n0000000062 00000 n \n0000000111 00000 n \n0000000220 00000 n \ntrailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n273\n%%EOF\n'
     )
 
+    async def _save_download(self, download) -> bytes:
+        """Save a Playwright Download object to a temp file and return its bytes."""
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            await download.save_as(tmp_path)
+            with open(tmp_path, "rb") as f:
+                return f.read()
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
     async def _retrieve_pdf(self, request_number: str) -> bytes:
         try:
             # Step 1: Hover over "Tenant Registration" in the top menu
@@ -869,31 +883,112 @@ class FormFiller:
                 timeout=300000,
             )
 
-            # Step 5: Set up download handler, then click Print
-            import tempfile, os
-            async with self._page.expect_download(timeout=300000) as download_info:
-                await self._page.click("text=Print")
-            download = await download_info.value
+            # Step 5: Click Print — the portal may respond with either:
+            #   (a) A direct download on the current page, or
+            #   (b) A new tab opened via window.open() containing the PDF.
+            #
+            # Strategy: register a "page" event listener on the context before
+            # clicking so we capture any new tab immediately. Then try for a
+            # context-level download (catches downloads from ALL tabs). If no
+            # download fires within the short window, fall back to the new tab.
+            context = self._page.context
+            opened_tabs: list = []
+            context.on("page", opened_tabs.append)
 
-            tmp_path = tempfile.mktemp(suffix=".pdf")
             try:
-                await download.save_as(tmp_path)
-                with open(tmp_path, "rb") as f:
-                    pdf_bytes = f.read()
-            finally:
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
+                # Use context.expect_download (not page) so a download triggered
+                # in any new tab is also captured. Timeout kept short because if
+                # the portal opens a new tab instead, the download never fires.
+                async with context.expect_download(timeout=30000) as dl_info:
+                    await self._page.click("text=Print")
+                download = await dl_info.value
+                pdf_bytes = await self._save_download(download)
+                self._logger.warning(
+                    "_retrieve_pdf: direct download — %d bytes for request_number=%s",
+                    len(pdf_bytes),
+                    request_number,
+                )
+                return pdf_bytes
 
+            except PlaywrightTimeoutError:
+                self._logger.warning(
+                    "_retrieve_pdf: no direct download after Print click for %s — "
+                    "checking for new tab (%d opened)",
+                    request_number,
+                    len(opened_tabs),
+                )
+
+            # Give any async tab-open a moment to register
+            if not opened_tabs:
+                await asyncio.sleep(3)
+
+            if not opened_tabs:
+                raise RuntimeError(
+                    "Print click produced neither a download nor a new tab. "
+                    "The portal may have changed its UI or the session expired."
+                )
+
+            new_tab = opened_tabs[0]
+
+            # Wait for the new tab to finish loading
+            try:
+                await new_tab.wait_for_load_state("domcontentloaded", timeout=30000)
+            except Exception as e:
+                self._logger.warning(
+                    "_retrieve_pdf: new tab load_state error: %s", e
+                )
+
+            # Case A: the new tab itself triggers a download (e.g. browser PDF plugin
+            # is disabled in headless and the file is offered as a download).
+            try:
+                async with new_tab.expect_download(timeout=10000) as dl_info2:
+                    pass  # download may already be in flight from page load
+                download2 = await dl_info2.value
+                pdf_bytes = await self._save_download(download2)
+                self._logger.warning(
+                    "_retrieve_pdf: new-tab download — %d bytes for request_number=%s",
+                    len(pdf_bytes),
+                    request_number,
+                )
+                return pdf_bytes
+            except PlaywrightTimeoutError:
+                pass
+
+            # Case B: the new tab loaded the PDF as a page (inline viewer).
+            # Fetch it directly using the authenticated session cookies.
+            tab_url = new_tab.url
             self._logger.warning(
-                "_retrieve_pdf: downloaded %d bytes for request_number=%s",
-                len(pdf_bytes),
-                request_number,
+                "_retrieve_pdf: fetching new-tab URL directly: %s", tab_url
             )
-            return pdf_bytes
+            try:
+                response = await context.request.get(tab_url, timeout=60000)
+                body = await response.body()
+                if body[:4] == b"%PDF":
+                    self._logger.warning(
+                        "_retrieve_pdf: URL fetch returned %d bytes of PDF for %s",
+                        len(body),
+                        request_number,
+                    )
+                    return body
+                self._logger.warning(
+                    "_retrieve_pdf: URL fetch returned non-PDF content (%d bytes, "
+                    "first 100: %s)",
+                    len(body),
+                    body[:100],
+                )
+            except Exception as fetch_exc:
+                self._logger.warning(
+                    "_retrieve_pdf: URL fetch failed for %s: %s", tab_url, fetch_exc
+                )
+
+            raise RuntimeError(
+                f"Could not retrieve PDF for request_number={request_number} "
+                f"— new tab URL was {tab_url!r}"
+            )
 
         except Exception as exc:
             self._logger.warning(
-                "_retrieve_pdf failed for request_number=%s: %s",
+                "_retrieve_pdf failed for request_number=%s: %r",
                 request_number,
                 exc,
             )

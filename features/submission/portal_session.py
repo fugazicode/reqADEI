@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from playwright.async_api import Browser, Error as PlaywrightError, Page, Playwright
+from playwright.async_api import Browser, BrowserContext, Error as PlaywrightError, Page, Playwright
 
 # Delhi Police Citizen Services Portal
 _LOGIN_URL = "https://cctns.delhipolice.gov.in/citizenservices/"
@@ -26,10 +26,16 @@ class PortalSession:
         self._headless = headless
         self._logger = logger or LOGGER
         self._browser: Browser | None = None
+        self._context: BrowserContext | None = None
 
     async def open(self) -> Page:
         self._browser = await self._pw.chromium.launch(headless=self._headless)
-        page = await self._browser.new_page()
+        # accept_downloads=True is required for expect_download() to work.
+        # Without it Playwright silently cancels every download and the event
+        # never fires, regardless of whether it originates from the current page
+        # or a tab opened via window.open().
+        self._context = await self._browser.new_context(accept_downloads=True)
+        page = await self._context.new_page()
         new_page = await self._login(page)
         await self._navigate_to_form(new_page)
         return new_page
@@ -41,6 +47,7 @@ class PortalSession:
             except PlaywrightError:
                 pass
             self._browser = None
+            self._context = None
 
     async def _login(self, page: Page) -> Page:
         await page.goto("https://delhipolice.gov.in/", wait_until="domcontentloaded")
