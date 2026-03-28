@@ -884,9 +884,8 @@ class FormFiller:
             )
 
             # Step 5: Click Print — triggers a direct download.
-            # Use context.expect_download() to catch it at the context level.
-            context = self._page.context
-            async with context.expect_download(timeout=60000) as dl_info:
+            # expect_download must be on the page, not the context.
+            async with self._page.expect_download(timeout=60000) as dl_info:
                 await self._page.click("#print", no_wait_after=True)
             download = await dl_info.value
             pdf_bytes = await self._save_download(download)
