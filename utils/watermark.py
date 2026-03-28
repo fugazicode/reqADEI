@@ -19,10 +19,8 @@ def apply_watermark(pdf_bytes: bytes, text: str = "PREVIEW") -> bytes:
     # Tile the watermark text at 45°
     for x in range(0, page_width, 160):
         for y in range(0, page_height, 120):
-            overlay.start_transform()
-            overlay.rotate(45, x=x + 60, y=y + 30)
-            overlay.text(x + 10, y + 60, text)
-            overlay.stop_transform()
+            with overlay.rotation(45, x + 60, y + 30):
+                overlay.text(x + 10, y + 60, text)
 
     buf = io.BytesIO()
     overlay.output(buf)

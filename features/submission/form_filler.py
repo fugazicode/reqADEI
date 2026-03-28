@@ -883,112 +883,46 @@ class FormFiller:
                 timeout=300000,
             )
 
-            # Step 5: Click Print — the portal may respond with either:
-            #   (a) A direct download on the current page, or
-            #   (b) A new tab opened via window.open() containing the PDF.
-            #
-            # Strategy: register a "page" event listener on the context before
-            # clicking so we capture any new tab immediately. Then try for a
-            # context-level download (catches downloads from ALL tabs). If no
-            # download fires within the short window, fall back to the new tab.
+            # Step 5: Click Print — opens a new tab via window.open().
+            # Register the new tab listener BEFORE clicking to avoid missing the event.
             context = self._page.context
-            opened_tabs: list = []
-            context.on("page", opened_tabs.append)
+            async with context.expect_page() as new_page_info:
+                await self._page.click("#print")
+            new_tab = await new_page_info.value
+            await new_tab.wait_for_load_state("domcontentloaded", timeout=60000)
 
-            try:
-                # Use context.expect_download (not page) so a download triggered
-                # in any new tab is also captured. Timeout kept short because if
-                # the portal opens a new tab instead, the download never fires.
-                async with context.expect_download(timeout=30000) as dl_info:
-                    await self._page.click("text=Print")
-                download = await dl_info.value
-                pdf_bytes = await self._save_download(download)
-                self._logger.warning(
-                    "_retrieve_pdf: direct download — %d bytes for request_number=%s",
-                    len(pdf_bytes),
-                    request_number,
-                )
-                return pdf_bytes
-
-            except PlaywrightTimeoutError:
-                self._logger.warning(
-                    "_retrieve_pdf: no direct download after Print click for %s — "
-                    "checking for new tab (%d opened)",
-                    request_number,
-                    len(opened_tabs),
-                )
-
-            # Give any async tab-open a moment to register
-            if not opened_tabs:
-                await asyncio.sleep(3)
-
-            if not opened_tabs:
-                raise RuntimeError(
-                    "Print click produced neither a download nor a new tab. "
-                    "The portal may have changed its UI or the session expired."
-                )
-
-            new_tab = opened_tabs[0]
-
-            # Wait for the new tab to finish loading
-            try:
-                await new_tab.wait_for_load_state("domcontentloaded", timeout=30000)
-            except Exception as e:
-                self._logger.warning(
-                    "_retrieve_pdf: new tab load_state error: %s", e
-                )
-
-            # Case A: the new tab itself triggers a download (e.g. browser PDF plugin
-            # is disabled in headless and the file is offered as a download).
-            try:
-                async with new_tab.expect_download(timeout=10000) as dl_info2:
-                    pass  # download may already be in flight from page load
-                download2 = await dl_info2.value
-                pdf_bytes = await self._save_download(download2)
-                self._logger.warning(
-                    "_retrieve_pdf: new-tab download — %d bytes for request_number=%s",
-                    len(pdf_bytes),
-                    request_number,
-                )
-                return pdf_bytes
-            except PlaywrightTimeoutError:
-                pass
-
-            # Case B: the new tab loaded the PDF as a page (inline viewer).
-            # Fetch it directly using the authenticated session cookies.
+            # Fetch the PDF directly using the authenticated session context.
             tab_url = new_tab.url
             self._logger.warning(
-                "_retrieve_pdf: fetching new-tab URL directly: %s", tab_url
+                "_retrieve_pdf: new tab opened — fetching URL: %s", tab_url
             )
-            try:
-                response = await context.request.get(tab_url, timeout=60000)
-                body = await response.body()
-                if body[:4] == b"%PDF":
-                    self._logger.warning(
-                        "_retrieve_pdf: URL fetch returned %d bytes of PDF for %s",
-                        len(body),
-                        request_number,
-                    )
-                    return body
+            response = await context.request.get(tab_url, timeout=60000)
+            pdf_bytes = await response.body()
+            if pdf_bytes[:4] == b"%PDF":
                 self._logger.warning(
-                    "_retrieve_pdf: URL fetch returned non-PDF content (%d bytes, "
-                    "first 100: %s)",
-                    len(body),
-                    body[:100],
+                    "_retrieve_pdf: successfully retrieved %d bytes for request_number=%s",
+                    len(pdf_bytes),
+                    request_number,
                 )
-            except Exception as fetch_exc:
-                self._logger.warning(
-                    "_retrieve_pdf: URL fetch failed for %s: %s", tab_url, fetch_exc
-                )
+                return pdf_bytes
 
+            self._logger.warning(
+                "_retrieve_pdf: new tab did not contain a PDF — "
+                "URL: %r, content length: %d, first 100 bytes: %s",
+                tab_url,
+                len(pdf_bytes),
+                pdf_bytes[:100],
+            )
             raise RuntimeError(
-                f"Could not retrieve PDF for request_number={request_number} "
-                f"— new tab URL was {tab_url!r}"
+                f"New tab did not contain a PDF for request_number={request_number} "
+                f"— URL was {tab_url!r}"
             )
 
         except Exception as exc:
             self._logger.warning(
-                "_retrieve_pdf failed for request_number=%s: %r",
+                "_retrieve_pdf failed for request_number=%s: %r — "
+                "falling back to _DUMMY_PDF_BYTES (442 bytes). "
+                "Check navigation and tab handling above.",
                 request_number,
                 exc,
             )
