@@ -878,7 +878,7 @@ class FormFiller:
             # Step 4: Find the row with the correct request_number and click it
             await self._page.click(f"text={request_number}")
             await self._page.wait_for_selector(
-                "text=View Tenant Registration Detail",
+                "#print",
                 state="visible",
                 timeout=300000,
             )
