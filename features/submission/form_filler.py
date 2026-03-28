@@ -883,21 +883,13 @@ class FormFiller:
                 timeout=300000,
             )
 
-            # Step 5: Click Print — opens a new tab via window.open().
-            # Register the new tab listener BEFORE clicking to avoid missing the event.
+            # Step 5: Click Print — triggers a direct download.
+            # Use context.expect_download() to catch it at the context level.
             context = self._page.context
-            async with context.expect_page() as new_page_info:
-                await self._page.click("#print")
-            new_tab = await new_page_info.value
-            await new_tab.wait_for_load_state("domcontentloaded", timeout=60000)
-
-            # Fetch the PDF directly using the authenticated session context.
-            tab_url = new_tab.url
-            self._logger.warning(
-                "_retrieve_pdf: new tab opened — fetching URL: %s", tab_url
-            )
-            response = await context.request.get(tab_url, timeout=60000)
-            pdf_bytes = await response.body()
+            async with context.expect_download(timeout=60000) as dl_info:
+                await self._page.click("#print", no_wait_after=True)
+            download = await dl_info.value
+            pdf_bytes = await self._save_download(download)
             if pdf_bytes[:4] == b"%PDF":
                 self._logger.warning(
                     "_retrieve_pdf: successfully retrieved %d bytes for request_number=%s",
@@ -907,15 +899,13 @@ class FormFiller:
                 return pdf_bytes
 
             self._logger.warning(
-                "_retrieve_pdf: new tab did not contain a PDF — "
-                "URL: %r, content length: %d, first 100 bytes: %s",
-                tab_url,
+                "_retrieve_pdf: download did not contain a PDF — "
+                "content length: %d, first 100 bytes: %s",
                 len(pdf_bytes),
                 pdf_bytes[:100],
             )
             raise RuntimeError(
-                f"New tab did not contain a PDF for request_number={request_number} "
-                f"— URL was {tab_url!r}"
+                f"Download did not contain a PDF for request_number={request_number}"
             )
 
         except Exception as exc:
