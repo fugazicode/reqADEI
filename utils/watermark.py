@@ -32,7 +32,6 @@ def apply_watermark(pdf_bytes: bytes, text: str = "PREVIEW") -> bytes:
         src_reader = PdfReader(io.BytesIO(pdf_bytes))
         writer = PdfWriter()
         for page in src_reader.pages:
-            page = page.copy()
             page.merge_page(watermark_page)
             writer.add_page(page)
         out_buf = io.BytesIO()
