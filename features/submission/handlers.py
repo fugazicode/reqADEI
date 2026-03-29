@@ -62,21 +62,93 @@ async def handle_successful_payment(
     await state.set_state(SubmissionStates.COMPLETE)
 
 @router.message(F.text == "/test_invoice")
-async def test_invoice(message: Message, state: FSMContext, bot, settings: Settings, submission_worker: SubmissionWorker) -> None:
+async def test_invoice(
+    message: Message,
+    state: FSMContext,
+    bot: Bot,
+    settings: Settings,
+    submission_worker: SubmissionWorker,
+) -> None:
     if message.from_user.id != settings.admin_telegram_id:
         return
-    payload = json.dumps({"user_id": message.from_user.id, "request_number": "TEST-0000", "timestamp": time.time()})
-    submission_worker._pending_deliveries[message.from_user.id] = b"TEST_DOCUMENT_PLACEHOLDER"
+
+    # ── TEST CONSTANT ────────────────────────────────────────────────────────
+    # Hardcoded for isolated payment testing. When moving to full flow,
+    # this will be replaced by the request_number from _submit_and_get_result()
+    TEST_REQUEST_NUMBER = "816726116865"
+    # ────────────────────────────────────────────────────────────────────────
+
+    await message.answer("Starting test: retrieving real PDF from portal...")
+
+    from playwright.async_api import async_playwright
+    from features.submission.portal_session import PortalSession
+    from features.submission.form_filler import FormFiller
+    from tests.sample_payload import make_sample_payload
+    from utils.watermark import apply_watermark
+
+    try:
+        async with async_playwright() as pw:
+            session = PortalSession(
+                settings.portal_username,
+                settings.portal_password,
+                pw,
+                headless=True,
+            )
+            try:
+                page = await session.open()
+                payload = make_sample_payload()
+                filler = FormFiller(page, payload)
+
+                await message.answer("Portal login successful. Retrieving PDF...")
+                clean_bytes = await filler._retrieve_pdf(TEST_REQUEST_NUMBER)
+
+                if not clean_bytes or clean_bytes[:4] != b"%PDF" or len(clean_bytes) < 1000:
+                    await message.answer(
+                        f"PDF retrieval failed — got {len(clean_bytes)} bytes. Aborting test."
+                    )
+                    return
+
+                await message.answer(
+                    f"PDF retrieved successfully ({len(clean_bytes)} bytes). Applying watermark..."
+                )
+                watermarked_bytes = apply_watermark(clean_bytes)
+                await message.answer(
+                    f"Watermark applied ({len(watermarked_bytes)} bytes). Sending preview..."
+                )
+
+                await bot.send_document(
+                    chat_id=message.from_user.id,
+                    document=BufferedInputFile(watermarked_bytes, "preview.pdf"),
+                    caption="Preview of your verification document. Pay to receive the clean copy.",
+                )
+
+            finally:
+                await session.close()
+
+    except Exception as exc:
+        await message.answer(f"Portal session failed: {exc}")
+        return
+
+    user_id = message.from_user.id
+    submission_worker._pending_deliveries[user_id] = clean_bytes
+
+    payload_str = json.dumps({
+        "user_id": user_id,
+        "request_number": TEST_REQUEST_NUMBER,
+        "timestamp": time.time(),
+    })
+
     await bot.send_invoice(
-        chat_id=message.from_user.id,
-        title="Test Invoice",
-        description="Test Stars payment.",
-        payload=payload,
+        chat_id=user_id,
+        title="Tenant Verification Document",
+        description="Official Delhi Police CCTNS tenant verification form.",
+        payload=payload_str,
         provider_token="",
         currency="XTR",
-        prices=[LabeledPrice(label="Test", amount=1)],
+        prices=[LabeledPrice(label="Verification Document", amount=1)],
     )
     await state.set_state(SubmissionStates.AWAITING_PAYMENT)
+    await message.answer("Invoice sent. Waiting for payment...")
 
 @router.message(F.text == "/refund")
 async def user_refund(
