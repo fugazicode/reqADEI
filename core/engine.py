@@ -9,7 +9,7 @@ from shared.models.session import FormSession
 class PipelineEngine:
     def __init__(self, stages: Iterable[PipelineStage]) -> None:
         self._stages = list(stages)
-        self.stage_order = ["extract_images", "parse_id"]
+        self.stage_order = ["parse_image"]
 
         stage_names = [stage.name for stage in self._stages]
         if len(stage_names) != len(set(stage_names)):

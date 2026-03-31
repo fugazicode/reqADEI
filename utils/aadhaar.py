@@ -72,30 +72,6 @@ def validate_aadhaar(number: str) -> tuple[bool, str]:
     return True, cleaned
 
 
-def extract_aadhaar_from_text(ocr_text: str) -> list[str]:
-    substituted = _apply_ocr_substitutions(ocr_text)
-    stripped = re.sub(r"[\s-]+", "", substituted)
-    candidates = re.findall(r"\d{12,}", stripped)
-    found: list[str] = []
-    seen: set[str] = set()
-
-    for raw in candidates:
-        if len(raw) == 12:
-            windows = [raw]
-        else:
-            start = raw[:12]
-            end = raw[-12:]
-            windows = [start, end] if start != end else [start]
-
-        for candidate in windows:
-            is_valid, cleaned = validate_aadhaar(candidate)
-            if is_valid and cleaned not in seen:
-                found.append(cleaned)
-                seen.add(cleaned)
-
-    return found
-
-
 def mask_aadhaar(number: str) -> str:
     """Accept a full 12-digit Aadhaar or a 4-digit suffix."""
     cleaned = re.sub(r"[\s-]+", "", number)
@@ -104,40 +80,3 @@ def mask_aadhaar(number: str) -> str:
     if len(cleaned) == 12 and cleaned.isdigit():
         return f"XXXX-XXXX-{cleaned[-4:]}"
     return "XXXX-XXXX-XXXX"
-
-
-def classify_side(ocr_text: str, qr_decoded: bool) -> str:
-    if qr_decoded:
-        return "back"
-
-    indicators = [
-        "address",
-        "s/o",
-        "d/o",
-        "w/o",
-        "c/o",
-        "near",
-        "village",
-        "district",
-        "pin",
-    ]
-
-    indicator_hits = sum(
-        1
-        for indicator in indicators
-        if re.search(r"\b" + re.escape(indicator) + r"\b", ocr_text, re.IGNORECASE)
-    )
-
-    dob_pattern = re.compile(r"\b(\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})\b")
-    name_pattern = re.compile(r"\b[A-Z][a-zA-Z]{1,}(?:\s+[A-Z][a-zA-Z]{1,})+\b")
-
-    has_dob = bool(dob_pattern.search(ocr_text))
-    has_name = bool(name_pattern.search(ocr_text))
-
-    if not has_dob and indicator_hits >= 2:
-        return "back"
-
-    if has_dob and has_name:
-        return "front"
-
-    return "unknown"

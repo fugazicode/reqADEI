@@ -11,11 +11,8 @@ from shared.models.form_payload import FormPayload
 class ImageRecord:
     image_id: str
     person: str
-    side: str = "unknown"
     upload_timestamp: float = 0.0
     extracted_aadhaar_suffix: Optional[str] = None
-    ocr_confidence: float = 0.0
-    qr_decoded: bool = False
     extraction_warnings: list[str] = field(default_factory=list)
     linked_to_image_id: Optional[str] = None
     media_group_id: Optional[str] = None
@@ -32,9 +29,6 @@ class FormSession:
     upload_status_message_id: Optional[int] = None
 
     consent_given_at: Optional[float] = None
-
-    # Stores concatenated OCR text between extraction and parsing stages.
-    raw_ocr_text: str = ""
 
     tenant_image_bytes: bytes = field(default_factory=bytes)
 

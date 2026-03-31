@@ -10,22 +10,15 @@ from aiogram.filters import StateFilter
 from aiogram.types import Message
 
 from core.engine import PipelineEngine
-from core.pipeline_stages import IdParsingStage, ImageExtractionStage
+from core.pipeline_stages import ImageParsingStage
 from features.data_verification.handlers import router as data_verification_router
 from features.extras_collection.handlers import router as extras_collection_router
 from features.identity_collection.handlers import router as identity_collection_router
 from features.identity_collection.keyboards import consent_keyboard
 from features.identity_collection.states import IdentityCollectionStates
 from features.submission.submission_worker import SubmissionWorker
-from infrastructure.refund_ledger import RefundLedger
-from features.submission import handlers as submission_handlers
 from infrastructure.groq_parser import GroqParser
 from infrastructure.session_store import SessionStore
-from infrastructure.vision_client import (
-    VisionClient,
-    VisionConfigurationError,
-    VisionServiceUnavailable,
-)
 from shared.config import load_settings
 from shared.logger import configure_logger
 from shared.models.session import FormSession
@@ -66,22 +59,12 @@ async def cancel_root(message: Message, state: FSMContext, session_store: Sessio
     await message.answer("Form cancelled. Send /start to begin again.")
 
 
-def _build_pipeline(vision_client: VisionClient, groq_parser: GroqParser, bot: Bot) -> PipelineEngine:
+def _build_pipeline(groq_parser: GroqParser, bot: Bot) -> PipelineEngine:
     return PipelineEngine(
         [
-            ImageExtractionStage(vision_client, bot),
-            IdParsingStage(groq_parser),
+            ImageParsingStage(groq_parser, bot),
         ]
     )
-
-
-async def _preflight_ocr(vision_client: VisionClient) -> None:
-    try:
-        await vision_client.validate_api_key()
-    except VisionServiceUnavailable as exc:
-        LOGGER.warning("OCR preflight skipped due to service/network issue: %s", exc)
-    except VisionConfigurationError:
-        raise
 
 
 async def _session_cleanup_loop(session_store: SessionStore) -> None:
@@ -98,19 +81,18 @@ async def run() -> None:
     dp = Dispatcher()
 
     session_store = SessionStore()
-    vision_client = VisionClient(config.ocr_space_api_key)
-    await _preflight_ocr(vision_client)
 
     base_dir = Path(__file__).resolve().parent
     groq_parser = GroqParser(
         api_key=config.groq_api_key,
         model=config.groq_model,
+        vision_model=config.groq_vision_model,
         prompts_dir=base_dir / "prompts",
     )
     station_lookup = StationLookup(base_dir / "data" / "police_stations.json")
 
-    owner_engine = _build_pipeline(vision_client, groq_parser, bot)
-    tenant_engine = _build_pipeline(vision_client, groq_parser, bot)
+    owner_engine = _build_pipeline(groq_parser, bot)
+    tenant_engine = _build_pipeline(groq_parser, bot)
 
     dp["session_store"] = session_store
     dp["owner_engine"] = owner_engine
@@ -119,23 +101,14 @@ async def run() -> None:
     dp["station_lookup"] = station_lookup
     dp["bot"] = bot
 
-
-    refund_ledger = RefundLedger(base_dir / "refund_ledger.json")
-    dp["refund_ledger"] = refund_ledger
-    dp["settings"] = config
-
     submission_worker = SubmissionWorker(
         bot=bot,
         portal_username=config.portal_username,
         portal_password=config.portal_password,
-        settings=config,
-        refund_ledger=refund_ledger,
-        storage=dp.storage,
     )
     dp["submission_worker"] = submission_worker
 
     dp.include_router(root_router)
-    dp.include_router(submission_handlers.router)
     dp.include_router(identity_collection_router)
     dp.include_router(data_verification_router)
     dp.include_router(extras_collection_router)

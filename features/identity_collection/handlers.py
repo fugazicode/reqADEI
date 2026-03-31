@@ -274,16 +274,14 @@ async def tenant_upload_done(
         session.edit_return_person = session.current_confirming_person
         await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
 
+    # Pick the first available tenant record for the portal document upload.
+    # Side classification no longer exists — any tenant image is acceptable.
     front_record = next(
-        (r for r in session.image_records if r.person == "tenant" and r.side == "front"),
-        None,
-    ) or next(
         (r for r in session.image_records if r.person == "tenant"),
         None,
     )
-    if front_record:
-        import io
 
+    if front_record:
         buffer = io.BytesIO()
         await bot.download(front_record.image_id, destination=buffer)
         session.tenant_image_bytes = buffer.getvalue()
