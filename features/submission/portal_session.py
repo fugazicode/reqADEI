@@ -72,15 +72,10 @@ class PortalSession:
             timeout=300000,
         )
         await page.hover("text=Tenant Registration")
-        await page.wait_for_selector(
-            'a[href="addtenantpgverification.htm"]',
-            state="visible",
-            timeout=120000,
-        )
-        await page.click('a[href="addtenantpgverification.htm"]')
+        await page.click('a[href="addtenantpgverification.htm"]', no_wait_after=True)
         await page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",
-            timeout=300000,
+            timeout=300000,        # this is 5 minutes
         )
         self._logger.info("Form page loaded — URL: %s", page.url)
