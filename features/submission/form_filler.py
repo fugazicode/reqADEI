@@ -4,10 +4,12 @@ import logging
 import os
 import re
 import tempfile
+from dataclasses import dataclass
 from datetime import date, datetime
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 
+from shared.portal_enums import OWNER_OCCUPATIONS, TENANCY_PURPOSES
 from shared.models.form_payload import FormPayload
 
 
@@ -257,6 +259,20 @@ STATE_VALUES: dict[str, str] = {
 }
 
 
+@dataclass(frozen=True)
+class SubmitOutcome:
+    post_triggered: bool
+    content: str
+
+
+class SubmissionValidationError(RuntimeError):
+    pass
+
+
+class SubmissionBlockedError(RuntimeError):
+    pass
+
+
 class FormFiller:
     def __init__(self, page: Page, payload: FormPayload) -> None:
         self._page = page
@@ -308,15 +324,79 @@ class FormFiller:
             return
         await self._page.fill(f'[name="{field_name}"]', value)
 
-    async def _select_by_label(self, field_name: str, label: str | None) -> None:
+    def _normalize_select_label(self, field_name: str, label: str | None) -> str | None:
+        if label is None:
+            return None
+        if field_name in {"ownerOccupation", "tenantOccupation"}:
+            normalized = OWNER_OCCUPATIONS.normalize(label)
+        elif field_name == "tenancypurpose":
+            normalized = TENANCY_PURPOSES.normalize(label)
+        else:
+            normalized = " ".join(label.strip().split())
+        if normalized != label:
+            self._logger.warning(
+                "Normalized field '%s' value from '%s' to '%s'",
+                field_name,
+                label,
+                normalized,
+            )
+        return normalized
+
+    async def _select_has_label(self, field_name: str, label: str) -> bool:
+        return await self._page.evaluate(
+            """([name, wanted]) => {
+                const el = document.querySelector('[name="' + name + '"]');
+                if (!el) return false;
+                const clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();
+                return Array.from(el.options).some((o) => clean(o.text) === wanted);
+            }""",
+            [field_name, label],
+        )
+
+    async def _select_by_label(
+        self,
+        field_name: str,
+        label: str | None,
+        *,
+        required: bool = False,
+        required_display_name: str | None = None,
+    ) -> None:
         if label is None or label == "":
+            if required:
+                display = required_display_name or field_name
+                raise SubmissionValidationError(
+                    f"Required field '{display}' is empty before selection."
+                )
+            return
+        normalized_label = self._normalize_select_label(field_name, label)
+        display = required_display_name or field_name
+        if not normalized_label:
+            if required:
+                raise SubmissionValidationError(
+                    f"Required field '{display}' normalized to empty value."
+                )
+            return
+        if not await self._select_has_label(field_name, normalized_label):
+            message = (
+                f"Could not find option '{normalized_label}' for field '{field_name}'"
+            )
+            if required:
+                raise SubmissionValidationError(f"Required {display}: {message}")
+            self._logger.warning(message)
             return
         try:
-            await self._page.select_option(f'[name="{field_name}"]', label=label)
-        except Exception:
+            await self._page.select_option(
+                f'[name="{field_name}"]',
+                label=normalized_label,
+            )
+        except Exception as exc:
+            if required:
+                raise SubmissionValidationError(
+                    f"Required field '{display}' could not be selected with label '{normalized_label}': {exc}"
+                ) from exc
             self._logger.warning(
                 "Could not select label '%s' for field '%s'",
-                label,
+                normalized_label,
                 field_name,
             )
 
@@ -702,7 +782,12 @@ class FormFiller:
         await self._fill_text("ownerMiddleName", self._payload.owner.middle_name)
         await self._fill_text("ownerLastName", self._payload.owner.last_name)
         await self._fill_text("ownerRelativeName", self._payload.owner.relative_name)
-        await self._select_by_label("ownerOccupation", self._payload.owner.occupation)
+        await self._select_by_label(
+            "ownerOccupation",
+            self._payload.owner.occupation,
+            required=True,
+            required_display_name="Owner occupation",
+        )
         await self._select_by_label("ownerRelationType", self._payload.owner.relation_type)
         await self._fill_text("ownerMobile1", self._payload.owner.mobile_no)
 
@@ -768,6 +853,8 @@ class FormFiller:
         await self._select_by_label(
             "tenantAddressDocuments",
             self._payload.tenant.address_verification_doc_type,
+            required=True,
+            required_display_name="Tenant address document type",
         )
         await self._fill_text(
             "tenantAddressDocumentsNo",
@@ -776,6 +863,8 @@ class FormFiller:
         await self._select_by_label(
             "tenancypurpose",
             self._payload.tenant.purpose_of_tenancy,
+            required=True,
+            required_display_name="Purpose of tenancy",
         )
 
         if self._payload.tenant.dob:
@@ -851,6 +940,7 @@ class FormFiller:
 
     async def _retrieve_pdf(self, request_number: str) -> bytes:
         try:
+            await self._dismiss_fancybox_if_present()
             # Step 1: Hover over "Tenant Registration" in the top menu
             await self._page.hover("text=Tenant Registration")
             await self._page.wait_for_selector(
@@ -932,15 +1022,95 @@ class FormFiller:
                     "Submission cannot proceed."
                 )
 
-    async def _submit_and_get_result(self) -> str:
+    async def _selected_option_value(self, field_name: str) -> str:
+        return await self._page.evaluate(
+            """(name) => {
+                const el = document.querySelector('[name="' + name + '"]');
+                return el ? (el.value || '') : '';
+            }""",
+            field_name,
+        )
+
+    async def _validate_required_fields_before_submit(self) -> None:
+        required_text_fields = [
+            ("ownerFirstName", "Owner first name"),
+            ("ownerLastName", "Owner last name"),
+            ("tenantFirstName", "Tenant first name"),
+            ("tenantLastName", "Tenant last name"),
+        ]
+        required_select_fields = [
+            ("ownerOccupation", "Owner occupation"),
+            ("tenantAddressDocuments", "Tenant address document"),
+            ("tenancypurpose", "Purpose of tenancy"),
+        ]
+        missing: list[str] = []
+
+        for field_name, display in required_text_fields:
+            value = (await self._page.input_value(f'[name="{field_name}"]')).strip()
+            if not value:
+                missing.append(display)
+
+        for field_name, display in required_select_fields:
+            value = (await self._selected_option_value(field_name)).strip()
+            if value in {"", "-1", "0"}:
+                missing.append(display)
+
+        if missing:
+            self._logger.warning(
+                "Pre-submit validation failed for required fields: %s",
+                ", ".join(missing),
+            )
+            raise SubmissionValidationError(
+                "Pre-submit validation failed. Missing/invalid required fields: "
+                + ", ".join(missing)
+            )
+        self._logger.warning("Pre-submit validation passed for required fields")
+
+    async def _extract_fancybox_message(self) -> str | None:
+        message = await self._page.evaluate(
+            """() => {
+                const isVisible = (el) => !!el && el.offsetParent !== null;
+                const overlay = document.querySelector('#fancybox-overlay');
+                const body = document.querySelector('#fancybox-content, .fancybox-inner, #fancybox-wrap');
+                if (!isVisible(overlay) && !isVisible(body)) return null;
+                const text = (body?.innerText || '').replace(/\\s+/g, ' ').trim();
+                return text || 'Unknown portal validation error';
+            }"""
+        )
+        return message
+
+    async def _dismiss_fancybox_if_present(self) -> None:
+        selectors = [
+            "#fancybox-close",
+            ".fancybox-close",
+            "a.fancybox-close",
+            "button.fancybox-close",
+        ]
+        for selector in selectors:
+            try:
+                if await self._page.locator(selector).first.is_visible():
+                    await self._page.click(selector)
+                    await self._page.wait_for_timeout(200)
+                    return
+            except Exception:
+                continue
+        try:
+            await self._page.keyboard.press("Escape")
+        except Exception:
+            pass
+
+    async def _submit_and_capture_outcome(self) -> SubmitOutcome:
         self._page.on("dialog", lambda dialog: asyncio.ensure_future(dialog.dismiss()))
 
         captured_body: list[str] = []
+        post_triggered = False
 
         async def handle_submit_response(route, request) -> None:
+            nonlocal post_triggered
             if request.method != "POST":
                 await route.continue_()
                 return
+            post_triggered = True
             try:
                 response = await route.fetch(timeout=0)
                 body = await response.text()
@@ -963,8 +1133,19 @@ class FormFiller:
             handle_submit_response,
         )
 
-
         await self._page.click("#submit123", no_wait_after=True)
+        await self._page.wait_for_timeout(800)
+
+        popup_message = await self._extract_fancybox_message()
+        if popup_message:
+            await self._page.unroute("**/addtenantpgverification.htm")
+            self._logger.warning(
+                "Submission blocked by portal client-side validation popup: %s",
+                popup_message,
+            )
+            raise SubmissionValidationError(
+                f"Portal blocked submit via client-side validation: {popup_message}"
+            )
 
         # Poll until the route handler populates captured_body.
         # The handler fires asynchronously when the server responds to the POST.
@@ -987,16 +1168,36 @@ class FormFiller:
         if captured_body:
             content = captured_body[0]
         else:
+            if not post_triggered:
+                popup_message = await self._extract_fancybox_message()
+                if popup_message:
+                    self._logger.warning(
+                        "No POST triggered; portal popup message detected: %s",
+                        popup_message,
+                    )
+                    raise SubmissionValidationError(
+                        f"Portal blocked submit before POST: {popup_message}"
+                    )
+                self._logger.warning("No POST triggered and no popup detected after submit")
+                raise SubmissionBlockedError(
+                    "No POST request was triggered after submit click."
+                )
             self._logger.warning(
                 "Route handler did not capture response — falling back to page body"
             )
             content = await self._page.inner_text("body")
 
-
         self._logger.warning("Response content (first 1000 chars): %s", content[:1000])
+        self._logger.warning("Submit outcome classified: post_triggered=%s", post_triggered)
+        return SubmitOutcome(post_triggered=post_triggered, content=content)
+
+    async def _submit_and_get_result(self) -> str:
+        await self._validate_required_fields_before_submit()
+        outcome = await self._submit_and_capture_outcome()
+        content = outcome.content
 
         if "Unable to process your request" in content:
-            raise RuntimeError("Portal server rejected the submission.")
+            raise SubmissionBlockedError("Portal server rejected the submission.")
 
         match = re.search(
             r"Service\s+Request\s+Number\s+(\d+)",
@@ -1019,5 +1220,6 @@ class FormFiller:
             )
             return match.group(1)
 
-        self._logger.warning("Request number not found in captured response")
-        return "UNKNOWN"
+        raise SubmissionBlockedError(
+            "Submission completed but request number was not found in response."
+        )

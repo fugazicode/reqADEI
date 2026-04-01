@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass
 
 from aiogram import Bot
+from aiogram.types import BufferedInputFile
 from playwright.async_api import Playwright, async_playwright
 
 from features.submission.form_filler import FormFiller
@@ -59,6 +60,10 @@ class SubmissionWorker:
             page = await session.open()
             filler = FormFiller(page, job.payload)
             request_number = await filler.fill(job.image_bytes)
+            if not request_number or request_number == "UNKNOWN":
+                raise RuntimeError(
+                    "Submission did not return a valid request number; skipping PDF retrieval."
+                )
             pdf_bytes = await filler._retrieve_pdf(request_number)
             await self._bot.send_document(
                 job.telegram_user_id,

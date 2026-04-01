@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from features.data_verification.keyboards import confirm_edit_keyboard
+from features.data_verification.labels import field_label
 from features.data_verification.states import DataVerificationStates
 from shared.models.session import FormSession
 from utils.aadhaar import mask_aadhaar
@@ -46,18 +47,37 @@ class ConfirmationFlow:
             return None
 
         field_path = self.session.confirmation_queue[0]
+        label = field_label(field_path)
         value = PayloadAccessor.get(self.session.payload, field_path)
         if value is None or value == "":
             self.session.current_editing_field = field_path
-            await message.answer(f"{field_path} is missing. Please type the value.")
+            if self.session.last_prompt_message_id:
+                try:
+                    await message.bot.delete_message(
+                        chat_id=message.chat.id,
+                        message_id=self.session.last_prompt_message_id,
+                    )
+                except Exception:
+                    pass
+            sent = await message.answer(f"{label} is missing. Please provide the value.")
+            self.session.last_prompt_message_id = sent.message_id
             return "missing"
 
         display_value = value
         if field_path.endswith("address_verification_doc_no"):
             display_value = mask_aadhaar(str(value))
 
-        await message.answer(
-            f"Please confirm:\n{field_path}: {display_value}",
+        if self.session.last_prompt_message_id:
+            try:
+                await message.bot.delete_message(
+                    chat_id=message.chat.id,
+                    message_id=self.session.last_prompt_message_id,
+                )
+            except Exception:
+                pass
+        sent = await message.answer(
+            f"Please confirm:\n{label}: {display_value}",
             reply_markup=confirm_edit_keyboard(field_path),
         )
+        self.session.last_prompt_message_id = sent.message_id
         return "confirm"

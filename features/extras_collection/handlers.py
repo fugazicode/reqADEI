@@ -12,6 +12,7 @@ from features.identity_collection.keyboards import done_upload_keyboard
 from features.identity_collection.states import IdentityCollectionStates
 from infrastructure.groq_parser import GroqParser, GroqParsingError
 from infrastructure.session_store import SessionStore
+from shared.portal_enums import OWNER_OCCUPATIONS, TENANCY_PURPOSES
 from utils.payload_accessor import PayloadAccessor
 from utils.station_lookup import StationLookup
 
@@ -28,7 +29,7 @@ async def set_owner_occupation(callback: CallbackQuery, state: FSMContext, sessi
         await callback.answer("Session expired. Send /start.", show_alert=True)
         return
 
-    occupation = callback.data.split(":", 1)[1]
+    occupation = OWNER_OCCUPATIONS.normalize(callback.data.split(":", 1)[1])
     PayloadAccessor.set(session.payload, "owner.occupation", occupation)
 
     await session_store.save(session)
@@ -52,7 +53,7 @@ async def set_tenant_purpose(callback: CallbackQuery, state: FSMContext, session
         await callback.answer("Session expired. Send /start.", show_alert=True)
         return
 
-    purpose = callback.data.split(":", 1)[1]
+    purpose = TENANCY_PURPOSES.normalize(callback.data.split(":", 1)[1])
     PayloadAccessor.set(session.payload, "tenant.purpose_of_tenancy", purpose)
     await session_store.save(session)
 

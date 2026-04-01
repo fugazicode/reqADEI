@@ -47,6 +47,7 @@ class FormSession:
     # One-level edit stack for returning from edit input.
     edit_return_state: Optional[str] = None
     edit_return_person: Optional[str] = None
+    last_prompt_message_id: Optional[int] = None
 
     # Set by the pipeline engine whenever a stage fails.
     last_error: Optional[str] = None
