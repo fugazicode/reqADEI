@@ -142,79 +142,6 @@ async def _start_station_picker(
     await session_store.save(session)
 
 
-async def _next_step(
-    message: Message,
-    state: FSMContext,
-    session_store: SessionStore,
-    user_id: int,
-    submission_worker: "SubmissionWorker | None" = None,
-) -> None:
-    session = await session_store.get(user_id)
-    if session is None:
-        await message.answer("Session expired. Send /start to begin again.")
-        return
-
-    if not session.confirmation_queue:
-        if session.next_stage == "submission":
-            if session.payload.is_submittable():
-                if submission_worker is not None:
-                    job = SubmissionJob(
-                        telegram_user_id=user_id,
-                        payload=session.payload,
-                        image_bytes=session.tenant_image_bytes or b"",
-                    )
-                    position = await submission_worker.enqueue(job)
-                    await state.set_state(SubmissionStates.COMPLETE)
-                    await message.answer(
-                        f"✅ All data confirmed.\n"
-                        f"Your form is queued at position {position}.\n"
-                        f"You will be notified when submission completes."
-                    )
-                else:
-                    await state.set_state(SubmissionStates.COMPLETE)
-                    await message.answer("Submission complete. Playwright phase is queued.")
-            else:
-                await message.answer("Some required fields are still missing.")
-            await session_store.save(session)
-            return
-
-        if session.next_stage == "owner_extras":
-            session.next_stage = None
-            await state.set_state(ExtrasCollectionStates.OWNER_OCCUPATION)
-            await _send_prompt(
-                message,
-                session,
-                "Select owner occupation.",
-                reply_markup=owner_occupation_keyboard(),
-            )
-            await session_store.save(session)
-            return
-
-        if session.next_stage == "tenant_extras":
-            session.next_stage = None
-            await state.set_state(ExtrasCollectionStates.TENANT_EXTRAS)
-            await _send_prompt(
-                message,
-                session,
-                "Select tenancy purpose.",
-                reply_markup=tenant_purpose_keyboard(),
-            )
-            await session_store.save(session)
-            return
-
-        await session_store.save(session)
-        return
-
-    flow = ConfirmationFlow(session)
-    result = await flow.show_next_field(message, state)
-    if result == "missing":
-        session.edit_return_state = await state.get_state()
-        session.edit_return_person = session.current_confirming_person
-        await session_store.save(session)
-        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
-    await session_store.save(session)
-
-
 @router.callback_query(F.data.startswith("edit:"))
 async def edit_field(
     callback: CallbackQuery,
@@ -287,6 +214,102 @@ async def confirm_field(
     await session_store.save(session)
     await callback.answer("Confirmed")
     await _next_step(callback.message, state, session_store, callback.from_user.id, submission_worker)
+
+
+async def _next_step(
+    message: Message,
+    state: FSMContext,
+    session_store: SessionStore,
+    user_id: int,
+    submission_worker: "SubmissionWorker | None" = None,
+    station_lookup: StationLookup | None = None,
+) -> None:
+    session = await session_store.get(user_id)
+    if session is None:
+        await message.answer("Session expired. Send /start to begin again.")
+        return
+
+    if not session.confirmation_queue:
+        if session.next_stage == "submission":
+            if session.payload.is_submittable():
+                if submission_worker is not None:
+                    job = SubmissionJob(
+                        telegram_user_id=user_id,
+                        payload=session.payload,
+                        image_bytes=session.tenant_image_bytes or b"",
+                    )
+                    position = await submission_worker.enqueue(job)
+                    await state.set_state(SubmissionStates.COMPLETE)
+                    await message.answer(
+                        f"✅ All data confirmed.\n"
+                        f"Your form is queued at position {position}.\n"
+                        f"You will be notified when submission completes."
+                    )
+                else:
+                    await state.set_state(SubmissionStates.COMPLETE)
+                    await message.answer("Submission complete. Playwright phase is queued.")
+            else:
+                await message.answer("Some required fields are still missing.")
+            await session_store.save(session)
+            return
+
+        if session.next_stage == "owner_extras":
+            session.next_stage = None
+            await state.set_state(ExtrasCollectionStates.OWNER_OCCUPATION)
+            await _send_prompt(
+                message,
+                session,
+                "Select owner occupation.",
+                reply_markup=owner_occupation_keyboard(),
+            )
+            await session_store.save(session)
+            return
+
+        if session.next_stage == "tenant_extras":
+            session.next_stage = None
+            await state.set_state(ExtrasCollectionStates.TENANT_EXTRAS)
+            await _send_prompt(
+                message,
+                session,
+                "Select tenancy purpose.",
+                reply_markup=tenant_purpose_keyboard(),
+            )
+            await session_store.save(session)
+            return
+
+        await session_store.save(session)
+        return
+
+    flow = ConfirmationFlow(session)
+    result = await flow.show_next_field(message, state)
+    if result == "confirm":
+        pass  # Confirm/edit keyboard already shown by show_next_field
+    elif result == "missing":
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
+        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
+    elif result == "missing_picker":
+        session.edit_return_state = await state.get_state()
+        session.edit_return_person = session.current_confirming_person
+        await session_store.save(session)
+        # Route to the appropriate picker.
+        field_path = session.current_editing_field
+        if field_path in _DISTRICT_FIELDS:
+            await _start_district_picker(message, state, session_store, user_id, page=0)
+        elif field_path in _STATION_FIELDS:
+            if station_lookup is not None:
+                await _start_station_picker(message, state, session_store, station_lookup, user_id, page=0)
+            else:
+                # Fallback: prompt district first if no station_lookup available.
+                await _send_prompt(
+                    message,
+                    session,
+                    "District selection required. Please use the buttons below.",
+                    reply_markup=district_keyboard(page=0),
+                )
+                await state.set_state(DataVerificationStates.PICKING_DISTRICT)
+    await session_store.save(session)
 
 
 @router.message(DataVerificationStates.CONFIRMING_FIELD)

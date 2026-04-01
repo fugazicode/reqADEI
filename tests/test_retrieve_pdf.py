@@ -1,3 +1,35 @@
+"""
+Isolated PDF retrieval test.
+
+Purpose
+-------
+Verify that, given a known request number, the bot can:
+  1. Log into the Delhi Police CCTNS portal
+  2. Navigate to the "View Tenant Registration Detail" page
+  3. Download the generated PDF for that request number
+  4. Apply the PREVIEW watermark to the downloaded bytes
+
+This test does NOT trigger main.py or the Telegram bot.  It reuses the same
+PortalSession / FormFiller classes that the live SubmissionWorker uses, so the
+session lifecycle here is identical to the real end-to-end flow.
+
+Note on session.open()
+----------------------
+PortalSession.open() navigates all the way to the form-filling page
+(addtenantpgverification.htm) after login.  _retrieve_pdf() then navigates
+*away* from that page to the "View Tenant Registration Detail" page.  This is
+intentional — the session only needs to be authenticated; the starting page
+does not matter for retrieval.
+
+Usage
+-----
+  python -m tests.test_retrieve_pdf
+
+Required environment variables (.env or shell):
+  PORTAL_USERNAME
+  PORTAL_PASSWORD
+"""
+
 import asyncio
 import os
 import pathlib
@@ -19,9 +51,18 @@ except ImportError as e:
     print("Ensure all dependencies are installed and PYTHONPATH is set correctly.")
     raise SystemExit(1)
 
+# ── Test configuration ────────────────────────────────────────────────────────
+# Replace with a real request number from a previous submission to test against
+# the live portal.
 REQUEST_NUMBER = "816726116865"
+
 MAX_ATTEMPTS = 3
 RETRY_SLEEP_SECONDS = 10
+
+# Run headless so the test can be executed in CI or without a display.
+# Set to False locally if you want to watch the browser navigate.
+HEADLESS = True
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 async def main() -> None:
@@ -34,15 +75,21 @@ async def main() -> None:
         return
 
     async with async_playwright() as pw:
-        session = PortalSession(username, password, pw)
+        # headless=True keeps the test self-contained; no display required.
+        session = PortalSession(username, password, pw, headless=HEADLESS)
         try:
+            # open() logs in and navigates to the form page.  _retrieve_pdf()
+            # will navigate away from the form page to the retrieval page, so
+            # the exact landing page after open() does not matter.
             page = await session.open()
-            print(f"Form page reached — URL: {page.url}")
+            print(f"Portal authenticated — current URL: {page.url}")
 
+            # FormFiller is instantiated only because _retrieve_pdf() is an
+            # instance method on it.  The payload is not used during retrieval.
             payload = make_sample_payload()
             filler = FormFiller(page, payload)
 
-            # ── RETRIEVAL BLOCK WITH RETRY ──────────────────────────────────
+            # ── RETRIEVAL BLOCK WITH RETRY ────────────────────────────────────
             result = b""
             retrieval_pass = False
 
@@ -69,7 +116,7 @@ async def main() -> None:
                 print("  _DUMMY_PDF_BYTES on every attempt — the portal navigation")
                 print("  or download step failed. Check the WARNING logs above.")
 
-            # ── WATERMARK BLOCK ─────────────────────────────────────────────
+            # ── WATERMARK BLOCK ───────────────────────────────────────────────
             print("\nRunning watermark check...")
             try:
                 watermarked = apply_watermark(result)
@@ -91,7 +138,7 @@ async def main() -> None:
                 print("WATERMARK — FAIL (exception during apply_watermark)")
                 traceback.print_exc()
 
-            # ── OVERALL VERDICT ──────────────────────────────────────────────
+            # ── OVERALL VERDICT ───────────────────────────────────────────────
             print()
             if retrieval_pass and watermark_pass:
                 print("OVERALL — PASS")
