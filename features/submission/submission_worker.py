@@ -55,7 +55,7 @@ class SubmissionWorker:
                     self._queue.task_done()
 
     async def _process_job(self, job: SubmissionJob, pw: Playwright) -> None:
-        session = PortalSession(self._username, self._password, pw, headless=True)
+        session = PortalSession(self._username, self._password, pw, headless=False)
         try:
             page = await session.open()
             filler = FormFiller(page, job.payload)
@@ -71,9 +71,14 @@ class SubmissionWorker:
                 caption="Your tenant verification document.",
             )
         except Exception as exc:
+            LOGGER.exception(
+                "Submission failed for user %d: %s",
+                job.telegram_user_id,
+                exc,
+            )
             await self._bot.send_message(
                 job.telegram_user_id,
-                f"❌ Submission failed: {exc}",
+                "❌ Submission failed. Please try again or contact support.",
             )
         finally:
             await session.close()
