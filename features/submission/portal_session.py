@@ -61,7 +61,7 @@ class PortalSession:
         await new_page.click('[name="j_password"]')
         await new_page.fill('[name="j_password"]', self._password)
         await new_page.click('#button')
-        await new_page.wait_for_load_state("domcontentloaded", timeout=120000)
+        await new_page.wait_for_load_state("domcontentloaded", timeout=300000)
         if "login.htm" in new_page.url:
             raise RuntimeError(
                 "Portal login failed — credentials rejected. "
