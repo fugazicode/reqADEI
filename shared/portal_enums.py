@@ -35,12 +35,13 @@ OWNER_OCCUPATIONS = OptionSet(
 
 TENANCY_PURPOSES = OptionSet(
     values=(
-        "RESIDENTIAL",
-        "OFFICE",
+        "Residential",
+        "commercial",
     ),
     aliases={
-        "COMMERCIAL": "OFFICE",
-        "BUSINESS": "OFFICE",
-        "RESIDENTIAL": "RESIDENTIAL",
+        "RESIDENTIAL": "Residential",
+        "COMMERCIAL": "commercial",
+        "BUSINESS": "commercial",
+        "OFFICE": "commercial",
     },
 )

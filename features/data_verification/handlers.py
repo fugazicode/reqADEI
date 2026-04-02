@@ -302,6 +302,11 @@ async def _next_step(
                 await _start_station_picker(message, state, session_store, station_lookup, user_id, page=0)
             else:
                 # Fallback: prompt district first if no station_lookup available.
+                if field_path.startswith("owner."):
+                    district_field_path = "owner.address.district"
+                else:
+                    district_field_path = "tenant.tenanted_address.district"
+                session.current_editing_field = district_field_path
                 await _send_prompt(
                     message,
                     session,
