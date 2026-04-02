@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -16,6 +17,7 @@ class Settings:
     portal_username: str
     portal_password: str
     admin_telegram_id: int
+    snapshot_dir: Path | None = field(default=None)
 
 
 def load_settings() -> Settings:
@@ -24,6 +26,9 @@ def load_settings() -> Settings:
     if not admin_telegram_id_str or not admin_telegram_id_str.isdigit():
         raise ValueError("ADMIN_TELEGRAM_ID must be set in .env")
     admin_telegram_id = int(admin_telegram_id_str)
+
+    raw_snapshot_dir = os.getenv("SUBMISSION_SNAPSHOT_DIR", "").strip()
+    snapshot_dir = Path(raw_snapshot_dir) if raw_snapshot_dir else None
 
     return Settings(
         bot_token=os.getenv("BOT_TOKEN", ""),
@@ -34,4 +39,5 @@ def load_settings() -> Settings:
         portal_username=os.getenv("PORTAL_USERNAME", ""),
         portal_password=os.getenv("PORTAL_PASSWORD", ""),
         admin_telegram_id=admin_telegram_id,
+        snapshot_dir=snapshot_dir,
     )

@@ -9,5 +9,8 @@ __pycache__/
 # Runtime logs
 audit.log
 
+# Local submission snapshots (may contain PII)
+data/submission_snapshot/
+
 # IDE
 .idea/

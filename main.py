@@ -105,6 +105,7 @@ async def run() -> None:
         bot=bot,
         portal_username=config.portal_username,
         portal_password=config.portal_password,
+        snapshot_dir=config.snapshot_dir,
     )
     dp["submission_worker"] = submission_worker
 
