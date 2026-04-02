@@ -61,28 +61,21 @@ class PortalSession:
         await new_page.click('[name="j_password"]')
         await new_page.fill('[name="j_password"]', self._password)
         await new_page.click('#button')
-        try:
-            await new_page.wait_for_url(
-                lambda url: "login.htm" not in url,
-                timeout=120000,
-            )
-        except Exception as exc:
-            current_url = new_page.url
+        await new_page.wait_for_load_state("domcontentloaded", timeout=120000)
+        if "login.htm" in new_page.url:
             raise RuntimeError(
-                "Portal login failed — still on login page after submit. "
-                f"Current URL: {current_url}. Check PORTAL_USERNAME / PORTAL_PASSWORD."
-            ) from exc
+                "Portal login failed — credentials rejected. "
+                f"Current URL: {new_page.url}. Check PORTAL_USERNAME / PORTAL_PASSWORD."
+            )
         self._logger.info("Login succeeded — current URL: %s", new_page.url)
         return new_page
 
     async def _navigate_to_form(self, page: Page) -> None:
-        await page.wait_for_selector(
-            "text=Tenant Registration",
-            state="visible",
+        await page.goto(
+            "https://cctns.delhipolice.gov.in/citizenservices/addtenantpgverification.htm",
+            wait_until="domcontentloaded",
             timeout=300000,
         )
-        await page.hover("text=Tenant Registration")
-        await page.click('a[href="addtenantpgverification.htm"]')
         await page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",
