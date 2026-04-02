@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass
 
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
@@ -10,16 +9,9 @@ from playwright.async_api import Playwright, async_playwright
 
 from features.submission.form_filler import FormFiller
 from features.submission.portal_session import PortalSession
-from shared.models.form_payload import FormPayload
+from shared.models.submission_input import SubmissionInput
 
 LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class SubmissionJob:
-    telegram_user_id: int
-    payload: FormPayload
-    image_bytes: bytes
 
 
 class SubmissionWorker:
@@ -33,9 +25,9 @@ class SubmissionWorker:
         self._bot = bot
         self._username = portal_username
         self._password = portal_password
-        self._queue: asyncio.Queue[SubmissionJob] = asyncio.Queue()
+        self._queue: asyncio.Queue[SubmissionInput] = asyncio.Queue()
 
-    async def enqueue(self, job: SubmissionJob) -> int:
+    async def enqueue(self, job: SubmissionInput) -> int:
         await self._queue.put(job)
         return self._queue.qsize()
 
@@ -54,7 +46,8 @@ class SubmissionWorker:
                 finally:
                     self._queue.task_done()
 
-    async def _process_job(self, job: SubmissionJob, pw: Playwright) -> None:
+    async def _process_job(self, job: SubmissionInput, pw: Playwright) -> None:
+        # Flow: open session → fill form → submit → retrieve PDF → send document (no payment gate).
         session = PortalSession(self._username, self._password, pw, headless=False)
         try:
             page = await session.open()

@@ -9,8 +9,5 @@ __pycache__/
 # Runtime logs
 audit.log
 
-# Runtime data
-refund_ledger.json
-
 # IDE
 .idea/

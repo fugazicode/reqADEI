@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "MoQZ1m2aV7n0nNp7z7uV-"
-uri = "file://CODEBASE.md"
-type = "text"
-title = "Codebase Documentation — CCTNS Tenant Verification Bot"

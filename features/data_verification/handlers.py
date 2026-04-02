@@ -17,7 +17,8 @@ from features.extras_collection.keyboards import (
 )
 from features.extras_collection.states import ExtrasCollectionStates
 from features.submission.states import SubmissionStates
-from features.submission.submission_worker import SubmissionJob, SubmissionWorker
+from features.submission.submission_worker import SubmissionWorker
+from shared.models.submission_input import SubmissionInput
 from infrastructure.session_store import SessionStore
 from utils.aadhaar import validate_aadhaar
 from utils.payload_accessor import PayloadAccessor
@@ -233,7 +234,7 @@ async def _next_step(
         if session.next_stage == "submission":
             if session.payload.is_submittable():
                 if submission_worker is not None:
-                    job = SubmissionJob(
+                    job = SubmissionInput(
                         telegram_user_id=user_id,
                         payload=session.payload,
                         image_bytes=session.tenant_image_bytes or b"",
@@ -547,4 +548,6 @@ async def station_picker_hint(message: Message) -> None:
 
 @router.message(SubmissionStates.COMPLETE)
 async def already_complete(message: Message) -> None:
-    await message.answer("Your submission is queued. Playwright integration is coming soon.")
+    await message.answer(
+        "Your form was already submitted."
+    )
