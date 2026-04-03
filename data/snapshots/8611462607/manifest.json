@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "telegram_user_id": 8611462607,
+  "payload": {
+    "owner": {
+      "first_name": "Sanjeev Kumar",
+      "middle_name": null,
+      "last_name": "Saini",
+      "relative_name": "Bagwan Dass Saini",
+      "relation_type": "Father",
+      "dob": "1969-07-28",
+      "mobile_no": null,
+      "address_verification_doc_no": "367732998245",
+      "occupation": "COMPANY EXECUTIVE",
+      "address": {
+        "house_no": "J4/23 A Ground Floor",
+        "street_name": "Khirki Ext",
+        "colony_locality_area": "Malviya Nagar",
+        "village_town_city": "Delhi",
+        "tehsil_block_mandal": null,
+        "district": "SOUTH",
+        "police_station": "Malviya Nagar",
+        "pincode": "110017",
+        "state": null,
+        "country": null
+      }
+    },
+    "tenant": {
+      "first_name": "Anjana",
+      "middle_name": null,
+      "gender": null,
+      "occupation": null,
+      "last_name": "Saini",
+      "relative_name": "Sanjeev Kumar Saini",
+      "relation_type": "Husband",
+      "dob": "1970-10-17",
+      "address_verification_doc_type": "Aadhar Card",
+      "address_verification_doc_no": "507162196244",
+      "purpose_of_tenancy": "Residential",
+      "address": {
+        "house_no": "J4/23-A",
+        "street_name": null,
+        "colony_locality_area": "Malviya Nagar",
+        "village_town_city": "Delhi",
+        "tehsil_block_mandal": null,
+        "district": "SOUTH",
+        "police_station": null,
+        "pincode": "110017",
+        "state": null,
+        "country": null
+      },
+      "previous_address": null,
+      "tenanted_address": {
+        "house_no": "j4",
+        "street_name": "test street",
+        "colony_locality_area": "malviya nagar",
+        "village_town_city": "new delhi",
+        "tehsil_block_mandal": "Ablock",
+        "district": "SOUTH",
+        "police_station": "Malviya Nagar",
+        "pincode": "110017",
+        "state": "Delhi",
+        "country": "India"
+      }
+    }
+  }
+}
