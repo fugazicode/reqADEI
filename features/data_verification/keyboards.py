@@ -22,10 +22,10 @@ _SECTION_FIELDS: dict[str, dict[str, FieldMeta]] = {
 }
 
 _CONFIRM_LABELS: dict[str, str] = {
-    "owner": "✅ Confirm Owner → Tenant Details",
-    "tenant": "✅ Confirm Tenant → Tenanted Address",
-    "tenanted_addr": "✅ Confirm Tenanted Address → Permanent Address",
-    "perm_addr": "✅ Confirm & Submit",
+    "owner":         "✅ Confirm Owner → Tenanted Addr",   # 32 chars
+    "tenant":        "✅ Confirm Tenant → Perm. Address",  # 33 chars
+    "tenanted_addr": "✅ Confirm Address → Tenant ID",     # 30 chars
+    "perm_addr":     "✅ Confirm & Submit",                # 19 chars
 }
 
 
@@ -38,14 +38,18 @@ def overview_keyboard(section: str) -> InlineKeyboardMarkup:
 
 
 def field_selector_keyboard(section: str) -> InlineKeyboardMarkup:
-    """Show all fields in the section as buttons so user can pick which to edit."""
+    """Show all fields in the section as buttons so user can pick which to edit.
+
+    callback_data uses a numeric index (not the full dot-path) to stay within
+    Telegram's 64-byte callback_data limit.
+    """
     fields = _SECTION_FIELDS.get(section, {})
     buttons: list[list[InlineKeyboardButton]] = []
-    for path, meta in fields.items():
+    for i, (path, meta) in enumerate(fields.items()):
         buttons.append([
             InlineKeyboardButton(
                 text=meta.label,
-                callback_data=f"edit_field:{section}:{path}",
+                callback_data=f"edit_field:{section}:{i}",
             )
         ])
     buttons.append([InlineKeyboardButton(text="← Back to Overview", callback_data=f"overview:back:{section}")])

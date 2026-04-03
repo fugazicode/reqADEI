@@ -23,5 +23,6 @@ class ReviewStates(StatesGroup):
     # Phase 4 — Tenant permanent address (extracted from Aadhaar)
     REVIEWING_PERM_ADDR = State()
     EDITING_PERM_ADDR_FIELD = State()
+    PICKING_PERM_DROPDOWN = State()
     PICKING_PERM_DISTRICT = State()
     PICKING_PERM_STATION = State()

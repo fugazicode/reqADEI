@@ -1,8 +1,9 @@
 """Review & edit FSM handlers.
 
 Flow:
-  REVIEWING_OWNER → (confirm) → REVIEWING_TENANT → (confirm) → REVIEWING_TENANTED_ADDR
-  → (confirm) → REVIEWING_PERM_ADDR → (confirm) → SUBMITTING
+  REVIEWING_OWNER → (confirm) → ENTERING_TENANTED_ADDRESS → REVIEWING_TENANTED_ADDR
+  → (confirm) → UPLOADING_TENANT_ID → REVIEWING_TENANT → (confirm) → REVIEWING_PERM_ADDR
+  → (confirm) → SUBMITTING
 
   Any overview can trigger an "edit" sub-flow:
   1. User taps "Edit a Field"         → show field selector keyboard
@@ -43,11 +44,13 @@ from features.data_verification.overview import (
     build_tenanted_addr_overview_text,
     build_tenant_personal_overview_text,
     send_perm_addr_overview,
-    send_tenant_personal_overview,
-    send_tenanted_addr_overview,
 )
+from features.address_collection.states import AddressStates
 from features.data_verification.states import ReviewStates
+from features.identity_collection.states import IdentityStates
 from features.submission.states import SubmissionStates
+from features.submission.submission_worker import SubmissionWorker
+from infrastructure.analytics_store import AnalyticsStore
 from infrastructure.session_store import SessionStore
 from shared import portal_enums
 from utils.payload_accessor import PayloadAccessor
@@ -61,6 +64,15 @@ _ALL_FIELDS: dict[str, FieldMeta] = {
     **TENANT_PERSONAL_FIELDS,
     **TENANTED_ADDR_FIELDS,
     **PERM_ADDR_FIELDS,
+}
+
+# Ordered key lists per section — used to resolve numeric field indices from
+# field_selector_keyboard callback_data (avoids Telegram's 64-byte limit).
+_SECTION_FIELD_KEYS: dict[str, list[str]] = {
+    "owner": list(OWNER_FIELDS.keys()),
+    "tenant": list(TENANT_PERSONAL_FIELDS.keys()),
+    "tenanted_addr": list(TENANTED_ADDR_FIELDS.keys()),
+    "perm_addr": list(PERM_ADDR_FIELDS.keys()),
 }
 
 _SECTION_STATES = {
@@ -114,29 +126,19 @@ async def confirm_owner(callback: CallbackQuery, state: FSMContext, session_stor
     session = session_store.get(user_id)
     if not session:
         return
-    await state.set_state(ReviewStates.REVIEWING_TENANT)
+    await state.set_state(AddressStates.ENTERING_TENANTED_ADDRESS)
     session.overview_message_id = None
     session_store.set(user_id, session)
-    await send_tenant_personal_overview(callback.message, session)  # type: ignore[arg-type]
+    await callback.message.answer(  # type: ignore[union-attr]
+        "📍 *Tenanted Premises Address*\n\n"
+        "Please type the full address of the *rented property* (in Delhi).\n"
+        "e.g. Flat 12, Block A, Green Park Extension, New Delhi – 110016",
+        parse_mode="Markdown",
+    )
 
 
 @router.callback_query(ReviewStates.REVIEWING_TENANT, F.data == "overview:confirm:tenant")
 async def confirm_tenant(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
-    await callback.answer()
-    user_id = callback.from_user.id
-    session = session_store.get(user_id)
-    if not session:
-        return
-    await state.set_state(ReviewStates.REVIEWING_TENANTED_ADDR)
-    session.overview_message_id = None
-    session_store.set(user_id, session)
-    await send_tenanted_addr_overview(callback.message, session)  # type: ignore[arg-type]
-
-
-@router.callback_query(ReviewStates.REVIEWING_TENANTED_ADDR, F.data == "overview:confirm:tenanted_addr")
-async def confirm_tenanted_addr(
-    callback: CallbackQuery, state: FSMContext, session_store: SessionStore
-) -> None:
     await callback.answer()
     user_id = callback.from_user.id
     session = session_store.get(user_id)
@@ -148,12 +150,34 @@ async def confirm_tenanted_addr(
     await send_perm_addr_overview(callback.message, session)  # type: ignore[arg-type]
 
 
+@router.callback_query(ReviewStates.REVIEWING_TENANTED_ADDR, F.data == "overview:confirm:tenanted_addr")
+async def confirm_tenanted_addr(
+    callback: CallbackQuery, state: FSMContext, session_store: SessionStore
+) -> None:
+    await callback.answer()
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    await state.set_state(IdentityStates.UPLOADING_TENANT_ID)
+    session.overview_message_id = None
+    session.current_confirming_person = "tenant"
+    session_store.set(user_id, session)
+    await callback.message.answer(  # type: ignore[union-attr]
+        "👤 *Tenant ID*\n\nNow upload a clear photo of the *tenant's Aadhaar card*.\n"
+        "You may send multiple photos (front and back). Press *Confirm* when done.",
+        parse_mode="Markdown",
+    )
+
+
 @router.callback_query(ReviewStates.REVIEWING_PERM_ADDR, F.data == "overview:confirm:perm_addr")
 async def confirm_perm_addr_and_submit(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
     bot: Bot,
+    submission_worker: SubmissionWorker,
+    analytics_store: AnalyticsStore | None = None,
 ) -> None:
     await callback.answer()
     user_id = callback.from_user.id
@@ -180,7 +204,7 @@ async def confirm_perm_addr_and_submit(
     session_store.set(user_id, session)
     await callback.message.answer("✅ All details confirmed. Starting portal submission…")  # type: ignore[union-attr]
     from features.submission.handlers import trigger_submission
-    await trigger_submission(callback.message, session)  # type: ignore[arg-type]
+    await trigger_submission(callback.message, session, submission_worker, analytics_store)  # type: ignore[arg-type]
 
 
 # ── Overview: Edit buttons ────────────────────────────────────────────────────
@@ -227,7 +251,18 @@ async def edit_field_selected(
     await callback.answer()
     parts = callback.data.split(":", 2)  # type: ignore[union-attr]
     section = parts[1]
-    field_path = parts[2]
+    raw = parts[2]
+
+    # Resolve numeric index → dot-path (field_selector_keyboard emits indices
+    # to stay within Telegram's 64-byte callback_data limit).
+    if raw.isdigit():
+        keys = _SECTION_FIELD_KEYS.get(section, [])
+        idx = int(raw)
+        if idx >= len(keys):
+            return
+        field_path = keys[idx]
+    else:
+        field_path = raw
 
     user_id = callback.from_user.id
     session = session_store.get(user_id)
@@ -285,6 +320,7 @@ async def edit_field_selected(
         pick_state = {
             "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
             "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
+            "owner": ReviewStates.PICKING_TENANTED_DISTRICT,
         }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
         await state.set_state(pick_state)
         districts = station_lookup.district_names()
@@ -295,13 +331,47 @@ async def edit_field_selected(
         session.last_prompt_message_id = msg.message_id
         session_store.set(user_id, session)
 
+    elif enum_key == "STATIONS":
+        # Editing police station requires picking district first; remap
+        # current_editing_field to the district path so district_selected saves correctly.
+        _station_to_district = {
+            "owner.address.police_station": "owner.address.district",
+            "tenant.tenanted_address.police_station": "tenant.tenanted_address.district",
+            "tenant.address.police_station": "tenant.address.district",
+        }
+        session.current_editing_field = _station_to_district.get(field_path, field_path)
+        pick_state = {
+            "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
+            "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
+            "owner": ReviewStates.PICKING_TENANTED_DISTRICT,
+        }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
+        await state.set_state(pick_state)
+        districts = station_lookup.district_names()
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            "Select district first to choose a police station:",
+            reply_markup=district_picker_keyboard(section, districts),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
+    elif enum_key == "STATES":
+        pick_state = {
+            "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+            "perm_addr": ReviewStates.PICKING_PERM_DROPDOWN,
+        }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
+        await state.set_state(pick_state)
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            "Select state:",
+            reply_markup=small_dropdown_keyboard(section, field_path, portal_enums.STATES.values),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
     elif enum_key in ("RELATION_TYPES", "ADDRESS_DOC_TYPES", "TENANCY_PURPOSES"):
         opt_set = getattr(portal_enums, enum_key)
         pick_state = {
             "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
             "tenant": ReviewStates.PICKING_TENANT_DROPDOWN,
-            "tenanted_addr": ReviewStates.PICKING_TENANTED_DROPDOWN,
-            "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
         }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
         await state.set_state(pick_state)
         msg = await callback.message.answer(  # type: ignore[union-attr]
@@ -483,18 +553,19 @@ async def district_selected(
     if not session:
         return
 
-    # Persist district (may be tenanted or perm address district)
-    district_path = session.current_editing_field or (
-        "tenant.tenanted_address.district" if section == "tenanted_addr"
-        else "tenant.address.district"
-    )
+    # Persist district (may be owner, tenanted, or perm address district)
+    district_path = session.current_editing_field or {
+        "owner": "owner.address.district",
+        "tenanted_addr": "tenant.tenanted_address.district",
+        "perm_addr": "tenant.address.district",
+    }.get(section, "tenant.address.district")
     PayloadAccessor.set(session.payload, district_path, district_name)
 
     # Now ask for station
     station_state = {
         "tenanted_addr": ReviewStates.PICKING_TENANTED_STATION,
         "perm_addr": ReviewStates.PICKING_PERM_STATION,
-        "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+        "owner": ReviewStates.PICKING_TENANTED_STATION,
     }.get(section, ReviewStates.PICKING_TENANTED_STATION)
     await state.set_state(station_state)
 
@@ -561,10 +632,11 @@ async def station_selected(
     if not session:
         return
 
-    station_path = (
-        "tenant.tenanted_address.police_station" if section == "tenanted_addr"
-        else "tenant.address.police_station"
-    )
+    station_path = {
+        "tenanted_addr": "tenant.tenanted_address.police_station",
+        "perm_addr": "tenant.address.police_station",
+        "owner": "owner.address.police_station",
+    }.get(section, "tenant.address.police_station")
     PayloadAccessor.set(session.payload, station_path, station_name)
     session.current_editing_field = None
     session_store.set(user_id, session)

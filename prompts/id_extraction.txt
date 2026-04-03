@@ -13,9 +13,9 @@ Follow these rules exactly:
 3. Extract dob in YYYY-MM-DD if possible, else null.
 4. Extract address_verification_doc_no (the 12-digit Aadhaar number) if visible. Return it as a plain 12-digit string with no spaces or dashes.
 5. Extract address fields: house_no, street_name, colony_locality_area, village_town_city, tehsil_block_mandal, pincode.
-6. For district, select the closest value from this enum only:
-  ["CENTRAL", "DWARKA", "EAST", "IGI AIRPORT", "NEW DELHI", "NORTH", "NORTH EAST", "NORTH WEST", "OUTER DISTRICT", "OUTER NORTH", "ROHINI", "SHAHDARA", "SOUTH", "SOUTH WEST", "SOUTH-EAST", "WEST"]
-7. Return null for any field that cannot be determined.
+6. Extract state as the Indian state name exactly as written on the card (e.g. "Delhi", "Maharashtra", "Uttar Pradesh"). Return null if not visible.
+7. Extract district as the district name exactly as written on the card. Return null if not visible.
+8. Return null for any field that cannot be determined.
 
 Return ONLY valid JSON with no markdown and no code fences, using this shape:
 {
@@ -32,6 +32,7 @@ Return ONLY valid JSON with no markdown and no code fences, using this shape:
     "village_town_city": string | null,
     "tehsil_block_mandal": string | null,
     "district": string | null,
+    "state": string | null,
     "pincode": string | null
   }
 }

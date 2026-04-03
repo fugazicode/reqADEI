@@ -61,18 +61,25 @@ class FormPayload(BaseModel):
             return False
 
         # Owner mandatory fields
-        if not (self.owner.first_name and self.owner.last_name and self.owner.occupation):
+        if not (
+            self.owner.first_name
+            and self.owner.relative_name
+            and self.owner.relation_type
+            and self.owner.occupation
+        ):
             return False
         owner_addr = self.owner.address
         if not owner_addr:
             return False
-        if not (owner_addr.village_town_city and owner_addr.district and owner_addr.police_station):
+        if not (owner_addr.village_town_city and owner_addr.country
+                and owner_addr.state and owner_addr.district and owner_addr.police_station):
             return False
 
         # Tenant personal mandatory fields
         if not (
             self.tenant.first_name
-            and self.tenant.last_name
+            and self.tenant.relative_name
+            and self.tenant.relation_type
             and self.tenant.purpose_of_tenancy
             and self.tenant.address_verification_doc_type
             and self.tenant.address_verification_doc_no
@@ -86,12 +93,12 @@ class FormPayload(BaseModel):
         if not (ta.village_town_city and ta.district and ta.police_station):
             return False
 
-        # Tenant permanent address (village_town_city + country mandatory;
-        # state/district/police_station are best-effort for non-Delhi states)
+        # Tenant permanent address — all 5 fields are always mandatory.
         pa = self.tenant.address
         if not pa:
             return False
-        if not (pa.village_town_city and pa.country):
+        if not (pa.village_town_city and pa.country and pa.state
+                and pa.district and pa.police_station):
             return False
 
         return True
@@ -102,13 +109,19 @@ class FormPayload(BaseModel):
         o = self.owner
         if not o or not o.first_name:
             missing.append("owner.first_name")
-        if not o or not o.last_name:
-            missing.append("owner.last_name")
+        if not o or not o.relative_name:
+            missing.append("owner.relative_name")
+        if not o or not o.relation_type:
+            missing.append("owner.relation_type")
         if not o or not o.occupation:
             missing.append("owner.occupation")
         addr = o.address if o else None
         if not addr or not addr.village_town_city:
             missing.append("owner.address.village_town_city")
+        if not addr or not addr.country:
+            missing.append("owner.address.country")
+        if not addr or not addr.state:
+            missing.append("owner.address.state")
         if not addr or not addr.district:
             missing.append("owner.address.district")
         if not addr or not addr.police_station:
@@ -121,8 +134,10 @@ class FormPayload(BaseModel):
         t = self.tenant
         if not t or not t.first_name:
             missing.append("tenant.first_name")
-        if not t or not t.last_name:
-            missing.append("tenant.last_name")
+        if not t or not t.relative_name:
+            missing.append("tenant.relative_name")
+        if not t or not t.relation_type:
+            missing.append("tenant.relation_type")
         if not t or not t.address_verification_doc_type:
             missing.append("tenant.address_verification_doc_type")
         if not t or not t.address_verification_doc_no:
@@ -139,6 +154,12 @@ class FormPayload(BaseModel):
             missing.append("tenant.address.village_town_city")
         if not pa or not pa.country:
             missing.append("tenant.address.country")
+        if not pa or not pa.state:
+            missing.append("tenant.address.state")
+        if not pa or not pa.district:
+            missing.append("tenant.address.district")
+        if not pa or not pa.police_station:
+            missing.append("tenant.address.police_station")
         return missing
 
     def tenanted_addr_missing_mandatory(self) -> list[str]:

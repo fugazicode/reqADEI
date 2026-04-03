@@ -9,6 +9,7 @@ from core.stage_interface import PipelineStage
 from infrastructure.groq_parser import GroqParser
 from shared.audit_log import write_audit_event
 from shared.models.session import FormSession, ImageRecord
+from shared.portal_enums import STATES
 from utils.aadhaar import mask_aadhaar, validate_aadhaar
 from utils.payload_accessor import PayloadAccessor
 
@@ -86,13 +87,27 @@ class ImageParsingStage(PipelineStage):
         for key, value in parsed.items():
             if isinstance(value, dict):
                 for nested_key, nested_value in value.items():
-                    PayloadAccessor.set(
-                        session.payload,
-                        f"{target_prefix}.{key}.{nested_key}",
-                        nested_value,
-                    )
-            else:
+                    if nested_value is not None:
+                        PayloadAccessor.set(
+                            session.payload,
+                            f"{target_prefix}.{key}.{nested_key}",
+                            nested_value,
+                        )
+            elif value is not None:
                 PayloadAccessor.set(session.payload, f"{target_prefix}.{key}", value)
+
+        # All Aadhaar cards are Indian; auto-fill country if not already set
+        if not PayloadAccessor.get(session.payload, f"{target_prefix}.address.country"):
+            PayloadAccessor.set(session.payload, f"{target_prefix}.address.country", "INDIA")
+
+        # Normalise OCR-extracted state to UPPERCASE and expand abbreviations
+        # so the stored value matches STATE_VALUES lookup keys and the picker values.
+        state_path = f"{target_prefix}.address.state"
+        raw_state = PayloadAccessor.get(session.payload, state_path)
+        if raw_state:
+            expanded = STATES.normalize(str(raw_state))   # maps "UP" → "UTTAR PRADESH" etc.
+            normalised = expanded.strip().upper() if expanded else str(raw_state).strip().upper()
+            PayloadAccessor.set(session.payload, state_path, normalised)
 
         if target_prefix == "tenant" and not PayloadAccessor.get(
             session.payload,

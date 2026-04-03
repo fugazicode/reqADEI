@@ -89,10 +89,6 @@ async def run() -> None:
     dp["bot"] = bot
     dp["submission_worker"] = submission_worker
 
-    # Also make submission_worker accessible via bot[...] for submission/handlers.py
-    bot["submission_worker"] = submission_worker  # type: ignore[index]
-    bot["analytics_store"] = analytics_store  # type: ignore[index]
-
     dp.include_router(root_router)
     dp.include_router(identity_collection_router)
     dp.include_router(data_verification_router)
