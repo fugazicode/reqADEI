@@ -1,14 +1,8 @@
-from aiogram.types import InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def consent_keyboard() -> InlineKeyboardMarkup:
-    kb = InlineKeyboardBuilder()
-    kb.button(text="I Agree", callback_data="consent:agree")
-    return kb.as_markup()
-
-
-def done_upload_keyboard() -> InlineKeyboardMarkup:
-    kb = InlineKeyboardBuilder()
-    kb.button(text="Done", callback_data="upload_done")
-    return kb.as_markup()
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="✅ I Agree", callback_data="consent:agree"),
+        InlineKeyboardButton(text="❌ Cancel", callback_data="consent:cancel"),
+    ]])

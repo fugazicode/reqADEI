@@ -32,61 +32,52 @@ class FormSession:
 
     tenant_image_bytes: bytes = field(default_factory=bytes)
 
-    # Ordered field paths still awaiting user confirmation.
-    confirmation_queue: list[str] = field(default_factory=list)
-
-    # Dot-notation path currently being edited by the user.
-    current_editing_field: Optional[str] = None
-
-    # Must be set by handlers before triggering a pipeline run.
+    # Pipeline routing — used by ImageParsingStage to know which person to extract.
+    # Values: "owner" | "tenant"
     current_confirming_person: str = "owner"
 
-    # Handler-controlled routing to the next workflow stage.
-    next_stage: Optional[str] = None
+    # Edit tracking — set when user selects a field to edit from an overview.
+    current_editing_field: Optional[str] = None
 
-    # One-level edit stack for returning from edit input.
+    # FSM state to restore after an edit/picker completes (e.g. REVIEWING_OWNER).
     edit_return_state: Optional[str] = None
-    edit_return_person: Optional[str] = None
+
+    # Message management
+    # overview_message_id: the overview message edited in-place on every field update.
+    overview_message_id: Optional[int] = None
+    # last_prompt_message_id: picker or text-input prompt; deleted when edit completes.
     last_prompt_message_id: Optional[int] = None
 
-    # Set by the pipeline engine whenever a stage fails.
+    # Error from the last pipeline run.
     last_error: Optional[str] = None
 
-    # These properties are intentionally excluded from dataclasses.fields() and dataclasses.asdict().
-    # If FormSession is ever serialized using dataclass introspection tools, owner and tenant file IDs
-    # will not be included. Use session.image_records directly for serialization.
+    # Analytics DB row id — set by analytics_store.open_session().
+    analytics_session_id: Optional[int] = None
+
+    # ── Image record helpers ─────────────────────────────────────────────────
+
     @property
     def owner_image_file_ids(self) -> list[str]:
-        return [record.image_id for record in self.image_records if record.person == "owner"]
+        return [r.image_id for r in self.image_records if r.person == "owner"]
 
     @owner_image_file_ids.setter
     def owner_image_file_ids(self, file_ids: list[str]) -> None:
-        existing_ids = {record.image_id for record in self.image_records if record.person == "owner"}
-        for file_id in file_ids:
-            if file_id in existing_ids:
-                continue
-            self.image_records.append(
-                ImageRecord(
-                    image_id=file_id,
-                    person="owner",
-                    upload_timestamp=time.time(),
+        existing = {r.image_id for r in self.image_records if r.person == "owner"}
+        for fid in file_ids:
+            if fid not in existing:
+                self.image_records.append(
+                    ImageRecord(image_id=fid, person="owner", upload_timestamp=time.time())
                 )
-            )
 
     @property
     def tenant_image_file_ids(self) -> list[str]:
-        return [record.image_id for record in self.image_records if record.person == "tenant"]
+        return [r.image_id for r in self.image_records if r.person == "tenant"]
 
     @tenant_image_file_ids.setter
     def tenant_image_file_ids(self, file_ids: list[str]) -> None:
-        existing_ids = {record.image_id for record in self.image_records if record.person == "tenant"}
-        for file_id in file_ids:
-            if file_id in existing_ids:
-                continue
-            self.image_records.append(
-                ImageRecord(
-                    image_id=file_id,
-                    person="tenant",
-                    upload_timestamp=time.time(),
+        existing = {r.image_id for r in self.image_records if r.person == "tenant"}
+        for fid in file_ids:
+            if fid not in existing:
+                self.image_records.append(
+                    ImageRecord(image_id=fid, person="tenant", upload_timestamp=time.time())
                 )
-            )

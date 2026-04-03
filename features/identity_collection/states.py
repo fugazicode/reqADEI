@@ -1,7 +1,7 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
-class IdentityCollectionStates(StatesGroup):
+class IdentityStates(StatesGroup):
     AWAITING_CONSENT = State()
-    OWNER_UPLOAD = State()
-    TENANT_UPLOAD = State()
+    UPLOADING_OWNER_ID = State()
+    UPLOADING_TENANT_ID = State()

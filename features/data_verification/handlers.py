@@ -1,553 +1,600 @@
+"""Review & edit FSM handlers.
+
+Flow:
+  REVIEWING_OWNER → (confirm) → REVIEWING_TENANT → (confirm) → REVIEWING_TENANTED_ADDR
+  → (confirm) → REVIEWING_PERM_ADDR → (confirm) → SUBMITTING
+
+  Any overview can trigger an "edit" sub-flow:
+  1. User taps "Edit a Field"         → show field selector keyboard
+  2. User taps a field name           → show appropriate picker or ask for free-text
+  3. User inputs value / taps picker  → save, refresh overview in-place, return to overview state
+"""
 from __future__ import annotations
 
 import logging
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from features.data_verification.confirmation_flow import ConfirmationFlow
-from features.data_verification.labels import field_label
-from features.data_verification.states import DataVerificationStates
-from features.extras_collection.keyboards import (
-    district_keyboard,
-    owner_occupation_keyboard,
-    station_keyboard,
-    tenant_purpose_keyboard,
+from features.data_verification.keyboards import (
+    cancel_edit_keyboard,
+    district_picker_keyboard,
+    field_selector_keyboard,
+    occupation_quick_keyboard,
+    occupation_search_results_keyboard,
+    overview_keyboard,
+    small_dropdown_keyboard,
+    station_picker_keyboard,
 )
-from features.extras_collection.states import ExtrasCollectionStates
+from features.data_verification.labels import (
+    DATE,
+    DROPDOWN,
+    FREE_TEXT,
+    OWNER_FIELDS,
+    PERM_ADDR_FIELDS,
+    TENANTED_ADDR_FIELDS,
+    TENANT_PERSONAL_FIELDS,
+    FieldMeta,
+)
+from features.data_verification.overview import (
+    build_owner_overview_text,
+    build_perm_addr_overview_text,
+    build_tenanted_addr_overview_text,
+    build_tenant_personal_overview_text,
+    send_perm_addr_overview,
+    send_tenant_personal_overview,
+    send_tenanted_addr_overview,
+)
+from features.data_verification.states import ReviewStates
 from features.submission.states import SubmissionStates
-from features.submission.submission_worker import SubmissionWorker
-from shared.models.submission_input import SubmissionInput
 from infrastructure.session_store import SessionStore
-from utils.aadhaar import validate_aadhaar
+from shared import portal_enums
 from utils.payload_accessor import PayloadAccessor
 from utils.station_lookup import StationLookup
 
-router = Router(name=__name__)
 LOGGER = logging.getLogger(__name__)
+router = Router(name="data_verification")
 
-_DISTRICT_FIELDS = {
-    "owner.address.district",
-    "tenant.tenanted_address.district",
+_ALL_FIELDS: dict[str, FieldMeta] = {
+    **OWNER_FIELDS,
+    **TENANT_PERSONAL_FIELDS,
+    **TENANTED_ADDR_FIELDS,
+    **PERM_ADDR_FIELDS,
 }
-_STATION_FIELDS = {
-    "owner.address.police_station",
-    "tenant.tenanted_address.police_station",
+
+_SECTION_STATES = {
+    "owner": ReviewStates.REVIEWING_OWNER,
+    "tenant": ReviewStates.REVIEWING_TENANT,
+    "tenanted_addr": ReviewStates.REVIEWING_TENANTED_ADDR,
+    "perm_addr": ReviewStates.REVIEWING_PERM_ADDR,
+}
+
+_OVERVIEW_BUILDERS = {
+    "owner": build_owner_overview_text,
+    "tenant": build_tenant_personal_overview_text,
+    "tenanted_addr": build_tenanted_addr_overview_text,
+    "perm_addr": build_perm_addr_overview_text,
 }
 
 
-async def _delete_message_safe(message: Message) -> None:
+# ── Helper to refresh overview message in-place ──────────────────────────────
+
+async def _refresh_overview(bot: Bot, chat_id: int, session, section: str) -> None:
+    if not session.overview_message_id:
+        return
+    text = _OVERVIEW_BUILDERS[section](session)
     try:
-        await message.delete()
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=session.overview_message_id,
+            text=text,
+            reply_markup=overview_keyboard(section),
+            parse_mode="Markdown",
+        )
     except Exception:
         pass
 
 
-async def _delete_prompt_message(message: Message, prompt_message_id: int | None) -> None:
-    if not prompt_message_id:
+async def _delete_prompt(bot: Bot, chat_id: int, session) -> None:
+    if session.last_prompt_message_id:
+        try:
+            await bot.delete_message(chat_id, session.last_prompt_message_id)
+        except Exception:
+            pass
+        session.last_prompt_message_id = None
+
+
+# ── Overview: Confirm buttons ─────────────────────────────────────────────────
+
+@router.callback_query(ReviewStates.REVIEWING_OWNER, F.data == "overview:confirm:owner")
+async def confirm_owner(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
+    await callback.answer()
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
         return
-    try:
-        await message.bot.delete_message(chat_id=message.chat.id, message_id=prompt_message_id)
-    except Exception:
-        pass
+    await state.set_state(ReviewStates.REVIEWING_TENANT)
+    session.overview_message_id = None
+    session_store.set(user_id, session)
+    await send_tenant_personal_overview(callback.message, session)  # type: ignore[arg-type]
 
 
-async def _cleanup_for_incoming_user_message(message: Message, session) -> None:
-    await _delete_prompt_message(message, session.last_prompt_message_id)
-    session.last_prompt_message_id = None
-    await _delete_message_safe(message)
+@router.callback_query(ReviewStates.REVIEWING_TENANT, F.data == "overview:confirm:tenant")
+async def confirm_tenant(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
+    await callback.answer()
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    await state.set_state(ReviewStates.REVIEWING_TENANTED_ADDR)
+    session.overview_message_id = None
+    session_store.set(user_id, session)
+    await send_tenanted_addr_overview(callback.message, session)  # type: ignore[arg-type]
 
 
-async def _send_prompt(message: Message, session, text: str, *, reply_markup=None) -> None:
-    await _delete_prompt_message(message, session.last_prompt_message_id)
-    sent = await message.answer(text, reply_markup=reply_markup)
-    session.last_prompt_message_id = sent.message_id
+@router.callback_query(ReviewStates.REVIEWING_TENANTED_ADDR, F.data == "overview:confirm:tenanted_addr")
+async def confirm_tenanted_addr(
+    callback: CallbackQuery, state: FSMContext, session_store: SessionStore
+) -> None:
+    await callback.answer()
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    await state.set_state(ReviewStates.REVIEWING_PERM_ADDR)
+    session.overview_message_id = None
+    session_store.set(user_id, session)
+    await send_perm_addr_overview(callback.message, session)  # type: ignore[arg-type]
 
 
-async def _start_district_picker(
-    message: Message,
+@router.callback_query(ReviewStates.REVIEWING_PERM_ADDR, F.data == "overview:confirm:perm_addr")
+async def confirm_perm_addr_and_submit(
+    callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
-    user_id: int,
-    *,
-    page: int = 0,
+    bot: Bot,
 ) -> None:
-    session = await session_store.get(user_id)
-    if session is None:
-        await message.answer("Session expired. Send /start.")
-        return
-    if not session.current_editing_field or session.current_editing_field not in _DISTRICT_FIELDS:
-        await _send_prompt(message, session, "No district field is currently set for editing.")
-        await session_store.save(session)
-        return
-    await state.set_state(DataVerificationStates.PICKING_DISTRICT)
-    await _send_prompt(message, session, "Select district.", reply_markup=district_keyboard(page=page))
-    await session_store.save(session)
-
-
-async def _start_station_picker(
-    message: Message,
-    state: FSMContext,
-    session_store: SessionStore,
-    station_lookup: StationLookup,
-    user_id: int,
-    *,
-    page: int = 0,
-) -> None:
-    session = await session_store.get(user_id)
-    if session is None:
-        await message.answer("Session expired. Send /start.")
-        return
-    if not session.current_editing_field or session.current_editing_field not in _STATION_FIELDS:
-        await _send_prompt(message, session, "No police station field is currently set for editing.")
-        await session_store.save(session)
+    await callback.answer()
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
         return
 
-    target = session.current_editing_field
-    if target.startswith("owner."):
-        district_path = "owner.address.district"
-    else:
-        district_path = "tenant.tenanted_address.district"
-    district = PayloadAccessor.get(session.payload, district_path)
-    if not district:
-        await _send_prompt(
-            message,
-            session,
-            "District is required before selecting police station. Please pick district first."
-        )
-        session.current_editing_field = district_path
-        await session_store.save(session)
-        await _start_district_picker(message, state, session_store, user_id, page=0)
-        return
-
-    stations = station_lookup.stations_for_district(district)
-    if not stations:
-        await _send_prompt(
-            message,
-            session,
-            f"No police stations found for district '{district}'. Please pick a different district."
-        )
-        session.current_editing_field = district_path
-        await session_store.save(session)
-        await _start_district_picker(message, state, session_store, user_id, page=0)
-        return
-
-    await state.set_state(DataVerificationStates.PICKING_STATION)
-    await _send_prompt(
-        message,
-        session,
-        f"Select police station for district: {district}",
-        reply_markup=station_keyboard(stations, page=page, include_skip=True),
+    missing = (
+        session.payload.owner_missing_mandatory()
+        + session.payload.tenant_personal_missing_mandatory()
+        + session.payload.tenanted_addr_missing_mandatory()
+        + session.payload.tenant_perm_addr_missing_mandatory()
     )
-    await session_store.save(session)
+    if missing:
+        labels = [_ALL_FIELDS[p].label if p in _ALL_FIELDS else p for p in missing]
+        await callback.message.answer(  # type: ignore[union-attr]
+            "⚠️ The following mandatory fields are still empty:\n"
+            + "\n".join(f"• {l}" for l in labels)
+            + "\n\nPlease fill them before submitting.",
+        )
+        return
+
+    await state.set_state(SubmissionStates.SUBMITTING)
+    session_store.set(user_id, session)
+    await callback.message.answer("✅ All details confirmed. Starting portal submission…")  # type: ignore[union-attr]
+    from features.submission.handlers import trigger_submission
+    await trigger_submission(callback.message, session)  # type: ignore[arg-type]
 
 
-@router.callback_query(F.data.startswith("edit:"))
-async def edit_field(
+# ── Overview: Edit buttons ────────────────────────────────────────────────────
+
+@router.callback_query(F.data.startswith("overview:edit:"))
+async def overview_edit(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
+    await callback.answer()
+    section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    msg = await callback.message.answer(  # type: ignore[union-attr]
+        "Which field would you like to edit?",
+        reply_markup=field_selector_keyboard(section),
+    )
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if session:
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
+
+@router.callback_query(F.data.startswith("overview:back:"))
+async def overview_back(callback: CallbackQuery, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await callback.answer()
+    section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+    await state.set_state(_SECTION_STATES[section])
+    session.current_editing_field = None
+    session_store.set(user_id, session)
+    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
+
+
+# ── Field selector: route to correct picker or free-text prompt ───────────────
+
+@router.callback_query(F.data.startswith("edit_field:"))
+async def edit_field_selected(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
     station_lookup: StationLookup,
 ) -> None:
-    if not callback.from_user or not callback.message or not callback.data:
+    await callback.answer()
+    parts = callback.data.split(":", 2)  # type: ignore[union-attr]
+    section = parts[1]
+    field_path = parts[2]
+
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
         return
 
-    session = await session_store.get(callback.from_user.id)
-    if session is None:
-        await callback.answer("Session expired. Send /start.", show_alert=True)
-        return
-
-    field_path = callback.data.split(":", 1)[1]
     session.current_editing_field = field_path
-    session.edit_return_state = await state.get_state()
-    session.edit_return_person = session.current_confirming_person
-    await session_store.save(session)
-    if field_path in _DISTRICT_FIELDS:
-        await state.set_state(DataVerificationStates.PICKING_DISTRICT)
-        await _send_prompt(callback.message, session, "Select district.", reply_markup=district_keyboard(page=0))
-    elif field_path in _STATION_FIELDS:
-        await _start_station_picker(
-            callback.message,
-            state,
-            session_store,
-            station_lookup,
-            callback.from_user.id,
-            page=0,
+    session.edit_return_state = section
+    session_store.set(user_id, session)
+
+    meta = _ALL_FIELDS.get(field_path)
+    if not meta:
+        return
+
+    chat_id = callback.message.chat.id  # type: ignore[union-attr]
+
+    if meta.edit_type == FREE_TEXT or meta.edit_type == DATE:
+        edit_state = {
+            "owner": ReviewStates.EDITING_OWNER_FIELD,
+            "tenant": ReviewStates.EDITING_TENANT_FIELD,
+            "tenanted_addr": ReviewStates.EDITING_TENANTED_ADDR_FIELD,
+            "perm_addr": ReviewStates.EDITING_PERM_ADDR_FIELD,
+        }[section]
+        await state.set_state(edit_state)
+        prompt = (
+            f"Enter new value for *{meta.label}*:"
+            + (" (format: DD/MM/YYYY)" if meta.edit_type == DATE else "")
         )
-    else:
-        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
-        await _send_prompt(
-            callback.message,
-            session,
-            f"Please enter new value for {field_label(field_path)}.",
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            prompt,
+            reply_markup=cancel_edit_keyboard(section),
+            parse_mode="Markdown",
         )
-    await session_store.save(session)
-    await callback.answer()
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+        return
+
+    # DROPDOWN routing
+    enum_key = meta.enum_key or ""
+
+    if enum_key == "OCCUPATIONS":
+        pick_state = {
+            "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+            "tenant": ReviewStates.PICKING_TENANT_DROPDOWN,
+        }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
+        await state.set_state(pick_state)
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            "Select occupation:",
+            reply_markup=occupation_quick_keyboard(section),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
+    elif enum_key == "DISTRICTS":
+        pick_state = {
+            "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
+            "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
+        }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
+        await state.set_state(pick_state)
+        districts = station_lookup.district_names()
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            "Select district:",
+            reply_markup=district_picker_keyboard(section, districts),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
+    elif enum_key in ("RELATION_TYPES", "ADDRESS_DOC_TYPES", "TENANCY_PURPOSES"):
+        opt_set = getattr(portal_enums, enum_key)
+        pick_state = {
+            "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+            "tenant": ReviewStates.PICKING_TENANT_DROPDOWN,
+            "tenanted_addr": ReviewStates.PICKING_TENANTED_DROPDOWN,
+            "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
+        }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
+        await state.set_state(pick_state)
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            f"Select {meta.label}:",
+            reply_markup=small_dropdown_keyboard(section, field_path, opt_set.values),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
 
 
-@router.callback_query(F.data.startswith("confirm:"))
-async def confirm_field(
+# ── Free-text edit handlers ───────────────────────────────────────────────────
+
+async def _handle_free_text_edit(
+    message: Message,
+    state: FSMContext,
+    session_store: SessionStore,
+    bot: Bot,
+    section: str,
+) -> None:
+    user_id = message.from_user.id
+    session = session_store.get(user_id)
+    if not session or not session.current_editing_field:
+        return
+    field_path = session.current_editing_field
+    PayloadAccessor.set(session.payload, field_path, message.text.strip())  # type: ignore[union-attr]
+    await _delete_prompt(bot, message.chat.id, session)
+    await message.delete()
+    session.current_editing_field = None
+    session_store.set(user_id, session)
+    await state.set_state(_SECTION_STATES[section])
+    await _refresh_overview(bot, message.chat.id, session, section)
+
+
+@router.message(ReviewStates.EDITING_OWNER_FIELD)
+async def free_text_owner(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await _handle_free_text_edit(message, state, session_store, bot, "owner")
+
+
+@router.message(ReviewStates.EDITING_TENANT_FIELD)
+async def free_text_tenant(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await _handle_free_text_edit(message, state, session_store, bot, "tenant")
+
+
+@router.message(ReviewStates.EDITING_TENANTED_ADDR_FIELD)
+async def free_text_tenanted(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await _handle_free_text_edit(message, state, session_store, bot, "tenanted_addr")
+
+
+@router.message(ReviewStates.EDITING_PERM_ADDR_FIELD)
+async def free_text_perm(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await _handle_free_text_edit(message, state, session_store, bot, "perm_addr")
+
+
+# ── Occupation picker ─────────────────────────────────────────────────────────
+
+@router.callback_query(F.data.startswith("picker:occ:"))
+async def occupation_selected(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
-    submission_worker: SubmissionWorker,
+    bot: Bot,
 ) -> None:
-    if not callback.from_user or not callback.message or not callback.data:
-        return
-
-    session = await session_store.get(callback.from_user.id)
-    if session is None:
-        await callback.answer("Session expired. Send /start.", show_alert=True)
-        return
-
-    field_path = callback.data.split(":", 1)[1]
-    expected_field = session.confirmation_queue[0] if session.confirmation_queue else None
-    if expected_field is None or expected_field != field_path:
-        await callback.answer("This confirmation is no longer active.", show_alert=True)
-        return
-
-    if session.confirmation_queue and session.confirmation_queue[0] == field_path:
-        session.confirmation_queue.pop(0)
-
-    await _delete_prompt_message(callback.message, session.last_prompt_message_id)
-    session.last_prompt_message_id = None
-    await session_store.save(session)
-    await callback.answer("Confirmed")
-    await _next_step(callback.message, state, session_store, callback.from_user.id, submission_worker)
-
-
-async def _next_step(
-    message: Message,
-    state: FSMContext,
-    session_store: SessionStore,
-    user_id: int,
-    submission_worker: "SubmissionWorker | None" = None,
-    station_lookup: StationLookup | None = None,
-) -> None:
-    session = await session_store.get(user_id)
-    if session is None:
-        await message.answer("Session expired. Send /start to begin again.")
-        return
-
-    if not session.confirmation_queue:
-        if session.next_stage == "submission":
-            if session.payload.is_submittable():
-                if submission_worker is not None:
-                    job = SubmissionInput(
-                        telegram_user_id=user_id,
-                        payload=session.payload,
-                        image_bytes=session.tenant_image_bytes or b"",
-                    )
-                    position = await submission_worker.enqueue(job)
-                    await state.set_state(SubmissionStates.COMPLETE)
-                    await message.answer(
-                        f"✅ All data confirmed.\n"
-                        f"Your form is queued at position {position}.\n"
-                        f"You will be notified when submission completes."
-                    )
-                else:
-                    await state.set_state(SubmissionStates.COMPLETE)
-                    await message.answer("Submission complete. Playwright phase is queued.")
-            else:
-                await message.answer("Some required fields are still missing.")
-            await session_store.save(session)
-            return
-
-        if session.next_stage == "owner_extras":
-            session.next_stage = None
-            await state.set_state(ExtrasCollectionStates.OWNER_OCCUPATION)
-            await _send_prompt(
-                message,
-                session,
-                "Select owner occupation.",
-                reply_markup=owner_occupation_keyboard(),
-            )
-            await session_store.save(session)
-            return
-
-        if session.next_stage == "tenant_extras":
-            session.next_stage = None
-            await state.set_state(ExtrasCollectionStates.TENANT_EXTRAS)
-            await _send_prompt(
-                message,
-                session,
-                "Select tenancy purpose.",
-                reply_markup=tenant_purpose_keyboard(),
-            )
-            await session_store.save(session)
-            return
-
-        await session_store.save(session)
-        return
-
-    flow = ConfirmationFlow(session)
-    result = await flow.show_next_field(message, state)
-    if result == "confirm":
-        pass  # Confirm/edit keyboard already shown by show_next_field
-    elif result == "missing":
-        session.edit_return_state = await state.get_state()
-        session.edit_return_person = session.current_confirming_person
-        await session_store.save(session)
-        await state.set_state(DataVerificationStates.AWAITING_EDIT_INPUT)
-    elif result == "missing_picker":
-        session.edit_return_state = await state.get_state()
-        session.edit_return_person = session.current_confirming_person
-        await session_store.save(session)
-        # Route to the appropriate picker.
-        field_path = session.current_editing_field
-        if field_path in _DISTRICT_FIELDS:
-            await _start_district_picker(message, state, session_store, user_id, page=0)
-        elif field_path in _STATION_FIELDS:
-            if station_lookup is not None:
-                await _start_station_picker(message, state, session_store, station_lookup, user_id, page=0)
-            else:
-                # Fallback: prompt district first if no station_lookup available.
-                if field_path.startswith("owner."):
-                    district_field_path = "owner.address.district"
-                else:
-                    district_field_path = "tenant.tenanted_address.district"
-                session.current_editing_field = district_field_path
-                await _send_prompt(
-                    message,
-                    session,
-                    "District selection required. Please use the buttons below.",
-                    reply_markup=district_keyboard(page=0),
-                )
-                await state.set_state(DataVerificationStates.PICKING_DISTRICT)
-    await session_store.save(session)
-
-
-@router.message(DataVerificationStates.CONFIRMING_FIELD)
-async def confirm_field_hint(message: Message) -> None:
-    await message.answer("Please use the buttons to confirm or edit the field.")
-
-
-@router.message(DataVerificationStates.AWAITING_EDIT_INPUT)
-async def receive_edit_input(
-    message: Message,
-    state: FSMContext,
-    session_store: SessionStore,
-    submission_worker: SubmissionWorker,
-) -> None:
-    if not message.from_user or not message.text:
-        return
-
-    session = await session_store.get(message.from_user.id)
-    if session is None:
-        await message.answer("Session expired. Send /start.")
-        return
-
-    if not session.current_editing_field:
-        await _send_prompt(message, session, "No field is currently set for editing.")
-        await session_store.save(session)
-        return
-
-    value = message.text.strip()
-    if session.current_editing_field.endswith("address_verification_doc_no"):
-        is_valid, cleaned = validate_aadhaar(value)
-        if not is_valid:
-            await _send_prompt(
-                message,
-                session,
-                "The Aadhaar number you entered appears to be invalid. Please check it and type it again."
-            )
-            await session_store.save(session)
-            return
-        value = cleaned
-
-    await _cleanup_for_incoming_user_message(message, session)
-    PayloadAccessor.set(session.payload, session.current_editing_field, value)
-    session.current_editing_field = None
-
-    if session.edit_return_state is None:
-        LOGGER.warning(
-            "Missing edit_return_state for user %s; falling back to confirmation state.",
-            message.from_user.id,
-        )
-        return_state = DataVerificationStates.CONFIRMING_FIELD.state
-    else:
-        return_state = session.edit_return_state
-
-    session.edit_return_state = None
-    session.edit_return_person = None
-    await session_store.save(session)
-    await state.set_state(return_state)
-    await _next_step(message, state, session_store, message.from_user.id, submission_worker)
-
-
-@router.callback_query(DataVerificationStates.PICKING_DISTRICT, F.data.startswith("pickdistrictpage:"))
-async def district_page(callback: CallbackQuery, state: FSMContext) -> None:
-    if not callback.message or not callback.data:
-        return
-    try:
-        page = int(callback.data.split(":", 1)[1])
-    except ValueError:
-        await callback.answer()
-        return
-    await callback.message.edit_reply_markup(reply_markup=district_keyboard(page=page))
     await callback.answer()
+    parts = callback.data.split(":", 3)  # type: ignore[union-attr]
+    section = parts[2]
+    occupation = parts[3]
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session or not session.current_editing_field:
+        return
+    PayloadAccessor.set(session.payload, session.current_editing_field, occupation)
+    await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+    session.current_editing_field = None
+    session_store.set(user_id, session)
+    await state.set_state(_SECTION_STATES[section])
+    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
 
 
-@router.callback_query(DataVerificationStates.PICKING_DISTRICT, F.data.startswith("pickdistrict:"))
-async def pick_district(
+@router.callback_query(F.data.startswith("picker:occ_search:"))
+async def occupation_search_prompt(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+) -> None:
+    await callback.answer()
+    section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if session:
+        pick_state = {
+            "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+            "tenant": ReviewStates.PICKING_TENANT_DROPDOWN,
+        }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
+        await state.set_state(pick_state)
+        msg = await callback.message.answer("Type part of the occupation name:")  # type: ignore[union-attr]
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
+
+@router.callback_query(F.data.startswith("picker:occ_quick:"))
+async def occupation_back_to_quick(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+) -> None:
+    await callback.answer()
+    section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    await callback.message.edit_reply_markup(reply_markup=occupation_quick_keyboard(section))  # type: ignore[union-attr]
+
+
+async def _handle_occupation_search(
+    message: Message,
+    state: FSMContext,
+    session_store: SessionStore,
+    bot: Bot,
+    section: str,
+) -> None:
+    from shared.portal_enums import OCCUPATIONS
+    query = message.text.strip().upper()  # type: ignore[union-attr]
+    matches = [v for v in OCCUPATIONS.values if query in v.upper()]
+    user_id = message.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    await _delete_prompt(bot, message.chat.id, session)
+    await message.delete()
+    msg = await message.answer(
+        f"Results for '{message.text}':",
+        reply_markup=occupation_search_results_keyboard(section, matches),
+    )
+    session.last_prompt_message_id = msg.message_id
+    session_store.set(user_id, session)
+
+
+@router.message(ReviewStates.PICKING_OWNER_DROPDOWN)
+async def occ_search_owner(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await _handle_occupation_search(message, state, session_store, bot, "owner")
+
+
+@router.message(ReviewStates.PICKING_TENANT_DROPDOWN)
+async def occ_search_tenant(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    await _handle_occupation_search(message, state, session_store, bot, "tenant")
+
+
+# ── District / station pickers ────────────────────────────────────────────────
+
+@router.callback_query(F.data.startswith("picker:dist_page:"))
+async def district_page(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
     station_lookup: StationLookup,
 ) -> None:
-    if not callback.from_user or not callback.message or not callback.data:
-        return
-    session = await session_store.get(callback.from_user.id)
-    if session is None:
-        await callback.answer("Session expired. Send /start.", show_alert=True)
-        return
-    district = callback.data.split(":", 1)[1].strip()
-    target = session.current_editing_field
-    if target not in _DISTRICT_FIELDS:
-        await callback.answer("This selection is no longer active.", show_alert=True)
-        return
+    await callback.answer()
+    parts = callback.data.split(":")  # type: ignore[union-attr]
+    section = parts[2]
+    page = int(parts[3])
+    districts = station_lookup.district_names()
+    await callback.message.edit_reply_markup(  # type: ignore[union-attr]
+        reply_markup=district_picker_keyboard(section, districts, page)
+    )
 
-    PayloadAccessor.set(session.payload, target, district)
-    await _delete_prompt_message(callback.message, session.last_prompt_message_id)
-    session.last_prompt_message_id = None
-    await session_store.save(session)
-    await callback.answer("District set")
 
-    # If user was fixing district, strongly guide them to station selection next if station is empty.
-    if target.startswith("owner."):
-        station_path = "owner.address.police_station"
-    else:
-        station_path = "tenant.tenanted_address.police_station"
-    if not PayloadAccessor.get(session.payload, station_path):
-        session.current_editing_field = station_path
-        await session_store.save(session)
-        await _start_station_picker(
-            callback.message,
-            state,
-            session_store,
-            station_lookup,
-            callback.from_user.id,
-            page=0,
-        )
+@router.callback_query(F.data.startswith("picker:district:"))
+async def district_selected(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+    station_lookup: StationLookup,
+    bot: Bot,
+) -> None:
+    await callback.answer()
+    parts = callback.data.split(":", 3)  # type: ignore[union-attr]
+    section = parts[2]
+    district_name = parts[3]
+
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
         return
 
-    # Return to confirmation flow.
-    session.current_editing_field = None
-    return_state = session.edit_return_state or DataVerificationStates.CONFIRMING_FIELD.state
-    session.edit_return_state = None
-    session.edit_return_person = None
-    await session_store.save(session)
-    await state.set_state(return_state)
-    await _next_step(callback.message, state, session_store, callback.from_user.id)
+    # Persist district (may be tenanted or perm address district)
+    district_path = session.current_editing_field or (
+        "tenant.tenanted_address.district" if section == "tenanted_addr"
+        else "tenant.address.district"
+    )
+    PayloadAccessor.set(session.payload, district_path, district_name)
+
+    # Now ask for station
+    station_state = {
+        "tenanted_addr": ReviewStates.PICKING_TENANTED_STATION,
+        "perm_addr": ReviewStates.PICKING_PERM_STATION,
+        "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+    }.get(section, ReviewStates.PICKING_TENANTED_STATION)
+    await state.set_state(station_state)
+
+    stations = station_lookup.stations_for_district(district_name)
+    await callback.message.edit_text(  # type: ignore[union-attr]
+        f"District: *{district_name.title()}*\n\nNow select the police station:",
+        reply_markup=station_picker_keyboard(section, district_name, stations),
+        parse_mode="Markdown",
+    )
+    session_store.set(user_id, session)
 
 
-@router.callback_query(DataVerificationStates.PICKING_STATION, F.data.startswith("pickstationpage:"))
+@router.callback_query(F.data.startswith("picker:district_reselect:"))
+async def district_reselect(
+    callback: CallbackQuery,
+    state: FSMContext,
+    station_lookup: StationLookup,
+) -> None:
+    await callback.answer()
+    section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    pick_state = {
+        "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
+        "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
+    }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
+    await state.set_state(pick_state)
+    districts = station_lookup.district_names()
+    await callback.message.edit_text(  # type: ignore[union-attr]
+        "Select district:",
+        reply_markup=district_picker_keyboard(section, districts),
+    )
+
+
+@router.callback_query(F.data.startswith("picker:stn_page:"))
 async def station_page(
     callback: CallbackQuery,
-    state: FSMContext,
-    session_store: SessionStore,
     station_lookup: StationLookup,
 ) -> None:
-    if not callback.from_user or not callback.message or not callback.data:
-        return
-    session = await session_store.get(callback.from_user.id)
-    if session is None:
-        await callback.answer("Session expired. Send /start.", show_alert=True)
-        return
-    try:
-        page = int(callback.data.split(":", 1)[1])
-    except ValueError:
-        await callback.answer()
-        return
-    # Recompute stations from currently selected district.
-    if session.current_editing_field.startswith("owner."):
-        district_path = "owner.address.district"
-    else:
-        district_path = "tenant.tenanted_address.district"
-    district = PayloadAccessor.get(session.payload, district_path)
-    stations = station_lookup.stations_for_district(district or "")
-    await callback.message.edit_reply_markup(
-        reply_markup=station_keyboard(stations, page=page, include_skip=True)
-    )
     await callback.answer()
+    parts = callback.data.split(":", 4)  # type: ignore[union-attr]
+    section = parts[2]
+    district = parts[3]
+    page = int(parts[4])
+    stations = station_lookup.stations_for_district(district)
+    await callback.message.edit_reply_markup(  # type: ignore[union-attr]
+        reply_markup=station_picker_keyboard(section, district, stations, page)
+    )
 
 
-@router.callback_query(DataVerificationStates.PICKING_STATION, F.data.startswith("pickstation:"))
-async def pick_station(
+@router.callback_query(F.data.startswith("picker:station:"))
+async def station_selected(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
+    bot: Bot,
 ) -> None:
-    if not callback.from_user or not callback.message or not callback.data:
-        return
-    session = await session_store.get(callback.from_user.id)
-    if session is None:
-        await callback.answer("Session expired. Send /start.", show_alert=True)
+    await callback.answer()
+    parts = callback.data.split(":", 4)  # type: ignore[union-attr]
+    section = parts[2]
+    district = parts[3]
+    station_name = parts[4]
+
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
         return
 
-    station = callback.data.split(":", 1)[1].strip()
-    target = session.current_editing_field
-    if target not in _STATION_FIELDS:
-        await callback.answer("This selection is no longer active.", show_alert=True)
-        return
-    PayloadAccessor.set(session.payload, target, station)
-    await _delete_prompt_message(callback.message, session.last_prompt_message_id)
-    session.last_prompt_message_id = None
+    station_path = (
+        "tenant.tenanted_address.police_station" if section == "tenanted_addr"
+        else "tenant.address.police_station"
+    )
+    PayloadAccessor.set(session.payload, station_path, station_name)
     session.current_editing_field = None
-
-    return_state = session.edit_return_state or DataVerificationStates.CONFIRMING_FIELD.state
-    session.edit_return_state = None
-    session.edit_return_person = None
-    await session_store.save(session)
-
-    await callback.answer("Police station set")
-    await state.set_state(return_state)
-    await _next_step(callback.message, state, session_store, callback.from_user.id)
+    session_store.set(user_id, session)
+    await state.set_state(_SECTION_STATES[section])
+    await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
 
 
-@router.callback_query(DataVerificationStates.PICKING_STATION, F.data.startswith("pickstationskip:"))
-async def skip_station(
+# ── Small dropdown (relation type, doc type, tenancy purpose) ─────────────────
+
+@router.callback_query(F.data.startswith("picker:small:"))
+async def small_dropdown_selected(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
+    bot: Bot,
 ) -> None:
-    if not callback.from_user or not callback.message:
-        return
-    session = await session_store.get(callback.from_user.id)
-    if session is None:
-        await callback.answer("Session expired. Send /start.", show_alert=True)
-        return
-    # Keep existing value (possibly empty) and return.
-    await _delete_prompt_message(callback.message, session.last_prompt_message_id)
-    session.last_prompt_message_id = None
-    session.current_editing_field = None
-    return_state = session.edit_return_state or DataVerificationStates.CONFIRMING_FIELD.state
-    session.edit_return_state = None
-    session.edit_return_person = None
-    await session_store.save(session)
-    await callback.answer("Skipped")
-    await state.set_state(return_state)
-    await _next_step(callback.message, state, session_store, callback.from_user.id)
-
-
-@router.callback_query(F.data.startswith("picknoop:"))
-async def pick_noop(callback: CallbackQuery) -> None:
     await callback.answer()
+    parts = callback.data.split(":", 4)  # type: ignore[union-attr]
+    section = parts[2]
+    field_path = parts[3]
+    value = parts[4]
 
-
-@router.message(DataVerificationStates.PICKING_DISTRICT)
-async def district_picker_hint(message: Message) -> None:
-    await _delete_message_safe(message)
-
-
-@router.message(DataVerificationStates.PICKING_STATION)
-async def station_picker_hint(message: Message) -> None:
-    await _delete_message_safe(message)
-
-
-@router.message(SubmissionStates.COMPLETE)
-async def already_complete(message: Message) -> None:
-    await message.answer(
-        "Your form was already submitted."
-    )
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    PayloadAccessor.set(session.payload, field_path, value)
+    session.current_editing_field = None
+    session_store.set(user_id, session)
+    await state.set_state(_SECTION_STATES[section])
+    await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
