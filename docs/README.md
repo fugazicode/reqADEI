@@ -1,25 +1,41 @@
-# Documentation index
+# Project Documentation — Navigation Hub
 
-Use this folder as the **entry point** for project and portal rules. File names are stable—prefer linking to these paths from code comments and PRs.
+Start here. Every other doc in this folder is linked below with a one-line description of when to use it.
 
-## Current documents (use these)
+---
 
-| File | Purpose |
-|------|---------|
-| [`PROJECT_CONSTRAINTS.md`](PROJECT_CONSTRAINTS.md) | **Rule book:** portal behaviour, mandatory fields, FSM conventions, known gaps. Validate plans and code against this file. |
-| [`portal_field_mapping.md`](portal_field_mapping.md) | **Portal reference:** DOM field names, mandatory flags, address rules—cross-check with live portal when in doubt. |
-| [`ISSUES_AND_RESOLUTIONS.md`](ISSUES_AND_RESOLUTIONS.md) | **Tracker:** audit findings, discussion outcomes, and suggested resolution approaches (companion to implementation work). |
-| [`audit.md`](audit.md) | **Audit report:** detailed step-by-step logic issues found in the codebase (historical analysis). |
+## Living Documents (keep these up to date)
 
-## Archived (do not follow as current truth)
-
-| Location | Purpose |
-|----------|---------|
-| [`archive/`](archive/) | Obsolete or misleading docs retained only for history. See [`archive/README.md`](archive/README.md). |
+| File | What it answers |
+|------|-----------------|
+| [`OVERVIEW.md`](OVERVIEW.md) | What is this project, who uses it, and how does the flow work? |
+| [`REQUIREMENTS.md`](REQUIREMENTS.md) | What must the system do, and what does success look like? |
+| [`CONSTRAINTS.md`](CONSTRAINTS.md) | What rules must every plan and code change respect? |
+| [`ISSUES.md`](ISSUES.md) | What is currently broken or incomplete, and how urgent is it? |
+| [`portal_field_mapping.md`](portal_field_mapping.md) | What are the exact field names, dropdown values, and portal rules? |
 
 ## Suggested reading order
 
-1. `PROJECT_CONSTRAINTS.md` — what the system must respect.  
-2. `portal_field_mapping.md` — when checking portal field names or mandatory rules.  
-3. `ISSUES_AND_RESOLUTIONS.md` — when fixing known bugs or reconciling rules with code.  
-4. `audit.md` — when you need the original deep-dive on a specific issue.
+1. **`OVERVIEW.md`** — understand the project before anything else.
+2. **`REQUIREMENTS.md`** — understand what done looks like.
+3. **`CONSTRAINTS.md`** — understand what you must not break.
+4. **`ISSUES.md`** — understand what is currently known to be broken.
+5. **`portal_field_mapping.md`** — look up specific portal fields when writing or reviewing submission code.
+
+## Archived Documents (do not use as current truth)
+
+| File | Why archived |
+|------|--------------|
+| [`archive/audit.md`](archive/audit.md) | Original audit narrative. Findings have been summarised in `ISSUES.md`. |
+| [`archive/ISSUES_AND_RESOLUTIONS.md`](archive/ISSUES_AND_RESOLUTIONS.md) | Earlier issue tracker. Superseded by `ISSUES.md`. |
+| [`archive/obsolete_fsm_dependency_map.md`](archive/obsolete_fsm_dependency_map.md) | Describes an FSM that does not exist in the current code. |
+
+---
+
+## How to update these docs
+
+- **Found a new constraint?** Add it to `CONSTRAINTS.md` under the right section. Note the date.
+- **Found a new bug or gap?** Add it to `ISSUES.md`. Set priority and status.
+- **Something got fixed?** Update the status in `ISSUES.md`. Do not delete the row.
+- **Portal behaviour confirmed by live test?** Update `portal_field_mapping.md` and note it as confirmed.
+- **Requirements changed?** Update `REQUIREMENTS.md` and note what changed and why.

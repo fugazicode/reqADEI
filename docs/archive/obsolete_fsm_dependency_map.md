@@ -1,6 +1,6 @@
 # OBSOLETE — DO NOT USE FOR CURRENT CODEBASE
 
-This file was moved from `docs/` during documentation cleanup. It describes a **queue-based FSM and modules that do not exist** in the current app (e.g. `confirmation_flow.py`, `confirmation_queue`). For accurate architecture, use `docs/PROJECT_CONSTRAINTS.md` and the real handlers under `features/data_verification/`.
+This file was moved from `docs/` during documentation cleanup. It describes a **queue-based FSM and modules that do not exist** in the current app (e.g. `confirmation_flow.py`, `confirmation_queue`). For accurate architecture, use [`docs/CONSTRAINTS.md`](../CONSTRAINTS.md) and the real handlers under `features/data_verification/`.
 
 ---
 
