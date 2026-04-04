@@ -56,55 +56,6 @@ class FormPayload(BaseModel):
     owner: Optional[OwnerData] = None
     tenant: Optional[TenantData] = None
 
-    def is_submittable(self) -> bool:
-        if not self.owner or not self.tenant:
-            return False
-
-        # Owner mandatory fields
-        if not (
-            self.owner.first_name
-            and self.owner.relative_name
-            and self.owner.relation_type
-            and self.owner.occupation
-        ):
-            return False
-        owner_addr = self.owner.address
-        if not owner_addr:
-            return False
-        # owner.address.state not required — portal pre-selects DELHI; filler does not write it
-        # (CONSTRAINTS.md §2.5).
-        if not (owner_addr.village_town_city and owner_addr.country
-                and owner_addr.district and owner_addr.police_station):
-            return False
-
-        # Tenant personal mandatory fields
-        if not (
-            self.tenant.first_name
-            and self.tenant.relative_name
-            and self.tenant.relation_type
-            and self.tenant.purpose_of_tenancy
-            and self.tenant.address_verification_doc_type
-            and self.tenant.address_verification_doc_no
-        ):
-            return False
-
-        # Tenant tenanted premises address (always Delhi — all three mandatory)
-        ta = self.tenant.tenanted_address
-        if not ta:
-            return False
-        if not (ta.village_town_city and ta.district and ta.police_station):
-            return False
-
-        # Tenant permanent address — all 5 fields are always mandatory.
-        pa = self.tenant.address
-        if not pa:
-            return False
-        if not (pa.village_town_city and pa.country and pa.state
-                and pa.district and pa.police_station):
-            return False
-
-        return True
-
     def owner_missing_mandatory(self) -> list[str]:
         """Return dot-path list of owner mandatory fields that are still empty."""
         missing = []

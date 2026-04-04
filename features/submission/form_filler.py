@@ -510,6 +510,31 @@ class FormFiller:
             [field_name, value],
         )
 
+    async def _js_select_by_label(self, field_name: str, label: str | None) -> None:
+        """Set a <select> by visible label and fire change (portal jQuery handlers)."""
+        if label is None or label == "":
+            return
+        normalized = self._normalize_select_label(field_name, label)
+        if not normalized:
+            return
+        await self._page.evaluate(
+            """([name, lbl]) => {
+                const el = document.querySelector('[name="' + name + '"]');
+                if (!el) throw new Error('Element not found: ' + name);
+                const clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();
+                const opt = Array.from(el.options).find(
+                    (o) => clean(o.textContent) === lbl
+                );
+                if (!opt) {
+                    const avail = Array.from(el.options).map((o) => clean(o.textContent)).join(', ');
+                    throw new Error('Label "' + lbl + '" not in ' + name + '. Available: ' + avail);
+                }
+                el.value = opt.value;
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }""",
+            [field_name, normalized],
+        )
+
     async def _wait_for_options(self, field_name: str, timeout: int = 20000) -> bool:
         try:
             await self._page.wait_for_function(
@@ -727,26 +752,39 @@ class FormFiller:
 
         if self._payload.tenant.address.district:
             district_value = DISTRICT_VALUES.get(self._payload.tenant.address.district.upper())
-            if not district_value:
-                self._logger.warning(
-                    "Unknown permanent address district '%s' — skipping",
-                    self._payload.tenant.address.district,
-                )
-                return
+            if district_value:
+                try:
+                    async with self._page.expect_response(
+                        lambda r: "getpolicestations" in r.url,
+                        timeout=15000,
+                    ) as response_info:
+                        await self._js_select("tenantPermanentDistrict", district_value)
 
-            try:
-                async with self._page.expect_response(
-                    lambda r: "getpolicestations" in r.url,
-                    timeout=15000,
-                ) as response_info:
-                    await self._js_select("tenantPermanentDistrict", district_value)
-
-                await response_info.value
-            except PlaywrightTimeoutError:
-                self._logger.warning(
-                    "District selection did not trigger station load for '%s'",
-                    self._payload.tenant.address.district,
-                )
+                    await response_info.value
+                except PlaywrightTimeoutError:
+                    self._logger.warning(
+                        "District selection did not trigger station load for '%s'",
+                        self._payload.tenant.address.district,
+                    )
+            else:
+                # Non-Delhi districts: portal loads options after state select; use visible label
+                # with JS change event (Playwright select_option does not fire jQuery AJAX).
+                try:
+                    async with self._page.expect_response(
+                        lambda r: "getpolicestations" in r.url,
+                        timeout=15000,
+                    ) as response_info:
+                        await self._js_select_by_label(
+                            "tenantPermanentDistrict",
+                            self._payload.tenant.address.district,
+                        )
+                    await response_info.value
+                except PlaywrightTimeoutError:
+                    self._logger.warning(
+                        "District label select did not trigger station load for '%s'",
+                        self._payload.tenant.address.district,
+                    )
+                await self._wait_for_options("tenantPermanentPoliceStation")
 
             if not await self._wait_for_options("tenantPermanentPoliceStation"):
                 self._logger.warning(
@@ -755,7 +793,9 @@ class FormFiller:
                 )
 
             if self._payload.tenant.address.police_station:
-                station_value = POLICE_STATION_VALUES.get(self._payload.tenant.address.police_station.upper())
+                station_value = POLICE_STATION_VALUES.get(
+                    self._payload.tenant.address.police_station.upper()
+                )
                 if station_value:
                     await self._js_select("tenantPermanentPoliceStation", station_value)
                 else:

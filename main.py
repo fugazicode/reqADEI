@@ -66,7 +66,7 @@ async def run() -> None:
 
     station_lookup = StationLookup(
         stations_file=base_dir / "data" / "delhi_police_stations.json",
-        legacy_file=base_dir / "data" / "police_stations.json",
+        national_file=base_dir / "data" / "national_police_stations.json",
     )
 
     pipeline = _build_pipeline(groq_parser, bot)

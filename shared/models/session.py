@@ -28,6 +28,9 @@ class FormSession:
 
     upload_status_message_id: Optional[int] = None
 
+    # True while ID OCR pipeline runs (guards duplicate Extract / concurrent uploads).
+    id_upload_extraction_in_progress: bool = False
+
     consent_given_at: Optional[float] = None
 
     # Second /start within 60s after warning discards in-progress session (FIX-7).
@@ -41,9 +44,6 @@ class FormSession:
 
     # Edit tracking — set when user selects a field to edit from an overview.
     current_editing_field: Optional[str] = None
-
-    # FSM state to restore after an edit/picker completes (e.g. REVIEWING_OWNER).
-    edit_return_state: Optional[str] = None
 
     # Message management
     # overview_message_id: the overview message edited in-place on every field update.

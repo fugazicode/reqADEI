@@ -1,8 +1,0 @@
-[
-  {"locality": "Khirki Extension", "district": "SOUTH", "police_station": "Malviya Nagar"},
-  {"locality": "Hauz Khas", "district": "SOUTH", "police_station": "Hauz Khas"},
-  {"locality": "Lajpat Nagar", "district": "SOUTH EAST", "police_station": "Lajpat Nagar"},
-  {"locality": "Dwarka Sector 7", "district": "SOUTH WEST", "police_station": "Dwarka North"},
-  {"locality": "Rohini Sector 3", "district": "NORTH WEST", "police_station": "Prashant Vihar"},
-  {"locality": "Shahdara", "district": "SHAHDARA", "police_station": "Shahdara"}
-]
