@@ -11,18 +11,18 @@
       "dob": "1969-07-28",
       "mobile_no": null,
       "address_verification_doc_no": "367732998245",
-      "occupation": "COMPANY EXECUTIVE",
+      "occupation": "SERVICE",
       "address": {
         "house_no": "J4/23 A Ground Floor",
-        "street_name": "Khirki Ext",
+        "street_name": "Malviya Nagar",
         "colony_locality_area": "Malviya Nagar",
         "village_town_city": "Delhi",
         "tehsil_block_mandal": null,
-        "district": "SOUTH",
-        "police_station": "Malviya Nagar",
+        "district": "NEW DELHI",
+        "police_station": "NORTH AVENUE",
         "pincode": "110017",
-        "state": null,
-        "country": null
+        "state": "DELHI",
+        "country": "INDIA"
       }
     },
     "tenant": {
@@ -39,28 +39,28 @@
       "purpose_of_tenancy": "Residential",
       "address": {
         "house_no": "J4/23-A",
-        "street_name": null,
-        "colony_locality_area": "Malviya Nagar",
-        "village_town_city": "Delhi",
+        "street_name": "Ground Floor, Khirki Extension",
+        "colony_locality_area": "Malviya Nagar S.O",
+        "village_town_city": "South Delhi",
         "tehsil_block_mandal": null,
-        "district": "SOUTH",
-        "police_station": null,
+        "district": "NORTH WEST",
+        "police_station": "JAHANGIR PURI",
         "pincode": "110017",
-        "state": null,
-        "country": null
+        "state": "DELHI",
+        "country": "INDIA"
       },
       "previous_address": null,
       "tenanted_address": {
-        "house_no": "j4",
-        "street_name": "test street",
-        "colony_locality_area": "malviya nagar",
-        "village_town_city": "new delhi",
-        "tehsil_block_mandal": "Ablock",
-        "district": "SOUTH",
-        "police_station": "Malviya Nagar",
+        "house_no": null,
+        "street_name": null,
+        "colony_locality_area": "Malviya Nagar",
+        "village_town_city": "New Delhi",
+        "tehsil_block_mandal": null,
+        "district": "NEW DELHI",
+        "police_station": "NORTH AVENUE",
         "pincode": "110017",
-        "state": "Delhi",
-        "country": "India"
+        "state": "DELHI",
+        "country": "INDIA"
       }
     }
   }
