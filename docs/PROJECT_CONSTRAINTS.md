@@ -2,7 +2,7 @@
 
 **Purpose:** This file is the single authoritative reference for every project-specific, portal-specific, and FSM architecture constraint governing this codebase. Every plan and implementation must be validated against this file before execution. Update this file whenever a new constraint is confirmed.
 
-**Sources:** Confirmed portal behaviour (`docs/portal_field_mapping (1).md`), runtime-verified debug session findings, and explicitly confirmed requirements from audit sessions.
+**Sources:** Confirmed portal behaviour (`docs/portal_field_mapping.md`), runtime-verified debug session findings, and explicitly confirmed requirements from audit sessions.
 
 ---
 
@@ -19,7 +19,7 @@ All portal dropdown selections must use the label exactly as it appears in the p
 | Address doc type | `"Aadhar Card"` | `"Aadhaar"` / `"Aadhaar Card"` |
 | Relation type | `"Father"` | `"FATHER"` |
 
-All normalisation from user input to portal-exact labels must go through the appropriate `OptionSet.normalize()` method in `shared/portal_enums.py`.
+All normalisation from user input to portal-exact labels must go through the appropriate `OptionSet.normalize()` method in `shared/portal_enums.py`.(this is wrong as user input that are free text does not need normalizarion only those value which are dropdown menu in portal and in fsm they are picker selection which are filled by the text extraction by groq)
 
 ### 1.2 Indian state values must be UPPERCASE
 
@@ -33,7 +33,7 @@ OCR-extracted state values are normalised to UPPERCASE in `core/pipeline_stages.
 
 ### 1.4 Owner address country and state must never be written
 
-The portal pre-selects `INDIA` (value `80`) for country and `DELHI` (value `8`) for state on the Owner Information tab. Programmatically changing either field triggers the `checkForOtherCountry()` JavaScript handler, which clears all downstream district and police station dropdown options. `form_filler.py` intentionally leaves both fields untouched. No future change may add `ownerCountry` or `ownerState` writing to `_fill_owner_tab()`.
+The portal pre-selects `INDIA` (value `80`) for country and `DELHI` (value `8`) for state on the Owner Information tab. Programmatically changing either field triggers the `checkForOtherCountry()` JavaScript handler, which clears all downstream district and police station dropdown options. `form_filler.py` intentionally leaves both fields untouched. No future change may add `ownerCountry` or `ownerState` writing to `_fill_owner_tab()`.(new info: the country and state is pre-selected in all the address tabs of tenant and owner)
 
 ### 1.5 Tenanted premises address is always India/Delhi
 
@@ -59,8 +59,8 @@ These sentinels must be written directly to the DOM via JS when country is non-I
 
 `_validate_required_fields_before_submit()` in `form_filler.py` checks the following fields before clicking `#submit123`. A value of `""`, `"-1"`, or `"0"` in any select field counts as not filled and raises `SubmissionValidationError`:
 
-- `ownerFirstName`, `ownerLastName`
-- `tenantFirstName`, `tenantLastName`
+- `ownerFirstName`, `ownerLastName`(why are we including the last name when they are not mandatory and will not be reviwed by user in edit/submit over page during input taking, this can cause miss information being filled without user knowing it)
+- `tenantFirstName`, `tenantLastName`(same logic for this, the last name either needs to be removed completely from fsm and extraction so groq won't silently add these information)
 - `ownerOccupation` (select)
 - `tenantAddressDocuments` (select)
 - `tenancypurpose` (select)
@@ -99,7 +99,7 @@ For the tenanted premises address, `country="INDIA"` and `state="DELHI"` are set
 
 ### 2.5 Owner country is auto-set; owner state is OCR-extracted
 
-`pipeline_stages.py` automatically sets `owner.address.country = "INDIA"` after a successful OCR parse. `owner.address.state` is extracted from the Aadhaar card image and immediately normalised to UPPERCASE. If OCR misses the state, the user will see ⚠️ on the owner overview and must fill it via the state picker.
+`pipeline_stages.py` automatically sets `owner.address.country = "INDIA"` after a successful OCR parse. `owner.address.state` is extracted from the Aadhaar card image and immediately normalised to UPPERCASE. If OCR misses the state, the user will see ⚠️ on the owner overview and must fill it via the state picker.(what if the owner is not equal to india, then how does ocr selection will handles this. let say the ocr extracts info which are not in dropdown menu as these info is forigen, in this case how does we handle those extracted info from groq, as when user see the edit/continue page then user will have to select there country and village-town-city(free text input))(needs proper audit if there is some false logic and assumption)
 
 ### 2.6 Non-mandatory address fields (reference)
 
@@ -126,6 +126,7 @@ FSM states for picker flows must not be shared between sections. The following `
 | `PICKING_PERM_STATION` | perm_addr | Station selection |
 
 The owner section must never borrow `PICKING_TENANTED_DISTRICT` or `PICKING_TENANTED_STATION`. A dedicated owner district/station picker state does not yet exist — if owner district/station editing is refactored, new states must be added.
+(while the above info is correct the specifics neeed to be mentioned like the owner occupation is silently set to default "service")
 
 ### 3.2 All portal dropdown enums belong in portal_enums.py
 
@@ -140,6 +141,7 @@ Current enums in `portal_enums.py`:
 | `TENANCY_PURPOSES` | Tenant tenancy purpose picker |
 | `ADDRESS_DOC_TYPES` | Tenant ID proof type picker |
 | `RELATION_TYPES` | Owner and tenant relation type picker |
+(there are several enums that are missing like country, state, district, police station, if there are in code base then file needs to modified to have correct information.)
 
 ### 3.3 Field order in labels.py determines callback indices
 
@@ -158,7 +160,7 @@ When adding new `picker:small:` or `picker:station:` payloads, count bytes expli
 ### 3.5 STATES alias dict must cover common OCR abbreviations
 
 The `STATES` OptionSet aliases in `shared/portal_enums.py` must include common OCR abbreviations and misspellings that appear on Aadhaar cards (e.g. `"UP"` → `"UTTAR PRADESH"`, `"MP"` → `"MADHYA PRADESH"`, `"ORISSA"` → `"ODISHA"`, `"TELENGANA"` → `"TELANGANA"`). The full alias list is maintained in `shared/portal_enums.py`. When adding support for a new OCR source, verify its state output format and add aliases if needed.
-
+(i think this is an important part to have correct alias, but not as important)
 ### 3.6 Session model properties for image records
 
 `session.owner_image_file_ids` and `session.tenant_image_file_ids` in `shared/models/session.py` are property setters that append to `session.image_records`. They do not replace existing records — they only add file IDs that are not already present. The pipeline (`core/pipeline_stages.py`) reads from `session.image_records` exclusively. Do not access raw file IDs outside the session model.
@@ -200,7 +202,7 @@ All picker keyboards (`small_dropdown_keyboard`, `occupation_quick_keyboard`, `d
 ### 4.4 Multi-photo upload advertises accumulation but removes all-or-nothing
 
 The upload confirm keyboard shows an accumulating count of uploaded photos. The "Remove" button (`upload:remove:{person}`) clears all images for that person at once. There is no per-image remove. This is a known UX limitation (U-8 from audit) — if per-image management is added, the `ImageRecord` model and the remove handler must both be updated.
-
+(there might be an bug here: when user uplaads two more more images for extraction then the message popup for each image is being extracted is not user friendly and confirmation of each image causes it to extract one image then it shows the edit/continue overview page so this is an fatal issue, image should process together or if that cant then one by one and these info needs to be parsed again so we can show edit/continue page correctly.)
 ---
 
 ## Section 5 — Known Gaps and Pre-existing Risks
@@ -224,6 +226,7 @@ These are confirmed gaps in the current implementation. Do not assume they work.
 `form_filler.py` only fills the Permanent Address sub-tab. The portal requires at least one of Previous or Permanent address to be filled. If Permanent address data is absent from the session, submission will fail regardless of whether Previous address data exists.
 
 **Impact:** High. **Status:** Not implemented.
+(since there is no way to know the pervious address then this step should have proper fall back logic)
 
 ### 5.4 Owner address non-India/non-Delhi path does not exist
 
@@ -240,7 +243,7 @@ After `trigger_submission` enqueues the job, the FSM state is set to `Submission
 ### 5.6 No per-section mandatory field validation before advancing
 
 The intermediate confirm handlers (`confirm_owner`, `confirm_tenant`, `confirm_tenanted_addr`) advance to the next section without checking whether the current section's mandatory fields are filled. Only `confirm_perm_addr_and_submit` validates all fields. A user can complete the entire flow with empty mandatory fields and only be blocked at the final submit step. This is audit gap L-7.
-
+(this causes user to scroll down and find the field which was not filled casue user to confusion as if user click edit the messgase is stacked very below at the end so user will keep scroll up and down to navigate in this case.)
 **Impact:** High. **Status:** Known gap, not yet fixed.
 
 ### 5.7 /start silently destroys an in-progress session

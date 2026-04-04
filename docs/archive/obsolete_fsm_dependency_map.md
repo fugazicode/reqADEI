@@ -1,3 +1,9 @@
+# OBSOLETE — DO NOT USE FOR CURRENT CODEBASE
+
+This file was moved from `docs/` during documentation cleanup. It describes a **queue-based FSM and modules that do not exist** in the current app (e.g. `confirmation_flow.py`, `confirmation_queue`). For accurate architecture, use `docs/PROJECT_CONSTRAINTS.md` and the real handlers under `features/data_verification/`.
+
+---
+
 # FSM: Data verification dependency map
 
 Training artifact for planning and debugging the aiogram FSM around field confirmation. **No code** — text-only dependencies, transitions, and high-friction validation.
