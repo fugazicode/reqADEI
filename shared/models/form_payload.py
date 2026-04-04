@@ -71,8 +71,10 @@ class FormPayload(BaseModel):
         owner_addr = self.owner.address
         if not owner_addr:
             return False
+        # owner.address.state not required — portal pre-selects DELHI; filler does not write it
+        # (CONSTRAINTS.md §2.5).
         if not (owner_addr.village_town_city and owner_addr.country
-                and owner_addr.state and owner_addr.district and owner_addr.police_station):
+                and owner_addr.district and owner_addr.police_station):
             return False
 
         # Tenant personal mandatory fields
@@ -120,8 +122,7 @@ class FormPayload(BaseModel):
             missing.append("owner.address.village_town_city")
         if not addr or not addr.country:
             missing.append("owner.address.country")
-        if not addr or not addr.state:
-            missing.append("owner.address.state")
+        # owner.address.state omitted — not written to portal (CONSTRAINTS.md §2.5).
         if not addr or not addr.district:
             missing.append("owner.address.district")
         if not addr or not addr.police_station:

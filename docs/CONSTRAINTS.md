@@ -1,6 +1,6 @@
 # Constraints Reference
 
-**Last updated:** 2026-04-04
+**Last updated:** 2026-04-04 (synced with codebase)
 **Purpose:** Every plan and code change must be validated against this file before execution. When a constraint is confirmed or updated, note the date and source.
 
 ---
@@ -84,9 +84,9 @@ After selecting a state, the portal fires a network request to load district opt
 ## Section 3 — Portal: Submission
 
 ### 3.1 Last name is NOT required by the portal
-The portal accepts submissions without owner or tenant last name. The pre-submit validation in code incorrectly treats last name as required. This must be fixed — see `ISSUES.md` Issue #G.
+The portal accepts submissions without owner or tenant last name. Pre-submit validation in `form_filler._validate_required_fields_before_submit()` must not require `ownerLastName` / `tenantLastName` (only first names are required as text fields).
 
-**Status:** CONFIRMED (portal field mapping); code is WRONG
+**Status:** CONFIRMED (portal field mapping); code aligned — see `ISSUES.md` Issue #G (RESOLVED).
 
 ### 3.2 Fields the portal requires before submission
 These fields must be non-empty before the submit button is clicked:
@@ -113,22 +113,22 @@ Button text longer than ~33 characters clips on small screens. Use abbreviations
 **Status:** CONFIRMED
 
 ### 4.2 Callback data maximum is 64 bytes (UTF-8 encoded)
-Every inline button's callback data must be 64 bytes or fewer. Use numeric indices in field selector buttons instead of full dot-paths. Verify byte length explicitly when adding new picker buttons:
+Every inline button's callback_data must be 64 bytes or fewer. Field-picker and small-dropdown keyboards use a numeric field index in callback data (not the full dot-path). Verify byte length explicitly when adding new picker buttons:
 
 ```python
-len(f"picker:small:{section}:{field_path}:{value}".encode("utf-8")) <= 64
+len(f"picker:small:{section}:{field_idx}:{value}".encode("utf-8")) <= 64
 ```
 
-The current tenant ID proof type picker **violates this rule** — all buttons exceed 64 bytes. See `ISSUES.md` Issue #A.
-
-**Status:** CONFIRMED violation exists
+**Status:** CONFIRMED — Issue #A (64-byte overflow on ID proof type) RESOLVED via `field_idx` encoding.
 
 ---
 
 ## Section 5 — FSM Architecture
 
 ### 5.1 Each picker flow must have its own dedicated FSM state
-Picker states must not be shared between sections. The owner district/station picker currently borrows tenanted-address states — this is a known structural flaw (Issue #5) that does not currently cause data bugs but will if state-guarded handlers are added.
+Picker states must not be shared between sections. Owner district/station editing uses `PICKING_OWNER_DISTRICT` and `PICKING_OWNER_STATION` (`ReviewStates`). Tenanted-address flows use `PICKING_TENANTED_*` only.
+
+**Status:** Issue #5 RESOLVED in code; rule remains for future pickers.
 
 ### 5.2 All portal dropdown options must be defined in `portal_enums.py`
 Any value that the FSM needs to present as a picker must be defined as an `OptionSet` in `shared/portal_enums.py`. Portal-specific lookup tables (`STATE_VALUES`, `DISTRICT_VALUES`, `POLICE_STATION_VALUES`) stay in `form_filler.py`.
@@ -149,14 +149,14 @@ These are confirmed gaps. Any plan touching these areas must explicitly address 
 
 | Gap | Impact | Issue ref |
 |-----|--------|-----------|
-| Tenant Aadhaar scan is never uploaded to the portal | **Critical** | #1 |
-| Tenant ID proof type picker buttons all exceed 64 bytes | **Critical** | #A |
 | Foreign permanent address creates an unresolvable deadlock | **High** | #B |
 | Non-India country path not implemented in form filler | **High** | Issue #B, §2.4 |
 | Non-Delhi Indian state addresses will silently fail submission | **High** | inherited |
-| Tenant previous address is never filled | **High** | #5.3 |
-| Last name treated as mandatory by filler but optional on portal | **High** | #G |
-| "South Delhi" OCR district output does not match any portal key | **High** | #F |
+| Tenant previous address is never filled | **High** | portal coverage / backlog |
+| Legacy `police_stations.json` vs `delhi_police_stations.json` district naming (`SOUTH EAST` vs `SOUTH-EAST`) | **Medium** | #4 |
+| `confirm_tenant()` has no section-scoped mandatory check (tenant personal) | **Medium** | #2 |
+
+Resolved in code (no longer list as gaps): tenant scan bytes to portal (#1), 64-byte small dropdowns (#A), last-name validator (#G), Delhi district OCR normalisation (#F).
 
 ---
 
@@ -165,3 +165,4 @@ These are confirmed gaps. Any plan touching these areas must explicitly address 
 | Date | Change |
 |------|--------|
 | 2026-04-04 | Created from `PROJECT_CONSTRAINTS.md` + contradiction resolution from `ISSUES_AND_RESOLUTIONS.md`. Removed internal contradictions; marked each item with confirmation status. |
+| 2026-04-04 | §3.1, §4.2, §5.1, §6 updated to match shipped fixes (`ISSUES.md` RESOLVED items). |

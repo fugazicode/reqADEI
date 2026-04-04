@@ -12,6 +12,7 @@ from core.engine import PipelineEngine
 from features.data_verification.states import ReviewStates
 from features.identity_collection.keyboards import consent_keyboard, upload_confirm_keyboard
 from features.identity_collection.states import IdentityStates
+from features.submission.states import SubmissionStates
 from infrastructure.session_store import SessionStore
 from shared.models.form_payload import FormPayload
 from shared.models.session import FormSession, ImageRecord
@@ -31,6 +32,35 @@ _CONSENT_TEXT = (
 @router.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext, session_store: SessionStore) -> None:
     user_id = message.from_user.id
+    existing = session_store.get(user_id)
+    cur = await state.get_state()
+
+    if existing and existing.consent_given_at is not None:
+        idle_states = (
+            IdentityStates.AWAITING_CONSENT.state,
+            SubmissionStates.DONE.state,
+        )
+        if cur is not None and cur not in idle_states:
+            now = time.time()
+            if existing.pending_discard_start_at is None:
+                existing.pending_discard_start_at = now
+                session_store.set(user_id, existing)
+                await message.answer(
+                    "You have a form in progress. Send /start again within 60 seconds "
+                    "to discard it and begin again."
+                )
+                return
+            if now - existing.pending_discard_start_at <= 60.0:
+                pass
+            else:
+                existing.pending_discard_start_at = now
+                session_store.set(user_id, existing)
+                await message.answer(
+                    "You have a form in progress. Send /start again within 60 seconds "
+                    "to discard it and begin again."
+                )
+                return
+
     session = FormSession(telegram_user_id=user_id, payload=FormPayload())
     session_store.set(user_id, session)
     await state.set_state(IdentityStates.AWAITING_CONSENT)
@@ -128,8 +158,10 @@ async def owner_upload_confirmed(
     session_store.set(user_id, session)
 
     if session.last_error:
+        session.image_records = [r for r in session.image_records if r.person != "owner"]
         await status_msg.edit_text(
             f"❌ {session.last_error}\n\nPlease re-upload the owner ID."
+            "\n\nSend a new photo to try again."
         )
         session.last_error = None
         session_store.set(user_id, session)
@@ -230,8 +262,10 @@ async def tenant_upload_confirmed(
     session_store.set(user_id, session)
 
     if session.last_error:
+        session.image_records = [r for r in session.image_records if r.person != "tenant"]
         await status_msg.edit_text(
             f"❌ {session.last_error}\n\nPlease re-upload the tenant ID."
+            "\n\nSend a new photo to try again."
         )
         session.last_error = None
         session_store.set(user_id, session)

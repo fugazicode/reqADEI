@@ -8,6 +8,8 @@ class ReviewStates(StatesGroup):
     EDITING_OWNER_FIELD = State()
     # Sub-state: user is in a picker for owner dropdown field
     PICKING_OWNER_DROPDOWN = State()
+    PICKING_OWNER_DISTRICT = State()
+    PICKING_OWNER_STATION = State()
 
     # Phase 2 — Tenant personal overview
     REVIEWING_TENANT = State()

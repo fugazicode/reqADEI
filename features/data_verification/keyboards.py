@@ -152,12 +152,13 @@ def station_picker_keyboard(section: str, district: str, stations: list[str], pa
 
 # ── Generic small-list dropdown ──────────────────────────────────────────────
 
-def small_dropdown_keyboard(section: str, field_path: str, options: tuple[str, ...]) -> InlineKeyboardMarkup:
+def small_dropdown_keyboard(section: str, field_idx: int, options: tuple[str, ...]) -> InlineKeyboardMarkup:
+    """field_idx is the index into the section's field list (see _SECTION_FIELD_KEYS)."""
     buttons: list[list[InlineKeyboardButton]] = []
     for opt in options:
         buttons.append([InlineKeyboardButton(
             text=opt,
-            callback_data=f"picker:small:{section}:{field_path}:{opt}",
+            callback_data=f"picker:small:{section}:{field_idx}:{opt}",
         )])
     buttons.append([InlineKeyboardButton(text="← Back", callback_data=f"overview:back:{section}")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)

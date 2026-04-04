@@ -13,6 +13,70 @@ from shared.portal_enums import STATES
 from utils.aadhaar import mask_aadhaar, validate_aadhaar
 from utils.payload_accessor import PayloadAccessor
 
+# Must match keys in features/submission/form_filler.py DISTRICT_VALUES.
+_DELHI_DISTRICT_KEYS: frozenset[str] = frozenset(
+    {
+        "CENTRAL",
+        "DWARKA",
+        "EAST",
+        "IGI AIRPORT",
+        "NEW DELHI",
+        "NORTH",
+        "NORTH EAST",
+        "NORTH WEST",
+        "OUTER DISTRICT",
+        "OUTER NORTH",
+        "ROHINI",
+        "SHAHDARA",
+        "SOUTH",
+        "SOUTH WEST",
+        "SOUTH-EAST",
+        "WEST",
+    }
+)
+
+# OCR / colloquial variants -> canonical portal district key (uppercase).
+_DELHI_DISTRICT_ALIASES: dict[str, str] = {
+    "SOUTH DELHI": "SOUTH",
+    "SOUTH DELHI DISTRICT": "SOUTH",
+    "NORTH DELHI": "NORTH",
+    "NORTH DELHI DISTRICT": "NORTH",
+    "EAST DELHI": "EAST",
+    "EAST DELHI DISTRICT": "EAST",
+    "WEST DELHI": "WEST",
+    "WEST DELHI DISTRICT": "WEST",
+    "CENTRAL DELHI": "CENTRAL",
+    "CENTRAL DELHI DISTRICT": "CENTRAL",
+    "NEW DELHI DISTRICT": "NEW DELHI",
+    "NORTH EAST DELHI": "NORTH EAST",
+    "NORTH-EAST DELHI": "NORTH EAST",
+    "NORTH EAST DISTRICT": "NORTH EAST",
+    "NORTH WEST DELHI": "NORTH WEST",
+    "NORTH-WEST DELHI": "NORTH WEST",
+    "NORTH WEST DISTRICT": "NORTH WEST",
+    "SOUTH EAST DELHI": "SOUTH-EAST",
+    "SOUTH-EAST DELHI": "SOUTH-EAST",
+    "SOUTH EAST": "SOUTH-EAST",
+    "SOUTH EAST DISTRICT": "SOUTH-EAST",
+    "SOUTH-WEST DELHI": "SOUTH WEST",
+    "SOUTH WEST DELHI": "SOUTH WEST",
+    "SOUTH WEST DISTRICT": "SOUTH WEST",
+    "OUTER DELHI": "OUTER DISTRICT",
+    "OUTER DISTRICT DELHI": "OUTER DISTRICT",
+    "INDIRA GANDHI INTERNATIONAL": "IGI AIRPORT",
+    "INDIRA GANDHI INTERNATIONAL AIRPORT": "IGI AIRPORT",
+}
+
+
+def _normalise_delhi_district(raw: str) -> str:
+    """Map OCR district text to a DISTRICT_VALUES key; else return collapsed UPPERCASE."""
+    collapsed = " ".join(str(raw).strip().split()).upper()
+    if collapsed in _DELHI_DISTRICT_KEYS:
+        return collapsed
+    if collapsed in _DELHI_DISTRICT_ALIASES:
+        return _DELHI_DISTRICT_ALIASES[collapsed]
+    return collapsed
+
 
 class ImageParsingStage(PipelineStage):
     name = "parse_image"
@@ -38,6 +102,9 @@ class ImageParsingStage(PipelineStage):
             buffer = io.BytesIO()
             await self._bot.download(record.image_id, destination=buffer)
             image_bytes_list.append(buffer.getvalue())
+
+        if session.current_confirming_person == "tenant" and image_bytes_list:
+            session.tenant_image_bytes = image_bytes_list[0]
 
         parsed = await self._groq_parser.parse_image(image_bytes_list, "id_extraction")
 
@@ -108,6 +175,15 @@ class ImageParsingStage(PipelineStage):
             expanded = STATES.normalize(str(raw_state))   # maps "UP" → "UTTAR PRADESH" etc.
             normalised = expanded.strip().upper() if expanded else str(raw_state).strip().upper()
             PayloadAccessor.set(session.payload, state_path, normalised)
+
+        district_path = f"{target_prefix}.address.district"
+        raw_district = PayloadAccessor.get(session.payload, district_path)
+        if raw_district:
+            PayloadAccessor.set(
+                session.payload,
+                district_path,
+                _normalise_delhi_district(str(raw_district)),
+            )
 
         if target_prefix == "tenant" and not PayloadAccessor.get(
             session.payload,

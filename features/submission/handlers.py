@@ -27,7 +27,7 @@ async def trigger_submission(
     if session.payload.tenant and session.payload.tenant.tenanted_address is None:
         LOGGER.warning("Submitting without tenanted_address — possible data gap")
 
-    tenant_image_bytes = b""
+    tenant_image_bytes = session.tenant_image_bytes
     job = SubmissionInput(
         telegram_user_id=session.telegram_user_id,
         payload=session.payload,

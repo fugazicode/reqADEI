@@ -3,7 +3,7 @@
 Flow:
   REVIEWING_OWNER → (confirm) → ENTERING_TENANTED_ADDRESS → REVIEWING_TENANTED_ADDR
   → (confirm) → UPLOADING_TENANT_ID → REVIEWING_TENANT → (confirm) → REVIEWING_PERM_ADDR
-  → (confirm) → SUBMITTING
+  → (confirm) → DONE (submission runs in background worker)
 
   Any overview can trigger an "edit" sub-flow:
   1. User taps "Edit a Field"         → show field selector keyboard
@@ -16,6 +16,7 @@ import logging
 
 from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types import CallbackQuery, Message
 
 from features.data_verification.keyboards import (
@@ -89,10 +90,55 @@ _OVERVIEW_BUILDERS = {
     "perm_addr": build_perm_addr_overview_text,
 }
 
+def _edit_state_ids(*states: State) -> frozenset[str]:
+    return frozenset(s.state for s in states)
+
+
+_OWNER_EDIT_STATE_IDS = _edit_state_ids(
+    ReviewStates.REVIEWING_OWNER,
+    ReviewStates.EDITING_OWNER_FIELD,
+    ReviewStates.PICKING_OWNER_DROPDOWN,
+    ReviewStates.PICKING_OWNER_DISTRICT,
+    ReviewStates.PICKING_OWNER_STATION,
+)
+_TENANT_EDIT_STATE_IDS = _edit_state_ids(
+    ReviewStates.REVIEWING_TENANT,
+    ReviewStates.EDITING_TENANT_FIELD,
+    ReviewStates.PICKING_TENANT_DROPDOWN,
+)
+_TENANTED_EDIT_STATE_IDS = _edit_state_ids(
+    ReviewStates.REVIEWING_TENANTED_ADDR,
+    ReviewStates.EDITING_TENANTED_ADDR_FIELD,
+    ReviewStates.PICKING_TENANTED_DISTRICT,
+    ReviewStates.PICKING_TENANTED_STATION,
+)
+_PERM_EDIT_STATE_IDS = _edit_state_ids(
+    ReviewStates.REVIEWING_PERM_ADDR,
+    ReviewStates.EDITING_PERM_ADDR_FIELD,
+    ReviewStates.PICKING_PERM_DROPDOWN,
+    ReviewStates.PICKING_PERM_DISTRICT,
+    ReviewStates.PICKING_PERM_STATION,
+)
+
+_SECTION_EDIT_STATE_IDS: dict[str, frozenset[str]] = {
+    "owner": _OWNER_EDIT_STATE_IDS,
+    "tenant": _TENANT_EDIT_STATE_IDS,
+    "tenanted_addr": _TENANTED_EDIT_STATE_IDS,
+    "perm_addr": _PERM_EDIT_STATE_IDS,
+}
+
 
 # ── Helper to refresh overview message in-place ──────────────────────────────
 
-async def _refresh_overview(bot: Bot, chat_id: int, session, section: str) -> None:
+async def _refresh_overview(
+    bot: Bot,
+    chat_id: int,
+    session,
+    section: str,
+    *,
+    user_id: int,
+    session_store: SessionStore,
+) -> None:
     if not session.overview_message_id:
         return
     text = _OVERVIEW_BUILDERS[section](session)
@@ -105,7 +151,14 @@ async def _refresh_overview(bot: Bot, chat_id: int, session, section: str) -> No
             parse_mode="Markdown",
         )
     except Exception:
-        pass
+        msg = await bot.send_message(
+            chat_id,
+            text,
+            reply_markup=overview_keyboard(section),
+            parse_mode="Markdown",
+        )
+        session.overview_message_id = msg.message_id
+        session_store.set(user_id, session)
 
 
 async def _delete_prompt(bot: Bot, chat_id: int, session) -> None:
@@ -125,6 +178,15 @@ async def confirm_owner(callback: CallbackQuery, state: FSMContext, session_stor
     user_id = callback.from_user.id
     session = session_store.get(user_id)
     if not session:
+        return
+    missing = session.payload.owner_missing_mandatory()
+    if missing:
+        labels = [_ALL_FIELDS[p].label if p in _ALL_FIELDS else p for p in missing]
+        await callback.message.answer(  # type: ignore[union-attr]
+            "⚠️ The following owner fields are still empty:\n"
+            + "\n".join(f"• {l}" for l in labels)
+            + "\n\nPlease fill them before continuing.",
+        )
         return
     await state.set_state(AddressStates.ENTERING_TENANTED_ADDRESS)
     session.overview_message_id = None
@@ -158,6 +220,15 @@ async def confirm_tenanted_addr(
     user_id = callback.from_user.id
     session = session_store.get(user_id)
     if not session:
+        return
+    missing = session.payload.tenanted_addr_missing_mandatory()
+    if missing:
+        labels = [_ALL_FIELDS[p].label if p in _ALL_FIELDS else p for p in missing]
+        await callback.message.answer(  # type: ignore[union-attr]
+            "⚠️ The following tenanted address fields are still empty:\n"
+            + "\n".join(f"• {l}" for l in labels)
+            + "\n\nPlease fill them before continuing.",
+        )
         return
     await state.set_state(IdentityStates.UPLOADING_TENANT_ID)
     session.overview_message_id = None
@@ -200,11 +271,18 @@ async def confirm_perm_addr_and_submit(
         )
         return
 
-    await state.set_state(SubmissionStates.SUBMITTING)
+    await state.set_state(SubmissionStates.DONE)
     session_store.set(user_id, session)
     await callback.message.answer("✅ All details confirmed. Starting portal submission…")  # type: ignore[union-attr]
     from features.submission.handlers import trigger_submission
     await trigger_submission(callback.message, session, submission_worker, analytics_store)  # type: ignore[arg-type]
+
+
+@router.message(SubmissionStates.DONE)
+async def done_state_any_message(message: Message, state: FSMContext) -> None:
+    await message.answer(
+        "Your submission is processing. Send /start to begin a new registration."
+    )
 
 
 # ── Overview: Edit buttons ────────────────────────────────────────────────────
@@ -213,6 +291,10 @@ async def confirm_perm_addr_and_submit(
 async def overview_edit(callback: CallbackQuery, state: FSMContext, session_store: SessionStore) -> None:
     await callback.answer()
     section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    cur = await state.get_state()
+    allowed = _SECTION_EDIT_STATE_IDS.get(section, frozenset())
+    if cur not in allowed:
+        return
     msg = await callback.message.answer(  # type: ignore[union-attr]
         "Which field would you like to edit?",
         reply_markup=field_selector_keyboard(section),
@@ -232,11 +314,22 @@ async def overview_back(callback: CallbackQuery, state: FSMContext, session_stor
     session = session_store.get(user_id)
     if not session:
         return
+    cur = await state.get_state()
+    allowed = _SECTION_EDIT_STATE_IDS.get(section, frozenset())
+    if cur not in allowed:
+        return
     await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
     await state.set_state(_SECTION_STATES[section])
     session.current_editing_field = None
     session_store.set(user_id, session)
-    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
+    await _refresh_overview(
+        bot,
+        callback.message.chat.id,  # type: ignore[union-attr]
+        session,
+        section,
+        user_id=user_id,
+        session_store=session_store,
+    )
 
 
 # ── Field selector: route to correct picker or free-text prompt ───────────────
@@ -252,6 +345,11 @@ async def edit_field_selected(
     parts = callback.data.split(":", 2)  # type: ignore[union-attr]
     section = parts[1]
     raw = parts[2]
+
+    cur = await state.get_state()
+    allowed = _SECTION_EDIT_STATE_IDS.get(section, frozenset())
+    if cur not in allowed:
+        return
 
     # Resolve numeric index → dot-path (field_selector_keyboard emits indices
     # to stay within Telegram's 64-byte callback_data limit).
@@ -320,7 +418,7 @@ async def edit_field_selected(
         pick_state = {
             "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
             "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
-            "owner": ReviewStates.PICKING_TENANTED_DISTRICT,
+            "owner": ReviewStates.PICKING_OWNER_DISTRICT,
         }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
         await state.set_state(pick_state)
         districts = station_lookup.district_names()
@@ -343,7 +441,7 @@ async def edit_field_selected(
         pick_state = {
             "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
             "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
-            "owner": ReviewStates.PICKING_TENANTED_DISTRICT,
+            "owner": ReviewStates.PICKING_OWNER_DISTRICT,
         }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
         await state.set_state(pick_state)
         districts = station_lookup.district_names()
@@ -360,9 +458,10 @@ async def edit_field_selected(
             "perm_addr": ReviewStates.PICKING_PERM_DROPDOWN,
         }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
         await state.set_state(pick_state)
+        fidx = _SECTION_FIELD_KEYS[section].index(field_path)
         msg = await callback.message.answer(  # type: ignore[union-attr]
             "Select state:",
-            reply_markup=small_dropdown_keyboard(section, field_path, portal_enums.STATES.values),
+            reply_markup=small_dropdown_keyboard(section, fidx, portal_enums.STATES.values),
         )
         session.last_prompt_message_id = msg.message_id
         session_store.set(user_id, session)
@@ -374,9 +473,10 @@ async def edit_field_selected(
             "tenant": ReviewStates.PICKING_TENANT_DROPDOWN,
         }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
         await state.set_state(pick_state)
+        fidx = _SECTION_FIELD_KEYS[section].index(field_path)
         msg = await callback.message.answer(  # type: ignore[union-attr]
             f"Select {meta.label}:",
-            reply_markup=small_dropdown_keyboard(section, field_path, opt_set.values),
+            reply_markup=small_dropdown_keyboard(section, fidx, opt_set.values),
         )
         session.last_prompt_message_id = msg.message_id
         session_store.set(user_id, session)
@@ -402,7 +502,9 @@ async def _handle_free_text_edit(
     session.current_editing_field = None
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
-    await _refresh_overview(bot, message.chat.id, session, section)
+    await _refresh_overview(
+        bot, message.chat.id, session, section, user_id=user_id, session_store=session_store
+    )
 
 
 @router.message(ReviewStates.EDITING_OWNER_FIELD)
@@ -447,7 +549,14 @@ async def occupation_selected(
     session.current_editing_field = None
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
-    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
+    await _refresh_overview(
+        bot,
+        callback.message.chat.id,  # type: ignore[union-attr]
+        session,
+        section,
+        user_id=user_id,
+        session_store=session_store,
+    )
 
 
 @router.callback_query(F.data.startswith("picker:occ_search:"))
@@ -508,12 +617,41 @@ async def _handle_occupation_search(
 
 @router.message(ReviewStates.PICKING_OWNER_DROPDOWN)
 async def occ_search_owner(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    session = session_store.get(message.from_user.id)
+    if session:
+        meta = _ALL_FIELDS.get(session.current_editing_field or "")
+        if not meta or meta.enum_key != "OCCUPATIONS":
+            await message.answer("Please use the buttons above to make a selection.")
+            try:
+                await message.delete()
+            except Exception:
+                pass
+            return
     await _handle_occupation_search(message, state, session_store, bot, "owner")
 
 
 @router.message(ReviewStates.PICKING_TENANT_DROPDOWN)
 async def occ_search_tenant(message: Message, state: FSMContext, session_store: SessionStore, bot: Bot) -> None:
+    session = session_store.get(message.from_user.id)
+    if session:
+        meta = _ALL_FIELDS.get(session.current_editing_field or "")
+        if not meta or meta.enum_key != "OCCUPATIONS":
+            await message.answer("Please use the buttons above to make a selection.")
+            try:
+                await message.delete()
+            except Exception:
+                pass
+            return
     await _handle_occupation_search(message, state, session_store, bot, "tenant")
+
+
+@router.message(ReviewStates.PICKING_PERM_DROPDOWN)
+async def perm_dropdown_text(message: Message, bot: Bot) -> None:
+    await message.answer("Please use the buttons above to select a state.")
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
 
 # ── District / station pickers ────────────────────────────────────────────────
@@ -565,7 +703,7 @@ async def district_selected(
     station_state = {
         "tenanted_addr": ReviewStates.PICKING_TENANTED_STATION,
         "perm_addr": ReviewStates.PICKING_PERM_STATION,
-        "owner": ReviewStates.PICKING_TENANTED_STATION,
+        "owner": ReviewStates.PICKING_OWNER_STATION,
     }.get(section, ReviewStates.PICKING_TENANTED_STATION)
     await state.set_state(station_state)
 
@@ -589,6 +727,7 @@ async def district_reselect(
     pick_state = {
         "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
         "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
+        "owner": ReviewStates.PICKING_OWNER_DISTRICT,
     }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
     await state.set_state(pick_state)
     districts = station_lookup.district_names()
@@ -642,7 +781,14 @@ async def station_selected(
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
     await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
-    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
+    await _refresh_overview(
+        bot,
+        callback.message.chat.id,  # type: ignore[union-attr]
+        session,
+        section,
+        user_id=user_id,
+        session_store=session_store,
+    )
 
 
 # ── Small dropdown (relation type, doc type, tenancy purpose) ─────────────────
@@ -657,16 +803,30 @@ async def small_dropdown_selected(
     await callback.answer()
     parts = callback.data.split(":", 4)  # type: ignore[union-attr]
     section = parts[2]
-    field_path = parts[3]
+    field_idx_raw = parts[3]
     value = parts[4]
 
     user_id = callback.from_user.id
     session = session_store.get(user_id)
     if not session:
         return
+    keys = _SECTION_FIELD_KEYS.get(section, [])
+    if not field_idx_raw.isdigit():
+        return
+    idx = int(field_idx_raw)
+    if idx >= len(keys):
+        return
+    field_path = keys[idx]
     PayloadAccessor.set(session.payload, field_path, value)
     session.current_editing_field = None
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
     await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
-    await _refresh_overview(bot, callback.message.chat.id, session, section)  # type: ignore[union-attr]
+    await _refresh_overview(
+        bot,
+        callback.message.chat.id,  # type: ignore[union-attr]
+        session,
+        section,
+        user_id=user_id,
+        session_store=session_store,
+    )

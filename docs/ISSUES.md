@@ -1,6 +1,6 @@
 # Known Issues
 
-**Last updated:** 2026-04-04
+**Last updated:** 2026-04-04  
 **Purpose:** Track every confirmed bug, gap, or structural flaw. Update status when something is fixed. Do not delete rows — change the status instead.
 
 ---
@@ -24,18 +24,16 @@
 ## Critical Issues 🔴
 
 ### Issue #1 — Tenant Aadhaar scan is never uploaded to the portal
-**Where:** `features/submission/handlers.py` → `trigger_submission()`
-**What happens:** The bot reads the tenant's Aadhaar photo to extract text, then throws the image away. When submitting to the portal, `image_bytes` is hardcoded as empty (`b""`). The document upload step is silently skipped for every single submission.
-**Impact:** Every submission is missing the required ID document. Likely rejected by the portal.
-**Fix:** Save the downloaded image bytes to `session.tenant_image_bytes` during the extraction pipeline, then pass them into `SubmissionInput` at submission time.
-**Status:** `OPEN`
+**Where:** `core/pipeline_stages.py` (`ImageParsingStage`), `features/submission/handlers.py` → `trigger_submission()`
+**What happened (historical):** Image bytes were discarded after OCR; submission used empty `image_bytes`.
+**Resolution:** First downloaded tenant image bytes are stored on `session.tenant_image_bytes` after OCR download; `trigger_submission()` passes them into `SubmissionInput`. Document tab navigation targets `#fileField2` per `portal_field_mapping.md` §2B (live portal smoke test still recommended).
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #A — Tenant ID proof type picker buttons all exceed Telegram's 64-byte limit
-**Where:** `features/data_verification/keyboards.py` → `small_dropdown_keyboard()` for `ADDRESS_DOC_TYPES`
-**What happens:** The callback data pattern `picker:small:tenant:tenant.address_verification_doc_type:{option}` is already 58 bytes before the option value. Every option pushes it over 64 bytes. Telegram rejects the keyboard entirely.
-**Impact:** Users can never edit the tenant's ID proof type. If OCR extracted it wrong, there is no way to correct it.
-**Fix:** Use a short numeric code for the field path in the callback, mapped back server-side. Same approach used for field selector buttons.
-**Status:** `OPEN`
+**Where:** `features/data_verification/keyboards.py` → `small_dropdown_keyboard()`, `features/data_verification/handlers.py` → `small_dropdown_selected()`
+**What happened (historical):** Callback data embedded the full dot-path; `ADDRESS_DOC_TYPES` options exceeded 64 bytes.
+**Resolution:** Callback pattern is `picker:small:{section}:{field_idx}:{opt}`; `field_idx` indexes `_SECTION_FIELD_KEYS[section]`; handler decodes index back to `field_path`.
+**Status:** `RESOLVED` (2026-04-04)
 
 ---
 
@@ -43,8 +41,8 @@
 
 ### Issue #2 — No validation before advancing past each review section
 **Where:** `features/data_verification/handlers.py` → `confirm_owner()`, `confirm_tenant()`, `confirm_tenanted_addr()`
-**What happens:** Users can confirm each section even if mandatory fields are empty. All validation only runs at the final submit step, where all missing fields across all sections are listed together with no easy way to navigate back.
-**Fix:** Run the section-specific missing-field check inside each confirm handler before advancing.
+**What happens:** `confirm_owner()` and `confirm_tenanted_addr()` call `owner_missing_mandatory()` / `tenanted_addr_missing_mandatory()` and block with a field list when incomplete. `confirm_tenant()` still advances without a tenant-personal section guard; missing tenant fields are only caught at final submit.
+**Fix (remaining):** Add `tenant_personal_missing_mandatory()` check to `confirm_tenant()` before transitioning.
 **Status:** `OPEN`
 
 ### Issue #B — Foreign permanent address creates an unresolvable deadlock
@@ -54,34 +52,34 @@
 **Status:** `OPEN`
 
 ### Issue #C — Re-uploading after a failed extraction accumulates stale images
-**Where:** `features/identity_collection/handlers.py` → photo received handlers
-**What happens:** The image record setter only appends, never replaces. After a failed extraction, uploading a new photo adds to the list. Both the bad and the new image are sent to OCR together on the next attempt.
-**Fix:** On pipeline failure (or when the user taps Remove), clear all image records for that person before accepting a new upload.
-**Status:** `OPEN`
+**Where:** `shared/models/session.py`, `features/identity_collection/handlers.py`
+**What happened (historical):** Append-only setters let failed and retried images accumulate for OCR.
+**Resolution:** Setters append with dedup so multiple photos per confirm still work; on pipeline error, `owner_upload_confirmed` / `tenant_upload_confirmed` clear `image_records` for that person before returning. Remove handlers still clear explicitly.
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #D — Bot goes silent after submission with no next step
-**Where:** `features/submission/handlers.py`, `features/submission/states.py`
-**What happens:** After queuing a submission, the FSM stays in `SUBMITTING` state forever. No success/failure message guides the user on what to do next. If submission fails, there is no retry path.
-**Fix:** After the worker completes (success or failure), send a clear outcome message and prompt the user to send `/start` for a new application.
-**Status:** `OPEN`
+**Where:** `features/data_verification/handlers.py`, `features/submission/submission_worker.py`
+**What happened (historical):** FSM stayed in `SUBMITTING` with no catch-all message handler.
+**Resolution:** `confirm_perm_addr_and_submit()` sets `SubmissionStates.DONE`; `@router.message(SubmissionStates.DONE)` prompts for `/start`; worker sends PDF (or failure text) plus "Send /start to register another tenant."
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #E — Pipeline error leaves the upload screen with no buttons
 **Where:** `features/identity_collection/handlers.py` → `owner_upload_confirmed()` and `tenant_upload_confirmed()` error branch
-**What happens:** When extraction fails, the error message is shown as plain text with no keyboard. The FSM state is correct (still `UPLOADING_*`), so a new photo would be accepted — but the user has no visible way to know this.
-**Fix:** After showing the error message, re-send the upload instructions and the confirm/remove keyboard.
-**Status:** `OPEN`
+**What happened (historical):** Error text gave no hint that another photo was accepted.
+**Resolution:** Error message appends plain-text instruction to send a new photo; FSM remains `UPLOADING_*`.
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #F — "South Delhi" OCR output does not match any portal district key
-**Where:** `core/pipeline_stages.py` → state normalisation (no equivalent for district)
-**What happens:** Aadhaar cards for Malviya Nagar, Hauz Khas, and similar South Delhi areas reliably extract as district = `"South Delhi"`. The portal key is `"SOUTH"`. There is no district normalisation step, so `DISTRICT_VALUES.get("SOUTH DELHI")` returns `None` and the district is silently left blank.
-**Fix:** Add a district normalisation/alias step in `pipeline_stages.py`, similar to the existing `STATES.normalize()` call. Map `"SOUTH DELHI"` → `"SOUTH"`, and other common OCR variants.
-**Status:** `OPEN`
+**Where:** `core/pipeline_stages.py`
+**What happened (historical):** District string from OCR was written verbatim; aliases like `SOUTH DELHI` did not map to `SOUTH`.
+**Resolution:** `_normalise_delhi_district()` maps OCR/colloquial variants to `DISTRICT_VALUES` keys after state normalisation.
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #G — Last name is treated as mandatory but the portal does not require it
 **Where:** `features/submission/form_filler.py` → `_validate_required_fields_before_submit()`
-**What happens:** The pre-submit validator raises an error if owner or tenant last name is empty. Many Indian Aadhaar cards have a single name with no last name. These users can never submit.
-**Fix:** Remove `ownerLastName` and `tenantLastName` from the required fields list. The portal accepts submissions without them.
-**Status:** `OPEN`
+**What happened (historical):** `ownerLastName` / `tenantLastName` were in `required_text_fields`.
+**Resolution:** Removed from `required_text_fields`; only first names remain required as text.
+**Status:** `RESOLVED` (2026-04-04)
 
 ---
 
@@ -89,9 +87,9 @@
 
 ### Issue #3 — Overview refresh fails silently if the message was deleted
 **Where:** `features/data_verification/handlers.py` → `_refresh_overview()`
-**What happens:** If the user deletes the overview message, any attempt to update it raises an exception that is swallowed silently. The user is left with no overview and no buttons. Only `/cancel` + `/start` recovers.
-**Fix:** On edit failure, send a new overview message and update `session.overview_message_id`.
-**Status:** `OPEN`
+**What happened (historical):** `edit_message_text` failures were swallowed.
+**Resolution:** On exception, sends a new overview message, updates `session.overview_message_id`, persists session.
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #4 — District name mismatch between data files
 **Where:** `data/police_stations.json` vs `data/delhi_police_stations.json` and `DISTRICT_VALUES`
@@ -100,44 +98,51 @@
 **Status:** `OPEN`
 
 ### Issue #6 — Stale buttons from old messages can affect a new session
-**Where:** `features/data_verification/handlers.py` — all callback handlers lack FSM state filters
-**What happens:** Tapping a button on an old overview message fires its callback handler regardless of the current FSM state. This can skip steps or corrupt a fresh session.
-**Fix:** Add FSM state filters to critical callbacks, or embed a session generation token in callback data so stale buttons are ignored.
-**Status:** `OPEN`
+**Where:** `features/data_verification/handlers.py`
+**What happened (historical):** Callbacks had no state awareness.
+**Resolution:** Section confirm callbacks are registered under the correct `ReviewStates.REVIEWING_*`. `overview:edit`, `overview:back`, and `edit_field` enforce `_SECTION_EDIT_STATE_IDS` / `_OWNER_EDIT_STATE_IDS` (etc.) before acting.
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #7 — `/start` mid-flow silently destroys an in-progress session
 **Where:** `features/identity_collection/handlers.py` → `cmd_start()`
-**What happens:** Sending `/start` while filling a form overwrites the session with no warning. All progress is lost.
-**Fix:** If a session with data already exists, prompt for confirmation before wiping it.
-**Status:** `OPEN`
+**What happened (historical):** `/start` always replaced the session.
+**Resolution:** If consent was given and FSM is not idle, first `/start` warns; second `/start` within 60 seconds discards (`pending_discard_start_at` on `FormSession`).
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #8 — No text message handler for `PICKING_PERM_DROPDOWN` state
 **Where:** `features/data_verification/handlers.py`
-**What happens:** The owner and tenant dropdown states handle typed text as occupation search. The permanent address dropdown state has no handler, so typing anything is silently ignored.
-**Fix:** Add a handler for `PICKING_PERM_DROPDOWN` that either mirrors the search behaviour (if applicable) or replies with a prompt to use the buttons.
-**Status:** `OPEN`
+**What happened (historical):** Typed text in perm-address state picker was ignored.
+**Resolution:** Handler replies to use buttons and deletes the user message.
+**Status:** `RESOLVED` (2026-04-04)
+
+### Issue #9 — Owner permanent address state treated as mandatory though not submitted
+**Where:** `shared/models/form_payload.py` → `owner_missing_mandatory()`, `features/data_verification/labels.py` → `OWNER_MANDATORY`
+**What happened (historical):** `owner.address.state` was mandatory in bot checks while `CONSTRAINTS.md` §2.5 forbids writing it in the form filler.
+**Resolution:** Removed from `owner_missing_mandatory()` and `OWNER_MANDATORY`; field remains in `OWNER_FIELDS` for display. Comments cite §2.5.
+**Status:** `RESOLVED` (2026-04-04)
 
 ---
 
 ## Low Priority Issues 🟢
 
 ### Issue #5 — Owner district/station picker borrows tenanted-address FSM states
-**Where:** `features/data_verification/handlers.py` → `edit_field_selected()`, `district_selected()`
-**What happens:** When editing the owner's district or police station, the FSM transitions to `PICKING_TENANTED_DISTRICT` / `PICKING_TENANTED_STATION`. The correct section is carried in callback data, so no data bug exists today. However, any future handler with a state filter on `PICKING_TENANTED_DISTRICT` will accidentally intercept owner edits too.
-**Fix:** Add `PICKING_OWNER_DISTRICT` and `PICKING_OWNER_STATION` states to `ReviewStates` and route owner edits through them.
-**Status:** `OPEN`
+**Where:** `features/data_verification/states.py`, `features/data_verification/handlers.py`
+**What happened (historical):** Owner district/station edits used `PICKING_TENANTED_*` states.
+**Resolution:** `PICKING_OWNER_DISTRICT` and `PICKING_OWNER_STATION` added; owner edit routes use them.
+**Status:** `RESOLVED` (2026-04-04)
 
 ### Issue #H — Police station label mismatch for IITF Pragati Maidan
 **Where:** `data/delhi_police_stations.json` vs `POLICE_STATION_VALUES` in `form_filler.py`
-**What happens:** The JSON file stores `"IITF PRAGATI MAIDAN"` (all caps, no comma). The filler dict and the portal label both use `"IITF,Pragati Maidan"` (mixed case, comma). The picker saves the wrong format; the filler cannot match it.
-**Fix:** Align `delhi_police_stations.json` station labels to exactly match the portal labels used in `POLICE_STATION_VALUES`.
-**Status:** `OPEN`
+**What happened (historical):** JSON key did not match filler/portal label.
+**Resolution:** JSON key set to `IITF,Pragati Maidan` to match `POLICE_STATION_VALUES` / portal.
+**Status:** `RESOLVED` (2026-04-04)
 
 ---
 
 ## Resolved Issues ✅
 
-_(None yet — add rows here as issues are fixed, with the fix date)_
+Summary of fixes shipped 2026-04-04: #1, #A, #C, #D, #E, #F, #G, #3, #5, #6, #7, #8, #9, #H.  
+**Still OPEN:** #2 (partial — `confirm_tenant` unchecked), #4, #B.
 
 ---
 
@@ -146,3 +151,4 @@ _(None yet — add rows here as issues are fixed, with the fix date)_
 | Date | Change |
 |------|--------|
 | 2026-04-04 | Initial creation. Consolidated from `audit.md` and `ISSUES_AND_RESOLUTIONS.md`. All issues carry forward as OPEN. |
+| 2026-04-04 | Status sync with codebase: Phase 1/2 fixes marked RESOLVED; #2 narrowed to remaining `confirm_tenant` gap; #9 added; summary table updated. |

@@ -897,9 +897,16 @@ class FormFiller:
 
 
     async def _fill_document_upload(self, image_bytes: bytes) -> None:
-        # Step 1: Click Tenant Information tab and activate Personal Information sub-tab
+        # Tenant Information → Documents → inner Personal Information (portal_field_mapping §2B)
         await self._page.click("text=Tenant Information")
-        await self._click_inner_tab("Personal Information", "tenantFirstName")
+        await self._page.click("text=Documents")
+        await self._page.wait_for_selector(
+            "text=Scan Copy Of The Identity Documents",
+            state="visible",
+            timeout=30000,
+        )
+        await self._page.click("text=Personal Information")
+        await self._page.wait_for_selector("#fileField2", state="visible", timeout=30000)
         if not image_bytes:
             self._logger.warning("No image bytes provided — skipping document upload")
             return
@@ -1036,9 +1043,7 @@ class FormFiller:
     async def _validate_required_fields_before_submit(self) -> None:
         required_text_fields = [
             ("ownerFirstName", "Owner first name"),
-            ("ownerLastName", "Owner last name"),
             ("tenantFirstName", "Tenant first name"),
-            ("tenantLastName", "Tenant last name"),
         ]
         required_select_fields = [
             ("ownerOccupation", "Owner occupation"),

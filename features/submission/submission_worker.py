@@ -94,6 +94,10 @@ class SubmissionWorker:
                 BufferedInputFile(pdf_bytes, "verification.pdf"),
                 caption="Your tenant verification document.",
             )
+            await self._bot.send_message(
+                job.telegram_user_id,
+                "Send /start to register another tenant.",
+            )
         except Exception as exc:
             LOGGER.exception(
                 "Submission failed for user %d: %s",
@@ -102,5 +106,6 @@ class SubmissionWorker:
             )
             await self._bot.send_message(
                 job.telegram_user_id,
-                "❌ Submission failed. Please try again or contact support.",
+                "❌ Submission failed. Please try again or contact support.\n\n"
+                "Send /start to register another tenant.",
             )

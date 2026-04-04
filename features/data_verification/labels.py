@@ -37,7 +37,6 @@ OWNER_MANDATORY = {
     "owner.occupation",
     "owner.address.village_town_city",
     "owner.address.country",
-    "owner.address.state",
     "owner.address.district",
     "owner.address.police_station",
 }

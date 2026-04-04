@@ -30,6 +30,9 @@ class FormSession:
 
     consent_given_at: Optional[float] = None
 
+    # Second /start within 60s after warning discards in-progress session (FIX-7).
+    pending_discard_start_at: Optional[float] = None
+
     tenant_image_bytes: bytes = field(default_factory=bytes)
 
     # Pipeline routing — used by ImageParsingStage to know which person to extract.
@@ -68,6 +71,7 @@ class FormSession:
                 self.image_records.append(
                     ImageRecord(image_id=fid, person="owner", upload_timestamp=time.time())
                 )
+                existing.add(fid)
 
     @property
     def tenant_image_file_ids(self) -> list[str]:
@@ -81,3 +85,4 @@ class FormSession:
                 self.image_records.append(
                     ImageRecord(image_id=fid, person="tenant", upload_timestamp=time.time())
                 )
+                existing.add(fid)
