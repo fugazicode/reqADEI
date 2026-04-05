@@ -9,7 +9,7 @@ from datetime import date, datetime
 
 from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 
-from shared.portal_enums import OWNER_OCCUPATIONS, TENANCY_PURPOSES
+from shared.portal_enums import ADDRESS_DOC_TYPES, OWNER_OCCUPATIONS, TENANCY_PURPOSES
 from shared.models.form_payload import FormPayload
 
 
@@ -333,6 +333,8 @@ class FormFiller:
             normalized = OWNER_OCCUPATIONS.normalize(label)
         elif field_name == "tenancypurpose":
             normalized = TENANCY_PURPOSES.normalize(label)
+        elif field_name == "tenantAddressDocuments":
+            normalized = ADDRESS_DOC_TYPES.normalize(label)
         else:
             normalized = " ".join(label.strip().split())
         if normalized != label:

@@ -13,6 +13,7 @@ Flow:
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from aiogram import Bot, F, Router
 from aiogram.filters import StateFilter
@@ -596,7 +597,25 @@ async def _handle_free_text_edit(
         await message.answer("Please type text only (no photos or stickers here).")
         return
     field_path = session.current_editing_field
-    PayloadAccessor.set(session.payload, field_path, message.text.strip())
+    meta = _ALL_FIELDS.get(field_path)
+    raw = message.text.strip()
+    if meta and meta.edit_type == DATE:
+        parsed: datetime | None = None
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+            try:
+                parsed = datetime.strptime(raw, fmt)
+                break
+            except ValueError:
+                continue
+        if parsed is None:
+            await message.answer(
+                "Invalid date. Use DD/MM/YYYY (e.g. 31/12/2000). "
+                "You can also use YYYY-MM-DD."
+            )
+            return
+        PayloadAccessor.set(session.payload, field_path, parsed.strftime("%Y-%m-%d"))
+    else:
+        PayloadAccessor.set(session.payload, field_path, raw)
     await _delete_prompt(bot, message.chat.id, session)
     await message.delete()
     session.current_editing_field = None

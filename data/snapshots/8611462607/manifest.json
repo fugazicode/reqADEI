@@ -14,12 +14,12 @@
       "occupation": "SERVICE",
       "address": {
         "house_no": "J4/23 A Ground Floor",
-        "street_name": "Malviya Nagar",
+        "street_name": "Khirki Ext",
         "colony_locality_area": "Malviya Nagar",
         "village_town_city": "Delhi",
         "tehsil_block_mandal": null,
-        "district": "NEW DELHI",
-        "police_station": "NORTH AVENUE",
+        "district": "SOUTH",
+        "police_station": "MALVIYA NAGAR",
         "pincode": "110017",
         "state": "DELHI",
         "country": "INDIA"
@@ -43,8 +43,8 @@
         "colony_locality_area": "Malviya Nagar S.O",
         "village_town_city": "South Delhi",
         "tehsil_block_mandal": null,
-        "district": "NORTH WEST",
-        "police_station": "JAHANGIR PURI",
+        "district": "NEW DELHI",
+        "police_station": "NORTH AVENUE",
         "pincode": "110017",
         "state": "DELHI",
         "country": "INDIA"
@@ -56,9 +56,9 @@
         "colony_locality_area": "Malviya Nagar",
         "village_town_city": "New Delhi",
         "tehsil_block_mandal": null,
-        "district": "NEW DELHI",
-        "police_station": "NORTH AVENUE",
-        "pincode": "110017",
+        "district": "SOUTH",
+        "police_station": "MALVIYA NAGAR",
+        "pincode": null,
         "state": "DELHI",
         "country": "INDIA"
       }

@@ -238,6 +238,7 @@ async def owner_upload_confirmed(
             await status_msg.edit_text("Session expired. Send /start.")
             return
         session = await pipeline.run(session)
+        session_store.set(user_id, session)
     finally:
         session = session_store.get(user_id)
         if session is not None:
@@ -249,12 +250,26 @@ async def owner_upload_confirmed(
         return
 
     if session.last_error:
+        err = session.last_error
         session.image_records = [r for r in session.image_records if r.person != "owner"]
-        await status_msg.edit_text(
-            f"❌ {session.last_error}\n\nPlease re-upload the owner ID."
-            "\n\nSend a new photo to try again."
-        )
         session.last_error = None
+        count = len(session.owner_image_file_ids)
+        prompt = _id_upload_prompt_text("the owner's ID", count)
+        try:
+            await status_msg.edit_text(
+                f"❌ {err}\n\n{prompt}",
+                reply_markup=upload_confirm_keyboard("owner", count),
+                parse_mode="Markdown",
+            )
+            session.upload_status_message_id = status_msg.message_id
+        except TelegramBadRequest:
+            session.upload_status_message_id = None
+            msg = await callback.message.answer(  # type: ignore[union-attr]
+                f"❌ {err}\n\n{prompt}",
+                reply_markup=upload_confirm_keyboard("owner", count),
+                parse_mode="Markdown",
+            )
+            session.upload_status_message_id = msg.message_id
         session_store.set(user_id, session)
         return
 
