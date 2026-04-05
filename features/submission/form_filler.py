@@ -1,5 +1,6 @@
 
 import asyncio  # add this
+import json
 import logging
 import os
 import re
@@ -7,10 +8,40 @@ import tempfile
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import (
+    Error as PlaywrightError,
+    Page,
+    TimeoutError as PlaywrightTimeoutError,
+)
 
+from features.submission.portal_session import (
+    ADD_TENANT_VERIFICATION_URL,
+    CITIZEN_SERVICES_HOME,
+)
 from shared.portal_enums import ADDRESS_DOC_TYPES, OWNER_OCCUPATIONS, TENANCY_PURPOSES
 from shared.models.form_payload import FormPayload
+
+# region agent log
+_AGENT_DEBUG_LOG = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "debug-1cbe2e.log",
+)
+
+
+def _agent_debug_ndjson(payload: dict) -> None:
+    line = {
+        "sessionId": "1cbe2e",
+        "timestamp": int(datetime.now().timestamp() * 1000),
+        **payload,
+    }
+    try:
+        with open(_AGENT_DEBUG_LOG, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(line, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+# endregion agent log
 
 
 DISTRICT_VALUES: dict[str, str] = {
@@ -273,6 +304,11 @@ class SubmissionBlockedError(RuntimeError):
     pass
 
 
+def _is_addtenant_form_url(url: str) -> bool:
+    """Route predicate: tenant form page (POST may include query string)."""
+    return "addtenantpgverification" in url.casefold()
+
+
 class FormFiller:
     def __init__(self, page: Page, payload: FormPayload) -> None:
         self._page = page
@@ -295,31 +331,346 @@ class FormFiller:
         Clicks an inner navigation button within a sub-tab and waits
         for a specific field to become visible, confirming the section loaded.
 
-        button_text: The exact visible text on the button to click.
-        visible_field_name: The name attribute of a field inside that section,
-                            used as the signal that the section is now active.
+        Uses TabView strip links (index 2 on this form), not ``text=…``, so we
+        do not hit hidden <p> / help nodes like ``Page.click("text=…")`` does.
+
+        button_text: Substring of the tab link label (e.g. "Tenanted Premises Address").
+        visible_field_name: ``name`` attribute of a field in that section.
         """
-        await self._page.click(f"text={button_text}")
+        await self._click_tabview_labeled_link(
+            2,
+            button_text,
+            log_hypothesis="inner-tab",
+        )
         await self._page.wait_for_selector(
             f'[name="{visible_field_name}"]',
             state="visible",
             timeout=30000,
         )
 
+    async def _click_main_tab(self, label: str) -> None:
+        """Click a top-level portal form tab by visible text.
+
+        Tries in order: JS match with unicode whitespace normalisation (innerText
+        and textContent), Playwright ``get_by_text`` (non-exact), then ``text=``.
+        Waits 400 ms after the click so tab-switch JS can run.
+        """
+        clicked = await self._page.evaluate(
+            r"""(label) => {
+                const clean = (s) =>
+                    (s || "")
+                        .replace(/[\u00a0\u200b\u2009\u202f\ufeff]/g, " ")
+                        .replace(/\s+/g, " ")
+                        .trim();
+                const want = clean(label);
+                const candidates = document.querySelectorAll("a, li, span, div");
+                for (const el of candidates) {
+                    const t = clean(el.innerText || el.textContent || "");
+                    if (t === want) {
+                        el.click();
+                        return { ok: true, matched: t };
+                    }
+                }
+                for (const el of candidates) {
+                    const t = clean(el.innerText || el.textContent || "");
+                    if (t.includes(want) || want.includes(t)) {
+                        if (t.length > 0 && Math.abs(t.length - want.length) < 5) {
+                            el.click();
+                            return { ok: true, matched: t, partial: true };
+                        }
+                    }
+                }
+                return { ok: false, want: want };
+            }""",
+            label,
+        )
+        # region agent log
+        _agent_debug_ndjson(
+            {
+                "hypothesisId": "outer-tab",
+                "location": "form_filler._click_main_tab",
+                "message": "main form tab",
+                "data": {**clicked, "label": label},
+            }
+        )
+        # endregion agent log
+        if not clicked.get("ok"):
+            self._logger.warning(
+                "_click_main_tab JS miss for %r — falling back to Playwright text selector",
+                label,
+            )
+            try:
+                await self._page.get_by_text(label, exact=False).first.click()
+            except Exception:
+                await self._page.click(f"text={label}")
+        await self._page.wait_for_timeout(400)
+
     async def _navigate_to_address_subtab(self) -> None:
         """
-        Clicks the Address sub-tab within Tenant Information.
-        Waits for the Tenanted Premises Address button to be visible
-        as confirmation that the Address sub-tab content has loaded.
+        Opens the Address sub-tab under Tenant Information (TabView.switchTab(1,1)).
+
+        Does **not** wait for ``tenantPresentHouseNo``: that field sits under the
+        inner "Tenanted Premises Address" strip (TabView 2), which may not be
+        active until ``_fill_tenant_address_tenanted`` runs. Waiting here caused
+        30s timeouts when the default inner tab was another section.
         """
         await self._page.evaluate(
             "document.querySelector('[href=\"javascript:TabView.switchTab(1,1);\"]').click()"
         )
-        await self._page.wait_for_selector(
-            "text=Tenanted Premises Address",
-            state="visible",
-            timeout=30000,
+
+    async def _click_tabview_labeled_link(
+        self,
+        tabview_index: int,
+        label_contains: str,
+        *,
+        log_hypothesis: str = "doc-tab",
+    ) -> None:
+        """
+        Click a tab strip <a href="javascript:TabView.switchTab(n,…)"> whose
+        visible text includes ``label_contains``.
+
+        Playwright ``text=…`` often matches unrelated nodes (e.g. <p> help
+        text) that stay hidden; this scopes to real TabView links only.
+        """
+        result = await self._page.evaluate(
+            """([idx, label]) => {
+              const rx = /TabView\\s*\\.\\s*switchTab\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/i;
+              const norm = (s) => (s || "").replace(/\\s+/g, " ").trim();
+              const want = norm(label).toLowerCase();
+              const matches = [];
+              for (const a of document.querySelectorAll("a[href]")) {
+                const href = a.getAttribute("href") || "";
+                const m = href.match(rx);
+                if (!m || Number(m[1]) !== idx) continue;
+                if (!norm(a.textContent).toLowerCase().includes(want)) continue;
+                const r = a.getBoundingClientRect();
+                matches.push({ a: a, area: r.width * r.height, href });
+              }
+              if (!matches.length) {
+                return { ok: false, reason: "no_match", tabviewIndex: idx, label: label };
+              }
+              const visible = matches.filter((m) => m.area > 0);
+              const pool = visible.length ? visible : matches;
+              pool.sort((x, y) => y.area - x.area);
+              const tie = pool[0].area;
+              const tied = pool.filter((m) => m.area === tie);
+              if (tie === 0 && tied.length > 1) {
+                const prefer = (sub) =>
+                  tied.find((m) => (m.href || "").includes(sub));
+                const p2 = prefer("switchTab(" + idx + ",2)");
+                const p1 = prefer("switchTab(" + idx + ",1)");
+                const p0 = prefer("switchTab(" + idx + ",0)");
+                const pick = p2 || p1 || p0 || tied[0];
+                pick.a.click();
+                return {
+                  ok: true,
+                  tabviewIndex: idx,
+                  label: label,
+                  href: pick.href,
+                  n: matches.length,
+                  pickedArea: pick.area,
+                  tieBreak: true,
+                };
+              }
+              pool[0].a.click();
+              return {
+                ok: true,
+                tabviewIndex: idx,
+                label: label,
+                href: pool[0].href,
+                n: matches.length,
+                pickedArea: pool[0].area,
+              };
+            }""",
+            [tabview_index, label_contains],
         )
+        # region agent log
+        _agent_debug_ndjson(
+            {
+                "hypothesisId": log_hypothesis,
+                "location": "form_filler._click_tabview_labeled_link",
+                "message": "tabview labeled click",
+                "data": result,
+            }
+        )
+        # endregion agent log
+        if not result.get("ok"):
+            raise RuntimeError(
+                f"TabView sub-tab click failed (TabView{tabview_index}, {label_contains!r}): {result}"
+            )
+
+    async def _click_tenant_documents_tab(self) -> None:
+        """
+        Open Tenant Information → Documents when present. Live portal hrefs vary.
+
+        Runtime (debug-1cbe2e): this portal only has TabView1 tabs ``[0, 1]``
+        (Personal, Address) — no separate Documents tab; upload is reached via
+        Personal ``(1,0)`` directly (#fileField2 is on the Personal panel).
+        """
+        if await self._page.evaluate(
+            """() => {
+            const el = document.querySelector("#fileField2");
+            if (!el) return false;
+            const st = window.getComputedStyle(el);
+            if (st.display === "none" || st.visibility === "hidden") return false;
+            return el.offsetParent !== null;
+        }"""
+        ):
+            # region agent log
+            _agent_debug_ndjson(
+                {
+                    "hypothesisId": "documents-tab-discover",
+                    "location": "form_filler._click_tenant_documents_tab",
+                    "message": "open Documents tab",
+                    "data": {"ok": True, "strategy": "filefield2_already_visible"},
+                }
+            )
+            # endregion agent log
+            return
+
+        result = await self._page.evaluate("""() => {
+          // Portal hrefs vary: spaces around comma, TabView vs tabView, rare extra wrapping.
+          const parseSwitchTab = (href) => {
+            if (!href || !/TabView/i.test(href)) return null;
+            const m = href.match(
+              /TabView\\s*\\.\\s*switchTab\\s*\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/i
+            );
+            if (!m) return null;
+            return { tv: Number(m[1]), tab: Number(m[2]) };
+          };
+          const norm = (s) => (s || "").replace(/\\s+/g, " ").trim();
+          // Positive: upload / ID scan style tabs. Negative: known non-document strips.
+          const looksLikeDocTab = (txt) => {
+            const s = norm(txt).toLowerCase();
+            if (!s) return false;
+            if (/^personal( information)?$/i.test(s)) return false;
+            if (/family\\s+member/i.test(s)) return false;
+            if (/tenanted|permanent\\s+premises|permanent address/i.test(s)) return false;
+            if (/^address$/i.test(s) || /^address\\s/i.test(s)) return false;
+            return /document|photo|upload|scan|identity|attachments?|annex|supporting/i.test(
+              s
+            );
+          };
+          const clickCoord = (tv, tab) => {
+            for (const a of document.querySelectorAll("a[href]")) {
+              const href = a.getAttribute("href") || "";
+              const p = parseSwitchTab(href);
+              if (!p || p.tv !== tv || p.tab !== tab) continue;
+              a.click();
+              return { ok: true, href, strategy: "coord", tv, tab };
+            }
+            return null;
+          };
+          const tv1Doc = [];
+          for (const a of document.querySelectorAll("a[href]")) {
+            const href = a.getAttribute("href") || "";
+            const p = parseSwitchTab(href);
+            if (!p || p.tv !== 1) continue;
+            if (!looksLikeDocTab(a.textContent)) continue;
+            const r = a.getBoundingClientRect();
+            tv1Doc.push({ a, area: r.width * r.height, href });
+          }
+          if (tv1Doc.length) {
+            tv1Doc.sort((x, y) => y.area - x.area);
+            tv1Doc[0].a.click();
+            return {
+              ok: true,
+              href: tv1Doc[0].href,
+              strategy: "label_tv1_document",
+              n: tv1Doc.length,
+              pickedArea: tv1Doc[0].area,
+            };
+          }
+          // TabView1 index 0 = Personal, 1 = Address (see CONTEXT). Never use those as Documents.
+          for (const tab of [2, 3, 4, 5, 6, 7]) {
+            const r = clickCoord(1, tab);
+            if (r) return r;
+          }
+          // Enumerate all TabView1 tabs in DOM; click smallest index >= 2 (first strip after Address).
+          const tv1ByTab = new Map();
+          for (const a of document.querySelectorAll("a[href]")) {
+            const href = a.getAttribute("href") || "";
+            const p = parseSwitchTab(href);
+            if (!p || p.tv !== 1) continue;
+            const r = a.getBoundingClientRect();
+            const area = r.width * r.height;
+            const prev = tv1ByTab.get(p.tab);
+            if (!prev || prev.area < area) tv1ByTab.set(p.tab, { a, href, area });
+          }
+          const tabKeys = [...tv1ByTab.keys()].sort((x, y) => x - y);
+          const docCandidate = tabKeys.find((k) => k >= 2);
+          if (docCandidate !== undefined) {
+            const row = tv1ByTab.get(docCandidate);
+            row.a.click();
+            return {
+              ok: true,
+              href: row.href,
+              strategy: "enum_tv1_min_ge2",
+              tab: docCandidate,
+              tv1Tabs: tabKeys,
+            };
+          }
+          const anyDoc = [];
+          for (const a of document.querySelectorAll("a[href]")) {
+            const href = a.getAttribute("href") || "";
+            if (!/TabView/i.test(href) || !/switchTab/i.test(href)) continue;
+            if (!looksLikeDocTab(a.textContent)) continue;
+            const p = parseSwitchTab(href);
+            if (p && p.tv === 1 && p.tab <= 1) continue;
+            const r = a.getBoundingClientRect();
+            anyDoc.push({ a, area: r.width * r.height, href });
+          }
+          if (!anyDoc.length) {
+            // Only Personal + Address on TabView1 — click Personal (1,0) for ID upload path.
+            const tv10 = [];
+            for (const a of document.querySelectorAll("a[href]")) {
+              const href = a.getAttribute("href") || "";
+              const p = parseSwitchTab(href);
+              if (!p || p.tv !== 1 || p.tab !== 0) continue;
+              const r = a.getBoundingClientRect();
+              tv10.push({ a, area: r.width * r.height, href });
+            }
+            if (tv10.length) {
+              const vis = tv10.filter((c) => c.area > 0);
+              const pool = vis.length ? vis : tv10;
+              pool.sort((x, y) => y.area - x.area);
+              pool[0].a.click();
+              return {
+                ok: true,
+                href: pool[0].href,
+                strategy: "fallback_tv1_tab0_personal",
+                tv1Tabs: tabKeys,
+                pickedArea: pool[0].area,
+              };
+            }
+            return {
+              ok: false,
+              reason: "no_documents_tab",
+              tv1Tabs: tabKeys,
+            };
+          }
+          anyDoc.sort((x, y) => y.area - x.area);
+          anyDoc[0].a.click();
+          return {
+            ok: true,
+            href: anyDoc[0].href,
+            strategy: "label_any_document",
+            n: anyDoc.length,
+            pickedArea: anyDoc[0].area,
+          };
+        }""")
+        # region agent log
+        _agent_debug_ndjson(
+            {
+                "hypothesisId": "documents-tab-discover",
+                "location": "form_filler._click_tenant_documents_tab",
+                "message": "open Documents tab",
+                "data": result,
+            }
+        )
+        # endregion agent log
+        if not result.get("ok"):
+            raise RuntimeError(f"Could not open tenant Documents tab: {result}")
 
     async def _fill_text(self, field_name: str, value: str | None) -> None:
         if value is None or value == "":
@@ -619,6 +970,9 @@ class FormFiller:
                 )
                 await self._select_by_label(station_field, station)
 
+        # Portal mirrors district/station into hidden inputs for submit. When
+        # visible <select> handlers do not sync them, patch value only (no
+        # change event) so we do not re-trigger country/cascade scripts.
         hidden_d = await self._page.input_value(f'[name="{hidden_district_field}"]')
         hidden_s = await self._page.input_value(f'[name="{hidden_station_field}"]')
         if not hidden_d:
@@ -815,7 +1169,7 @@ class FormFiller:
             await self._setup_ajax_csrf()
             self._csrf_setup_done = True
 
-        await self._page.click("text=Owner Information")
+        await self._click_main_tab("Owner Information")
         await self._page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",
@@ -871,7 +1225,7 @@ class FormFiller:
         )
 
     async def _fill_tenant_personal_tab(self) -> None:
-        await self._page.click("text=Tenant Information")
+        await self._click_main_tab("Tenant Information")
         await self._page.wait_for_selector(
             '[name="tenantFirstName"]',
             state="visible",
@@ -933,21 +1287,17 @@ class FormFiller:
                 )
 
     async def _fill_family_member_tab(self) -> None:
-        await self._page.click("text=Family Member Information")
+        await self._click_main_tab("Family Member Information")
         await self._page.wait_for_selector("#rbno", state="visible", timeout=120000)
         await self._page.click("#rbno")
 
 
     async def _fill_document_upload(self, image_bytes: bytes) -> None:
-        # Tenant Information → Documents → inner Personal Information (portal_field_mapping §2B)
-        await self._page.click("text=Tenant Information")
-        await self._page.click("text=Documents")
-        await self._page.wait_for_selector(
-            "text=Scan Copy Of The Identity Documents",
-            state="visible",
-            timeout=30000,
-        )
-        await self._page.click("text=Personal Information")
+        # Tenant Information → Personal tab (TabView1 only has [0]=Personal, [1]=Address;
+        # no separate Documents tab on this portal build — confirmed by tv1Tabs:[0,1] in logs).
+        # #fileField2 is directly on the Personal panel; no inner TabView2 click needed.
+        await self._click_main_tab("Tenant Information")
+        await self._click_tenant_documents_tab()
         await self._page.wait_for_selector("#fileField2", state="visible", timeout=30000)
         if not image_bytes:
             self._logger.warning("No image bytes provided — skipping document upload")
@@ -989,9 +1339,44 @@ class FormFiller:
             except OSError:
                 pass
 
+    async def _navigate_to_pdf_menu_shell(self) -> None:
+        """Load a page that includes the top menu; submit may have left only the OK stub."""
+        self._logger.warning(
+            "Navigating to citizen services shell for PDF retrieval "
+            "(post-submit document may be the route OK stub)"
+        )
+        await self._page.goto(
+            CITIZEN_SERVICES_HOME,
+            wait_until="domcontentloaded",
+            timeout=300000,
+        )
+        menu = "text=Tenant Registration"
+        try:
+            await self._page.wait_for_selector(
+                menu,
+                state="visible",
+                timeout=120000,
+            )
+        except PlaywrightTimeoutError:
+            self._logger.warning(
+                "Tenant Registration menu not visible on home — trying add-tenant form URL"
+            )
+            await self._page.goto(
+                ADD_TENANT_VERIFICATION_URL,
+                wait_until="domcontentloaded",
+                timeout=300000,
+            )
+            await self._page.wait_for_selector(
+                menu,
+                state="visible",
+                timeout=120000,
+            )
+        self._logger.warning("PDF menu shell ready (Tenant Registration visible)")
+
     async def _retrieve_pdf(self, request_number: str) -> bytes:
         try:
             await self._dismiss_fancybox_if_present()
+            await self._navigate_to_pdf_menu_shell()
             # Step 1: Hover over "Tenant Registration" in the top menu
             await self._page.hover("text=Tenant Registration")
             await self._page.wait_for_selector(
@@ -1059,7 +1444,7 @@ class FormFiller:
             return self._DUMMY_PDF_BYTES
 
     async def _fill_affidavit_tab(self) -> None:
-        await self._page.click("text=Affidavit")
+        await self._click_main_tab("Affidavit")
         await self._page.wait_for_selector("#allTrue", state="visible", timeout=120000)
         await self._page.click("#hasAnyCriminalRecord1")
         await self._page.check("#allTrue")
@@ -1128,6 +1513,20 @@ class FormFiller:
         )
         return message
 
+    async def _extract_fancybox_message_safe(self) -> str | None:
+        """Like `_extract_fancybox_message` but returns None if the frame navigated mid-read."""
+        try:
+            return await self._extract_fancybox_message()
+        except PlaywrightError as exc:
+            msg = str(exc)
+            if "Execution context was destroyed" in msg:
+                self._logger.warning(
+                    "Fancybox read skipped (execution context destroyed — likely navigation): %s",
+                    msg,
+                )
+                return None
+            raise
+
     async def _dismiss_fancybox_if_present(self) -> None:
         selectors = [
             "#fancybox-close",
@@ -1148,8 +1547,43 @@ class FormFiller:
         except Exception:
             pass
 
+    def _schedule_submit_dialog_handler(self) -> None:
+        """Handle native dialogs once per submit (``page.on`` stacks handlers if reused).
+
+        ``beforeunload`` must be **accepted** or navigation/submit stalls; alerts/confirms
+        are dismissed. ``asyncio.ensure_future(dialog.dismiss())`` alone is unreliable
+        when the listener is never cleared.
+        """
+
+        def _on_dialog(dialog) -> None:
+            async def _run() -> None:
+                try:
+                    # beforeunload must be accepted to allow navigation; confirm() needs
+                    # OK (accept) — dismiss() cancels the submit flow.
+                    await dialog.accept()
+                except Exception:
+                    try:
+                        await dialog.dismiss()
+                    except Exception:
+                        pass
+
+            asyncio.create_task(_run())
+
+        self._page.once("dialog", _on_dialog)
+
     async def _submit_and_capture_outcome(self) -> SubmitOutcome:
-        self._page.on("dialog", lambda dialog: asyncio.ensure_future(dialog.dismiss()))
+        # region agent log
+        _agent_debug_ndjson(
+            {
+                "hypothesisId": "submit-flow",
+                "location": "form_filler._submit_and_capture_outcome",
+                "message": "submit start",
+                "data": {},
+            }
+        )
+        # endregion agent log
+
+        self._schedule_submit_dialog_handler()
 
         captured_body: list[str] = []
         post_triggered = False
@@ -1160,6 +1594,16 @@ class FormFiller:
                 await route.continue_()
                 return
             post_triggered = True
+            # region agent log
+            _agent_debug_ndjson(
+                {
+                    "hypothesisId": "submit-flow",
+                    "location": "form_filler.handle_submit_response",
+                    "message": "POST intercepted",
+                    "data": {"path_tail": request.url.split("?", 1)[0].rsplit("/", 1)[-1]},
+                }
+            )
+            # endregion agent log
             try:
                 response = await route.fetch(timeout=0)
                 body = await response.text()
@@ -1175,19 +1619,41 @@ class FormFiller:
                 self._logger.warning(
                     "Route handler failed to fetch response: %s", exc
                 )
+                # region agent log
+                _agent_debug_ndjson(
+                    {
+                        "hypothesisId": "submit-flow",
+                        "location": "form_filler.handle_submit_response",
+                        "message": "route fetch failed",
+                        "data": {"exc_type": type(exc).__name__},
+                    }
+                )
+                # endregion agent log
                 await route.continue_()
 
-        await self._page.route(
-            "**/addtenantpgverification.htm",
-            handle_submit_response,
-        )
+        await self._page.route(_is_addtenant_form_url, handle_submit_response)
 
         await self._page.click("#submit123", no_wait_after=True)
+        try:
+            await self._page.wait_for_load_state("domcontentloaded", timeout=10000)
+        except PlaywrightTimeoutError:
+            pass
         await self._page.wait_for_timeout(800)
 
-        popup_message = await self._extract_fancybox_message()
+        # region agent log
+        _agent_debug_ndjson(
+            {
+                "hypothesisId": "submit-flow",
+                "location": "form_filler._submit_and_capture_outcome",
+                "message": "after submit click",
+                "data": {"post_triggered": post_triggered},
+            }
+        )
+        # endregion agent log
+
+        popup_message = await self._extract_fancybox_message_safe()
         if popup_message:
-            await self._page.unroute("**/addtenantpgverification.htm")
+            await self._page.unroute(_is_addtenant_form_url)
             self._logger.warning(
                 "Submission blocked by portal client-side validation popup: %s",
                 popup_message,
@@ -1212,13 +1678,28 @@ class FormFiller:
             )
 
         # Unregister the route so it does not interfere with further navigation.
-        await self._page.unroute("**/addtenantpgverification.htm")
+        await self._page.unroute(_is_addtenant_form_url)
+
+        # region agent log
+        _agent_debug_ndjson(
+            {
+                "hypothesisId": "submit-flow",
+                "location": "form_filler._submit_and_capture_outcome",
+                "message": "after response poll",
+                "data": {
+                    "post_triggered": post_triggered,
+                    "captured_n": len(captured_body),
+                    "first_body_len": len(captured_body[0]) if captured_body else 0,
+                },
+            }
+        )
+        # endregion agent log
 
         if captured_body:
             content = captured_body[0]
         else:
             if not post_triggered:
-                popup_message = await self._extract_fancybox_message()
+                popup_message = await self._extract_fancybox_message_safe()
                 if popup_message:
                     self._logger.warning(
                         "No POST triggered; portal popup message detected: %s",

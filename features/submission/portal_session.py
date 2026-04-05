@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import logging
-import time
 
 from playwright.async_api import Browser, BrowserContext, Error as PlaywrightError, Page, Playwright
 
-_LOGIN_POLL_INTERVAL_S = 0.3
-_LOGIN_WAIT_MAX_S = 300.0
-
 # Delhi Police Citizen Services Portal
-_LOGIN_URL = "https://cctns.delhipolice.gov.in/citizenservices/"
+CITIZEN_SERVICES_HOME = "https://cctns.delhipolice.gov.in/citizenservices/"
+ADD_TENANT_VERIFICATION_URL = (
+    "https://cctns.delhipolice.gov.in/citizenservices/addtenantpgverification.htm"
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -64,46 +63,22 @@ class PortalSession:
         await new_page.fill('[name="j_username"]', self._username)
         await new_page.click('[name="j_password"]')
         await new_page.fill('[name="j_password"]', self._password)
-        async with new_page.expect_navigation(timeout=300_000):
-            await new_page.click("#button")
-        await new_page.wait_for_load_state("load", timeout=300_000)
-        # domcontentloaded alone can win a redirect race; wait until we see either
-        # failure (login.htm) or a CCTNS citizen-services URL.
-        deadline = time.monotonic() + _LOGIN_WAIT_MAX_S
-        while time.monotonic() < deadline:
-            url = new_page.url
-            lower = url.casefold()
-            if "login.htm" in lower:
-                raise RuntimeError(
-                    "Portal login failed — credentials rejected. "
-                    f"Current URL: {url}. Check PORTAL_USERNAME / PORTAL_PASSWORD."
-                )
-            if "citizenservices" in lower or "cctns.delhipolice" in lower:
-                self._logger.info("Login succeeded — current URL: %s", url)
-                return new_page
-            await new_page.wait_for_timeout(int(_LOGIN_POLL_INTERVAL_S * 1000))
-        raise RuntimeError(
-            "Portal login timed out waiting for CCTNS after submit. "
-            f"Last URL: {new_page.url}. Check PORTAL_USERNAME / PORTAL_PASSWORD."
-        )
+        await new_page.click('#button')
+        await new_page.wait_for_load_state("domcontentloaded", timeout=300000)
+        if "login.htm" in new_page.url:
+            raise RuntimeError(
+                "Portal login failed — credentials rejected. "
+                f"Current URL: {new_page.url}. Check PORTAL_USERNAME / PORTAL_PASSWORD."
+            )
+        self._logger.info("Login succeeded — current URL: %s", new_page.url)
+        return new_page
 
     async def _navigate_to_form(self, page: Page) -> None:
         await page.goto(
-            "https://cctns.delhipolice.gov.in/citizenservices/addtenantpgverification.htm",
+            ADD_TENANT_VERIFICATION_URL,
             wait_until="domcontentloaded",
             timeout=300000,
         )
-        nav_url = page.url.casefold()
-        if "login.htm" in nav_url:
-            raise RuntimeError(
-                "Portal session invalid or expired — landed on login page instead of tenant form. "
-                f"Current URL: {page.url}"
-            )
-        if "citizenservices" not in nav_url:
-            raise RuntimeError(
-                "Unexpected URL after opening tenant form (expected CCTNS citizen services). "
-                f"Current URL: {page.url}"
-            )
         await page.wait_for_selector(
             '[name="ownerFirstName"]',
             state="visible",

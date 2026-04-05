@@ -3,7 +3,7 @@
   "telegram_user_id": 8611462607,
   "payload": {
     "owner": {
-      "first_name": "Sanjeev Kumar",
+      "first_name": "Sanjeev",
       "middle_name": null,
       "last_name": "Saini",
       "relative_name": "Bagwan Dass Saini",
@@ -14,12 +14,12 @@
       "occupation": "SERVICE",
       "address": {
         "house_no": "J4/23 A Ground Floor",
-        "street_name": "Khirki Ext",
+        "street_name": "Khirki Extension",
         "colony_locality_area": "Malviya Nagar",
         "village_town_city": "Delhi",
         "tehsil_block_mandal": null,
-        "district": "SOUTH",
-        "police_station": "MALVIYA NAGAR",
+        "district": "NORTH EAST",
+        "police_station": "GOKUL PURI",
         "pincode": "110017",
         "state": "DELHI",
         "country": "INDIA"
@@ -43,8 +43,8 @@
         "colony_locality_area": "Malviya Nagar S.O",
         "village_town_city": "South Delhi",
         "tehsil_block_mandal": null,
-        "district": "NEW DELHI",
-        "police_station": "NORTH AVENUE",
+        "district": "NORTH",
+        "police_station": "BURARI",
         "pincode": "110017",
         "state": "DELHI",
         "country": "INDIA"
@@ -56,9 +56,9 @@
         "colony_locality_area": "Malviya Nagar",
         "village_town_city": "New Delhi",
         "tehsil_block_mandal": null,
-        "district": "SOUTH",
-        "police_station": "MALVIYA NAGAR",
-        "pincode": null,
+        "district": "NORTH WEST",
+        "police_station": "MAURYA ENCLAVE",
+        "pincode": "110017",
         "state": "DELHI",
         "country": "INDIA"
       }
