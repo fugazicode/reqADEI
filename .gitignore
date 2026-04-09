@@ -14,3 +14,6 @@ data/submission_snapshot/
 
 # IDE
 .idea/
+/data
+.cursor
+/memory

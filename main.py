@@ -11,6 +11,7 @@ from aiogram.types import Message
 
 from core.engine import PipelineEngine
 from core.pipeline_stages import ImageParsingStage
+from infrastructure.fsm_logger import AnalyticsMiddleware
 from features.address_collection.handlers import router as address_collection_router
 from features.data_verification.handlers import router as data_verification_router
 from features.identity_collection.handlers import router as identity_collection_router
@@ -36,8 +37,8 @@ async def cancel_root(message: Message, state: FSMContext, session_store: Sessio
     await message.answer("Form cancelled. Send /start to begin again.")
 
 
-def _build_pipeline(groq_parser: GroqParser, bot: Bot) -> PipelineEngine:
-    return PipelineEngine([ImageParsingStage(groq_parser, bot)])
+def _build_pipeline(groq_parser: GroqParser, bot: Bot, analytics_store: AnalyticsStore) -> PipelineEngine:
+    return PipelineEngine([ImageParsingStage(groq_parser, bot, analytics_store)])
 
 
 async def _session_cleanup_loop(session_store: SessionStore) -> None:
@@ -69,15 +70,16 @@ async def run() -> None:
         national_file=base_dir / "data" / "national_police_stations.json",
     )
 
-    pipeline = _build_pipeline(groq_parser, bot)
-
     analytics_store = AnalyticsStore(base_dir / "data" / "analytics.db")
+
+    pipeline = _build_pipeline(groq_parser, bot, analytics_store)
 
     submission_worker = SubmissionWorker(
         bot=bot,
         portal_username=config.portal_username,
         portal_password=config.portal_password,
         snapshot_dir=config.snapshot_dir,
+        analytics_store=analytics_store,
     )
 
     # Inject dependencies via dispatcher context
@@ -88,6 +90,10 @@ async def run() -> None:
     dp["analytics_store"] = analytics_store
     dp["bot"] = bot
     dp["submission_worker"] = submission_worker
+
+    analytics_mw = AnalyticsMiddleware(analytics_store, session_store)
+    dp.message.middleware(analytics_mw)
+    dp.callback_query.middleware(analytics_mw)
 
     dp.include_router(root_router)
     dp.include_router(identity_collection_router)

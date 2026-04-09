@@ -10,6 +10,7 @@ from playwright.async_api import Playwright, async_playwright
 
 from features.submission.form_filler import FormFiller
 from features.submission.portal_session import PortalSession
+from infrastructure.analytics_store import AnalyticsStore
 from infrastructure.submission_snapshot import save_snapshot
 from shared.models.submission_input import SubmissionInput
 
@@ -50,11 +51,13 @@ class SubmissionWorker:
         portal_username: str,
         portal_password: str,
         snapshot_dir: Path | None = None,
+        analytics_store: AnalyticsStore | None = None,
     ) -> None:
         self._bot = bot
         self._username = portal_username
         self._password = portal_password
         self._snapshot_dir = snapshot_dir
+        self._analytics = analytics_store
         self._queue: asyncio.Queue[SubmissionInput] = asyncio.Queue()
 
     async def enqueue(self, job: SubmissionInput) -> int:
@@ -81,6 +84,20 @@ class SubmissionWorker:
             snap_dir = self._snapshot_dir / str(job.telegram_user_id)
             await asyncio.to_thread(save_snapshot, snap_dir, job)
             LOGGER.info("Snapshot saved to %s", snap_dir)
+
+        run_id: int | None = None
+        if self._analytics is not None and job.analytics_session_id is not None:
+            try:
+                run_id = await self._analytics.log_playwright_start(
+                    job.analytics_session_id, job.telegram_user_id
+                )
+            except Exception as exc:
+                LOGGER.warning(
+                    "Failed to log playwright start for user %d: %s",
+                    job.telegram_user_id,
+                    exc,
+                )
+
         try:
             request_number, pdf_bytes = await execute_playwright_submission(
                 job,
@@ -89,6 +106,17 @@ class SubmissionWorker:
                 portal_password=self._password,
                 headless=False,
             )
+            if self._analytics is not None and run_id is not None:
+                try:
+                    await self._analytics.log_playwright_finish(
+                        run_id, "success", request_number=request_number
+                    )
+                except Exception as exc:
+                    LOGGER.warning(
+                        "Failed to log playwright finish for user %d: %s",
+                        job.telegram_user_id,
+                        exc,
+                    )
             await self._bot.send_document(
                 job.telegram_user_id,
                 BufferedInputFile(pdf_bytes, "verification.pdf"),
@@ -104,6 +132,17 @@ class SubmissionWorker:
                 job.telegram_user_id,
                 exc,
             )
+            if self._analytics is not None and run_id is not None:
+                try:
+                    await self._analytics.log_playwright_finish(
+                        run_id, "error", error_message=str(exc)
+                    )
+                except Exception as log_exc:
+                    LOGGER.warning(
+                        "Failed to log playwright finish (error) for user %d: %s",
+                        job.telegram_user_id,
+                        log_exc,
+                    )
             await self._bot.send_message(
                 job.telegram_user_id,
                 "❌ Submission failed. Please try again or contact support.\n\n"

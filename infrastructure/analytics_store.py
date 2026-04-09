@@ -5,7 +5,8 @@ Schema
 ──────
 sessions            — one row per bot conversation (telegram_user_id, times, outcome)
 field_edits         — one row each time a field value changes (who changed, from/to, source)
-fsm_transitions     — one row per state change
+fsm_transitions     — one row per state change (optional context JSON)
+extraction_events   — ID extraction / validation outcomes per person
 playwright_runs     — one row per portal automation attempt
 """
 from __future__ import annotations
@@ -54,7 +55,20 @@ CREATE TABLE IF NOT EXISTS fsm_transitions (
     telegram_user_id    INTEGER NOT NULL,
     ts                  REAL    NOT NULL,
     from_state          TEXT,
-    to_state            TEXT    NOT NULL
+    to_state            TEXT,
+    context             TEXT
+);
+
+CREATE TABLE IF NOT EXISTS extraction_events (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id          INTEGER REFERENCES sessions(id),
+    telegram_user_id    INTEGER NOT NULL,
+    ts                  REAL    NOT NULL,
+    person              TEXT    NOT NULL,
+    image_count         INTEGER NOT NULL,
+    raw_groq_response   TEXT,
+    validation_error    TEXT,
+    aadhaar_valid       INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS playwright_runs (
@@ -83,6 +97,11 @@ class AnalyticsStore:
         self._db.row_factory = aiosqlite.Row
         await self._db.executescript(_DDL)
         await self._db.commit()
+        try:
+            await self._db.execute("ALTER TABLE fsm_transitions ADD COLUMN context TEXT")
+            await self._db.commit()
+        except Exception:
+            pass
 
     async def close(self) -> None:
         if self._db:
@@ -179,18 +198,55 @@ class AnalyticsStore:
         session_id: int,
         telegram_user_id: int,
         from_state: Optional[str],
-        to_state: str,
+        to_state: Optional[str],
+        context: Optional[dict] = None,
     ) -> None:
         assert self._db
         await self._db.execute(
             """INSERT INTO fsm_transitions
-               (session_id, telegram_user_id, ts, from_state, to_state)
-               VALUES (?, ?, ?, ?, ?)""",
-            (session_id, telegram_user_id, time.time(), from_state, to_state),
+               (session_id, telegram_user_id, ts, from_state, to_state, context)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (
+                session_id,
+                telegram_user_id,
+                time.time(),
+                from_state,
+                to_state,
+                json.dumps(context) if context else None,
+            ),
         )
         await self._db.execute(
             "UPDATE sessions SET fsm_steps = fsm_steps + 1 WHERE id = ?",
             (session_id,),
+        )
+        await self._db.commit()
+
+    async def log_extraction_event(
+        self,
+        session_id: Optional[int],
+        telegram_user_id: int,
+        person: str,
+        image_count: int,
+        raw_groq_response: Optional[dict],
+        validation_error: Optional[str],
+        aadhaar_valid: bool,
+    ) -> None:
+        assert self._db
+        await self._db.execute(
+            """INSERT INTO extraction_events
+               (session_id, telegram_user_id, ts, person, image_count,
+                raw_groq_response, validation_error, aadhaar_valid)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                session_id,
+                telegram_user_id,
+                time.time(),
+                person,
+                image_count,
+                json.dumps(raw_groq_response) if raw_groq_response else None,
+                validation_error,
+                1 if aadhaar_valid else 0,
+            ),
         )
         await self._db.commit()
 

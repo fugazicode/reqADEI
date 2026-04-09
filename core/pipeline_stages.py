@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import io
-import time
+import logging
 
 from aiogram import Bot
 
 from core.stage_interface import PipelineStage
+from infrastructure.analytics_store import AnalyticsStore
 from infrastructure.groq_parser import GroqParser
 from shared.audit_log import write_audit_event
 from shared.models.session import FormSession, ImageRecord
@@ -81,9 +82,16 @@ def _normalise_delhi_district(raw: str) -> str:
 class ImageParsingStage(PipelineStage):
     name = "parse_image"
 
-    def __init__(self, groq_parser: GroqParser, bot: Bot) -> None:
+    def __init__(
+        self,
+        groq_parser: GroqParser,
+        bot: Bot,
+        analytics_store: AnalyticsStore | None = None,
+    ) -> None:
         self._groq_parser = groq_parser
         self._bot = bot
+        self._analytics = analytics_store
+        self._logger = logging.getLogger(__name__)
 
     async def execute(self, session: FormSession) -> FormSession:
         person_records = [
@@ -118,6 +126,7 @@ class ImageParsingStage(PipelineStage):
                     "The Aadhaar number extracted from the uploaded image appears to be invalid. "
                     "Please upload a clearer image or correct it manually in the next step."
                 )
+                await self._log_extraction(session, image_bytes_list, parsed, session.last_error, False)
                 return session
 
             parsed["address_verification_doc_no"] = cleaned_aadhaar
@@ -149,6 +158,7 @@ class ImageParsingStage(PipelineStage):
                     f"The same Aadhaar document ({masked}) appears to have been submitted "
                     "for both the owner and the tenant. Please re-upload the correct documents."
                 )
+                await self._log_extraction(session, image_bytes_list, parsed, session.last_error, False)
                 return session
 
         for key, value in parsed.items():
@@ -201,4 +211,28 @@ class ImageParsingStage(PipelineStage):
                 record,
             )
 
+        await self._log_extraction(session, image_bytes_list, parsed, None, True)
         return session
+
+    async def _log_extraction(
+        self,
+        session: FormSession,
+        image_bytes_list: list[bytes],
+        parsed: dict,
+        validation_error: str | None,
+        aadhaar_valid: bool,
+    ) -> None:
+        if not self._analytics or session.analytics_session_id is None:
+            return
+        try:
+            await self._analytics.log_extraction_event(
+                session_id=session.analytics_session_id,
+                telegram_user_id=session.telegram_user_id,
+                person=session.current_confirming_person,
+                image_count=len(image_bytes_list),
+                raw_groq_response=parsed,
+                validation_error=validation_error,
+                aadhaar_valid=aadhaar_valid,
+            )
+        except Exception as exc:
+            self._logger.warning("Failed to log extraction event: %s", exc)

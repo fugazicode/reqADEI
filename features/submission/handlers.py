@@ -32,6 +32,7 @@ async def trigger_submission(
         telegram_user_id=session.telegram_user_id,
         payload=session.payload,
         image_bytes=tenant_image_bytes,
+        analytics_session_id=session.analytics_session_id,
     )
 
     queue_size = await submission_worker.enqueue(job)

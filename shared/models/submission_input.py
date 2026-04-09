@@ -18,3 +18,4 @@ class SubmissionInput:
     telegram_user_id: int
     payload: FormPayload
     image_bytes: bytes
+    analytics_session_id: int | None = None
