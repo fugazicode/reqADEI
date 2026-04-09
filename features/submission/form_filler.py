@@ -1,6 +1,5 @@
 
-import asyncio  # add this
-import json
+import asyncio
 import logging
 import os
 import re
@@ -20,28 +19,6 @@ from features.submission.portal_session import (
 )
 from shared.portal_enums import ADDRESS_DOC_TYPES, OWNER_OCCUPATIONS, TENANCY_PURPOSES
 from shared.models.form_payload import FormPayload
-
-# region agent log
-_AGENT_DEBUG_LOG = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "debug-1cbe2e.log",
-)
-
-
-def _agent_debug_ndjson(payload: dict) -> None:
-    line = {
-        "sessionId": "1cbe2e",
-        "timestamp": int(datetime.now().timestamp() * 1000),
-        **payload,
-    }
-    try:
-        with open(_AGENT_DEBUG_LOG, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(line, ensure_ascii=False) + "\n")
-    except OSError:
-        pass
-
-
-# endregion agent log
 
 
 DISTRICT_VALUES: dict[str, str] = {
@@ -337,11 +314,7 @@ class FormFiller:
         button_text: Substring of the tab link label (e.g. "Tenanted Premises Address").
         visible_field_name: ``name`` attribute of a field in that section.
         """
-        await self._click_tabview_labeled_link(
-            2,
-            button_text,
-            log_hypothesis="inner-tab",
-        )
+        await self._click_tabview_labeled_link(2, button_text)
         await self._page.wait_for_selector(
             f'[name="{visible_field_name}"]',
             state="visible",
@@ -384,16 +357,7 @@ class FormFiller:
             }""",
             label,
         )
-        # region agent log
-        _agent_debug_ndjson(
-            {
-                "hypothesisId": "outer-tab",
-                "location": "form_filler._click_main_tab",
-                "message": "main form tab",
-                "data": {**clicked, "label": label},
-            }
-        )
-        # endregion agent log
+        self._logger.debug("Tab click: label=%r result=%s", label, clicked)
         if not clicked.get("ok"):
             self._logger.warning(
                 "_click_main_tab JS miss for %r — falling back to Playwright text selector",
@@ -419,11 +383,7 @@ class FormFiller:
         )
 
     async def _click_tabview_labeled_link(
-        self,
-        tabview_index: int,
-        label_contains: str,
-        *,
-        log_hypothesis: str = "doc-tab",
+        self, tabview_index: int, label_contains: str
     ) -> None:
         """
         Click a tab strip <a href="javascript:TabView.switchTab(n,…)"> whose
@@ -484,16 +444,12 @@ class FormFiller:
             }""",
             [tabview_index, label_contains],
         )
-        # region agent log
-        _agent_debug_ndjson(
-            {
-                "hypothesisId": log_hypothesis,
-                "location": "form_filler._click_tabview_labeled_link",
-                "message": "tabview labeled click",
-                "data": result,
-            }
+        self._logger.debug(
+            "TabView%d click: label=%r result=%s",
+            tabview_index,
+            label_contains,
+            result,
         )
-        # endregion agent log
         if not result.get("ok"):
             raise RuntimeError(
                 f"TabView sub-tab click failed (TabView{tabview_index}, {label_contains!r}): {result}"
@@ -503,7 +459,7 @@ class FormFiller:
         """
         Open Tenant Information → Documents when present. Live portal hrefs vary.
 
-        Runtime (debug-1cbe2e): this portal only has TabView1 tabs ``[0, 1]``
+        Observed on the live portal: TabView1 tabs are only ``[0, 1]``
         (Personal, Address) — no separate Documents tab; upload is reached via
         Personal ``(1,0)`` directly (#fileField2 is on the Personal panel).
         """
@@ -516,16 +472,9 @@ class FormFiller:
             return el.offsetParent !== null;
         }"""
         ):
-            # region agent log
-            _agent_debug_ndjson(
-                {
-                    "hypothesisId": "documents-tab-discover",
-                    "location": "form_filler._click_tenant_documents_tab",
-                    "message": "open Documents tab",
-                    "data": {"ok": True, "strategy": "filefield2_already_visible"},
-                }
+            self._logger.debug(
+                "Documents tab: fileField2 already visible, skipping click"
             )
-            # endregion agent log
             return
 
         result = await self._page.evaluate("""() => {
@@ -659,16 +608,7 @@ class FormFiller:
             pickedArea: anyDoc[0].area,
           };
         }""")
-        # region agent log
-        _agent_debug_ndjson(
-            {
-                "hypothesisId": "documents-tab-discover",
-                "location": "form_filler._click_tenant_documents_tab",
-                "message": "open Documents tab",
-                "data": result,
-            }
-        )
-        # endregion agent log
+        self._logger.debug("Documents tab click result: %s", result)
         if not result.get("ok"):
             raise RuntimeError(f"Could not open tenant Documents tab: {result}")
 
@@ -1572,16 +1512,7 @@ class FormFiller:
         self._page.once("dialog", _on_dialog)
 
     async def _submit_and_capture_outcome(self) -> SubmitOutcome:
-        # region agent log
-        _agent_debug_ndjson(
-            {
-                "hypothesisId": "submit-flow",
-                "location": "form_filler._submit_and_capture_outcome",
-                "message": "submit start",
-                "data": {},
-            }
-        )
-        # endregion agent log
+        self._logger.debug("Submit flow: starting")
 
         self._schedule_submit_dialog_handler()
 
@@ -1594,16 +1525,10 @@ class FormFiller:
                 await route.continue_()
                 return
             post_triggered = True
-            # region agent log
-            _agent_debug_ndjson(
-                {
-                    "hypothesisId": "submit-flow",
-                    "location": "form_filler.handle_submit_response",
-                    "message": "POST intercepted",
-                    "data": {"path_tail": request.url.split("?", 1)[0].rsplit("/", 1)[-1]},
-                }
+            self._logger.debug(
+                "Submit flow: POST intercepted url=%s",
+                request.url.split("?", 1)[0].rsplit("/", 1)[-1],
             )
-            # endregion agent log
             try:
                 response = await route.fetch(timeout=0)
                 body = await response.text()
@@ -1619,16 +1544,10 @@ class FormFiller:
                 self._logger.warning(
                     "Route handler failed to fetch response: %s", exc
                 )
-                # region agent log
-                _agent_debug_ndjson(
-                    {
-                        "hypothesisId": "submit-flow",
-                        "location": "form_filler.handle_submit_response",
-                        "message": "route fetch failed",
-                        "data": {"exc_type": type(exc).__name__},
-                    }
+                self._logger.debug(
+                    "Submit flow: route fetch failed exc_type=%s",
+                    type(exc).__name__,
                 )
-                # endregion agent log
                 await route.continue_()
 
         await self._page.route(_is_addtenant_form_url, handle_submit_response)
@@ -1640,16 +1559,9 @@ class FormFiller:
             pass
         await self._page.wait_for_timeout(800)
 
-        # region agent log
-        _agent_debug_ndjson(
-            {
-                "hypothesisId": "submit-flow",
-                "location": "form_filler._submit_and_capture_outcome",
-                "message": "after submit click",
-                "data": {"post_triggered": post_triggered},
-            }
+        self._logger.debug(
+            "Submit flow: after click post_triggered=%s", post_triggered
         )
-        # endregion agent log
 
         popup_message = await self._extract_fancybox_message_safe()
         if popup_message:
@@ -1680,20 +1592,12 @@ class FormFiller:
         # Unregister the route so it does not interfere with further navigation.
         await self._page.unroute(_is_addtenant_form_url)
 
-        # region agent log
-        _agent_debug_ndjson(
-            {
-                "hypothesisId": "submit-flow",
-                "location": "form_filler._submit_and_capture_outcome",
-                "message": "after response poll",
-                "data": {
-                    "post_triggered": post_triggered,
-                    "captured_n": len(captured_body),
-                    "first_body_len": len(captured_body[0]) if captured_body else 0,
-                },
-            }
+        self._logger.debug(
+            "Submit flow: poll done post_triggered=%s captured=%d body_len=%d",
+            post_triggered,
+            len(captured_body),
+            len(captured_body[0]) if captured_body else 0,
         )
-        # endregion agent log
 
         if captured_body:
             content = captured_body[0]
