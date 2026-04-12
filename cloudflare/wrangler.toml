@@ -1,0 +1,20 @@
+name = "telegram-bot-worker"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# KV namespace — create with:
+#   wrangler kv:namespace create BOT_STATUS
+# Then paste the resulting id below.
+[[kv_namespaces]]
+binding = "BOT_STATUS"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Non-secret env var — update this whenever your tunnel URL changes.
+[vars]
+LOCAL_BOT_URL = "https://your-named-tunnel.example.com"
+
+# Secrets — set each with:
+#   wrangler secret put BOT_TOKEN
+#   wrangler secret put WORKER_SECRET
+#   wrangler secret put TELEGRAM_WEBHOOK_SECRET
+# Do not put secret values in this file.

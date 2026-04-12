@@ -82,8 +82,8 @@ class SubmissionWorker:
     async def _process_job(self, job: SubmissionInput, pw: Playwright) -> None:
         if self._snapshot_dir is not None:
             snap_dir = self._snapshot_dir / str(job.telegram_user_id)
-            await asyncio.to_thread(save_snapshot, snap_dir, job)
-            LOGGER.info("Snapshot saved to %s", snap_dir)
+            run_dir = await asyncio.to_thread(save_snapshot, snap_dir, job)
+            LOGGER.info("Snapshot saved to %s", run_dir)
 
         run_id: int | None = None
         if self._analytics is not None and job.analytics_session_id is not None:

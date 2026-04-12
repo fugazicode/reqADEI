@@ -2,13 +2,15 @@
 
 Usage (from repo root):
 
-    python -m scripts.run_submission_snapshot
-    python -m scripts.run_submission_snapshot --snapshot data/submission_snapshot --output out.pdf
+    python -m scripts.run_submission_snapshot --snapshot data/submission_snapshot/USER_ID/RUN_TIMESTAMP --output out.pdf
+
+``--snapshot`` must be the **run directory** (the timestamped folder), which contains
+``manifest.json`` and ``tenant_image.jpg`` (new) or legacy ``tenant_image.bin`` (v1).
 
 Requires ``PORTAL_USERNAME`` and ``PORTAL_PASSWORD`` in the environment (e.g. ``.env``).
 
-Populate ``data/submission_snapshot`` by running the bot with ``SUBMISSION_SNAPSHOT_DIR`` set,
-or copy ``manifest.json`` + ``tenant_image.bin`` from another machine.
+Populate snapshots by running the bot with ``SUBMISSION_SNAPSHOT_DIR`` set, or copy a run
+folder from another machine.
 """
 
 from __future__ import annotations
@@ -58,7 +60,10 @@ def main() -> None:
         "--snapshot",
         type=Path,
         default=Path("data/submission_snapshot"),
-        help="Directory containing manifest.json and tenant_image.bin",
+        help=(
+            "Run directory: manifest.json + tenant_image.jpg "
+            "(or legacy tenant_image.bin), e.g. .../<user_id>/<timestamp>/"
+        ),
     )
     parser.add_argument(
         "--output",

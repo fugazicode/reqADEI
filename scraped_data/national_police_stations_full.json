@@ -1,8 +1,10 @@
 {
   "_meta": {
-    "source": "scripts/import_stations_csv.py --input national_police_stations_full.csv",
+    "source": "scrape_all_stations.py",
+    "scraped_at": "2026-04-11T15:55:26.484990Z",
     "states_scraped": 37,
-    "states_unmatched": []
+    "total_states": 37,
+    "description": "Nested map: state_name → district_name → [police_station_name, ...]"
   },
   "by_state": {
     "ANDAMAN & NICOBAR": {
@@ -986,6 +988,8 @@
         "HARBOUR L&O",
         "HARBOUR TRAFFIC",
         "I TOWN",
+        "I TOWN",
+        "II TOWN",
         "II TOWN",
         "III TOWN",
         "IV TOWN",
@@ -2374,6 +2378,7 @@
         "SC/ST",
         "TIKAPATTI"
       ],
+      "RAXAUL": [],
       "RLY JAMALPUR": [
         "BHAGALPUR",
         "JAMALPUR",
@@ -2862,6 +2867,7 @@
         "RAIGARH",
         "RAIPUR"
       ],
+      "JAGDALPUR": [],
       "JANJGIR/CHAMPA": [
         "AJK JANJGIR-CHAMPA",
         "AKALTARA",
@@ -4433,6 +4439,8 @@
         "ROHTAK"
       ],
       "JHAJJAR": [
+        "ASHODA",
+        "ASHODA",
         "ASHODA",
         "ASODA",
         "BERI",
@@ -6419,6 +6427,7 @@
         "MANGALORE EAST TRAFFIC",
         "MANGALORE NORTH",
         "MANGALORE RURAL",
+        "MANGALORE SOUTH",
         "MANGALORE SOUTH",
         "MANGALORE WEST TRAFFIC",
         "MANGALORE WOMEN",
@@ -10003,11 +10012,14 @@
         "TANGI",
         "TIGIRIA"
       ],
+      "DCP, BHUBANESWAR": [],
+      "DCP, CUTTACK": [],
       "DEOGARH": [
         "BARKOT",
         "DEOGARH",
         "KUNDHEIGOLA",
         "REAMAL",
+        "SPECIAL PS, ENERGY",
         "SPECIAL PS, ENERGY"
       ],
       "DHENKANAL": [
@@ -12081,6 +12093,7 @@
         "VENGANUR",
         "VICKRAMANGALAM"
       ],
+      "C I D": [],
       "COIMBATORE": [
         "ALANDURAI",
         "ALIYUR",
@@ -12194,6 +12207,7 @@
         "TEW SAIBABA COLONY (TRAFFIC ENFORCEMENT WING)",
         "TEW SARAVANANMPATTI (TRAFFIC ENFORCEMENT WING)",
         "TEW SELVAPURAM (TRAFFIC ENFORCEMENT WING)",
+        "TEW SINGANALLUR(TRAFFIC ENFORCEMENT WING)",
         "TIW KATOOR(TRAFFIC INVESTIGATION WING)",
         "TIW R.S PURAM(TRAFFIC INVESTIGATION WING)",
         "TIW SINGANALLUR (TRAFFIC INVESTIGATION WING)",
@@ -12390,6 +12404,7 @@
         "VILAMPATTI",
         "VIRUVEEDU"
       ],
+      "EOW": [],
       "ERODE": [
         "AMMAPET",
         "ANDHIYUR",
@@ -12453,6 +12468,7 @@
         "THINGALUR",
         "VARAPPALAYAM",
         "VELLITIRUPPUR",
+        "VELLODE",
         "VELLODE"
       ],
       "FLOWER BAZAR": [
@@ -13170,6 +13186,7 @@
         "T.KALLUPATTI",
         "T.RAMANATHAPURAM",
         "TECHNICAL SERVICES CELL,PTB UNIT @ TSP VI BN.",
+        "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
         "THIRUMANGALAM NH TRAFFIC PS, TEW",
         "THIRUMANGALAM TALUK",
@@ -15449,6 +15466,7 @@
       ]
     },
     "TRIPURA": {
+      "AGARTALA": [],
       "DHALAI": [
         "AMBASA",
         "AMBASSA GRP",
@@ -15684,6 +15702,7 @@
       "ANTI CORRUPTION": [
         "ANTI CORRUPTION"
       ],
+      "ANTI POWER THEFT": [],
       "AYODHYA": [
         "AKBARPUR",
         "ALAPUR",
@@ -16001,6 +16020,9 @@
         "BHAWAN BAHADUR NAGAR",
         "CHHATTRI",
         "CHOLA",
+        "CHOLA",
+        "CHOLA",
+        "CHOLA",
         "DANKAUR",
         "DEBAI",
         "GULAOTHI",
@@ -16053,6 +16075,7 @@
         "RAIPURA",
         "RAJAPUR"
       ],
+      "DEO PRAYAG": [],
       "DEORIA": [
         "BAGHICHGHAT",
         "BANKATA",
@@ -16092,6 +16115,7 @@
         "MIRHACHI",
         "NAYAGAON",
         "NICHAULI",
+        "NIDHAULI KALAN",
         "NIDHAULI KALAN",
         "PATIALI",
         "PILUA",
@@ -16987,6 +17011,13 @@
         "RAILWAY ROAD",
         "RAMALA",
         "ROHATA",
+        "ROHATA",
+        "ROHATA",
+        "ROHATA",
+        "ROHATA",
+        "ROHATA",
+        "ROHATA",
+        "ROHATA",
         "SADAR BAZAR",
         "SARDHANA",
         "SAROORPUR",
@@ -17773,6 +17804,7 @@
         "RAINA",
         "RANIGANJ"
       ],
+      "C I D": [],
       "COOCH BEHAR": [
         "BAXIRHAT",
         "DINHATA",
