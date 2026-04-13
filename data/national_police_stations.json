@@ -1,13 +1,13 @@
 {
   "_meta": {
-    "source": "scripts/scrape_police_stations.py --scrape",
-    "states_scraped": 37
+    "source": "docs\\list.csv",
+    "states": 36,
+    "districts": 841,
+    "stations": 16274
   },
   "by_state": {
     "ANDAMAN & NICOBAR": {
-      "--------------SELECT------------": [],
       "NICOBAR": [
-        "--------------Select------------",
         "CAMPBELL BAY",
         "CAR NICOBAR",
         "KATCHAL",
@@ -15,7 +15,6 @@
         "TREESSA"
       ],
       "NORTH & MIDDILE ANDAMAN": [
-        "--------------Select------------",
         "BILLIGROUND",
         "DIGLIPUR",
         "KALIGHAT",
@@ -23,7 +22,6 @@
         "RANGAT"
       ],
       "SOUTH ANDAMAN": [
-        "--------------Select------------",
         "ABERDEEN",
         "ANTI-HUMAN TRAFFICKING",
         "BAMBOOFLAT",
@@ -39,14 +37,11 @@
         "PAHARGAON"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
-        "TRANSPORT DEPT,  A&N ISLANDS"
+        "TRANSPORT DEPT, A&N ISLANDS"
       ]
     },
     "ANDHRA PRADESH": {
-      "--------------SELECT------------": [],
       "ANANTAPUR": [
-        "--------------Select------------",
         "AGALI",
         "AMADAGURU",
         "AMARAPURAM",
@@ -133,7 +128,6 @@
         "YELLANUR"
       ],
       "CHITTOOR": [
-        "--------------Select------------",
         "B. KOTHAKOTA",
         "BAIREDDYPALLEM (M)",
         "BANGARUPALEM",
@@ -201,7 +195,6 @@
         "YERRAVARIPALEM (M)"
       ],
       "CUDDAPAH": [
-        "--------------Select------------",
         "ATLUR",
         "B. KODUR",
         "B. MATAM",
@@ -268,7 +261,6 @@
         "YERRAGUNTALA"
       ],
       "GODAVARI EAST": [
-        "--------------Select------------",
         "ADDATEEGALU",
         "ALAMURU",
         "ALAVARAM",
@@ -346,7 +338,6 @@
         "YELESWARAM"
       ],
       "GODAVARI WEST": [
-        "--------------Select------------",
         "ACHANTA",
         "AKIVEEDU",
         "ANANTAPALLI",
@@ -414,7 +405,6 @@
         "YELAMANCHILI"
       ],
       "GRP GUNTAKAL": [
-        "--------------Select------------",
         "ADONI",
         "ANANTAPUR",
         "CHITTOOR",
@@ -436,8 +426,6 @@
         "YERAGUNTLA"
       ],
       "GRP SECUNDERABAD": [
-        "--------------Select------------",
-        "NALGONDA",
         "DORNAKAL",
         "HYDERABAD",
         "KACHIGUDA",
@@ -445,13 +433,13 @@
         "KHAMMAM",
         "MANCERIAL",
         "MEHABOOBNAGAR",
+        "NALGONDA",
         "NIZAMBAD",
         "SECUNDERABAD",
         "VIKARABAD",
         "WARANGAL"
       ],
       "GRP VIJAYAWADA": [
-        "--------------Select------------",
         "BHIMAVARAM",
         "ELLURU",
         "GUDIWADA",
@@ -469,7 +457,6 @@
         "VIZIANAGARAM"
       ],
       "GUNTUR": [
-        "--------------Select------------",
         "ADAVALADEEVI",
         "AMARAVATHI",
         "AMARTHALUR",
@@ -529,7 +516,6 @@
         "VINUKONDA"
       ],
       "GUNTUR RURAL": [
-        "--------------Select------------",
         "MACHERLA RURAL",
         "NARASARAOPET TRAFFIC",
         "NARASARAOPET-II TOWN",
@@ -541,7 +527,6 @@
         "TENALI-III TOWN"
       ],
       "GUNTUR URBAN": [
-        "--------------Select------------",
         "ARUNDELPET",
         "CHEBROLE",
         "EAST CCS",
@@ -565,7 +550,6 @@
         "WOMEN PS"
       ],
       "KADAPA": [
-        "--------------Select------------",
         "BADVEL URBAN",
         "PRODDATUR RURAL",
         "PULIVENDULA TRAFFIC",
@@ -573,7 +557,6 @@
         "RIMS"
       ],
       "KRISHNA": [
-        "--------------Select------------",
         "A. KONDURU",
         "AGIRIPALLI",
         "AVANIGADDA",
@@ -632,7 +615,6 @@
         "WOMEN P.S"
       ],
       "KURNOOL": [
-        "--------------Select------------",
         "ADONI TALUK",
         "ADONI TOWN 1",
         "ADONI TOWN 2",
@@ -720,7 +702,6 @@
         "YEMMIGANUR TRAFFIC"
       ],
       "NELLORE": [
-        "--------------Select------------",
         "ALLUR",
         "ANANTHASAGARAM",
         "ANASAMUDRAMPETA",
@@ -790,7 +771,6 @@
         "VINJAMUR"
       ],
       "PRAKASHAM": [
-        "--------------Select------------",
         "ADDANKI",
         "ARDHAUEEDU",
         "BALLIKURAVA",
@@ -859,7 +839,6 @@
         "YERRAGONDAPALEM"
       ],
       "RAJAHMUNDRY URBAN": [
-        "--------------Select------------",
         "BOMMURU",
         "DOWLAISWARAM",
         "GOKAVARAM",
@@ -880,7 +859,6 @@
         "WOMEN"
       ],
       "SRIKAKULAM": [
-        "--------------Select------------",
         "AMADALAVALASA",
         "BARUVA",
         "BATHILI",
@@ -932,7 +910,6 @@
         "WOMEN P.S"
       ],
       "TIRUPATI URBAN": [
-        "--------------Select------------",
         "ALIPIRI",
         "B.N.KANDRIGA",
         "CHANDRAGIRI",
@@ -960,12 +937,10 @@
         "YERPEDU"
       ],
       "VIJAYAWADA CITY": [
-        "--------------Select------------",
         "ATKURU PS",
         "CCS VIJAYAWADA"
       ],
       "VIJAYAWADA URBAN": [
-        "--------------Select------------",
         "GANNAVARAM",
         "GOVERNERPET",
         "IBRAHIMPATNAM",
@@ -991,7 +966,6 @@
         "WOMEN P.S"
       ],
       "VISAKHAPATNAM": [
-        "--------------Select------------",
         "CCS-ANAKAPALLI",
         "PENTAKOTA MARINE",
         "PUDIMADAKA MARINE",
@@ -999,7 +973,6 @@
         "YELAMANCHILI TRAFFIC"
       ],
       "VISHAKHAPATNAM CITY": [
-        "--------------Select------------",
         "AIR PORT",
         "ANANDAPURAM",
         "BHEEMILI",
@@ -1007,15 +980,13 @@
         "CYBER CRIME",
         "DUVVADA",
         "DWAKARA",
-        "GAJUWAKA  L&O",
+        "GAJUWAKA L&O",
         "GAJUWAKA TRAFFIC",
         "GOPALAPATNAM L&O",
         "GOPALAPATNAM TRAFFIC",
         "HARBOUR L&O",
         "HARBOUR TRAFFIC",
         "I TOWN",
-        "I TOWN",
-        "II TOWN",
         "II TOWN",
         "III TOWN",
         "IV TOWN",
@@ -1036,7 +1007,6 @@
         "WOMEN PS"
       ],
       "VISHAKHAPATNAM RURAL": [
-        "--------------Select------------",
         "ANAKAPALLI RURAL",
         "ANAKAPALLI TOWN",
         "ANAKAPALLI TRAFFIC",
@@ -1084,7 +1054,6 @@
         "YELLAMANCHILI TOWN"
       ],
       "VIZIANAGARAM": [
-        "--------------Select------------",
         "ANDRA",
         "BADANGI",
         "BALIJAPETA",
@@ -1133,11 +1102,9 @@
         "WOMEN P.S VIZIANAGARAM"
       ],
       "WARANGAL RURAL": [
-        "--------------Select------------",
         "KURAVI"
       ],
       "WARANGAL URBAN": [
-        "--------------Select------------",
         "ATHMAKUR",
         "CCS",
         "DHARMASAGAR",
@@ -1165,13 +1132,10 @@
       ]
     },
     "ARUNACHAL PRADESH": {
-      "--------------SELECT------------": [],
       "ANJAW": [
-        "--------------Select------------",
         "HAYULIANG"
       ],
       "CHANGLANG": [
-        "--------------Select------------",
         "BORDUMSA",
         "CHANGLANG",
         "DIYUN",
@@ -1186,21 +1150,17 @@
         "YANGKANG"
       ],
       "CRIME BRANCH": [
-        "--------------Select------------",
         "CRIME BRANCH"
       ],
       "DIBANG VALLEY": [
-        "--------------Select------------",
         "ANINI"
       ],
       "KAMENG EAST": [
-        "--------------Select------------",
         "CHAYANGTAJO",
         "SEIJOSA",
         "SEPPA"
       ],
       "KAMENG WEST": [
-        "--------------Select------------",
         "BALEMU",
         "BHALUKPONG",
         "BOMDILA",
@@ -1209,13 +1169,11 @@
         "RUPA"
       ],
       "KURUNG KUMAY": [
-        "--------------Select------------",
         "KOLORIANG",
         "NAYPIN",
         "SANGRAM"
       ],
       "LOHIT": [
-        "--------------Select------------",
         "MAHADEVPUR",
         "NAMSAI",
         "SUNPURA",
@@ -1223,7 +1181,6 @@
         "TEZU AHTU"
       ],
       "LONGDING": [
-        "--------------Select------------",
         "KANUBARI",
         "LONGDING",
         "PANGCHAO",
@@ -1233,13 +1190,11 @@
         "WAKKA"
       ],
       "LOWER DIBANG VALLEY": [
-        "--------------Select------------",
         "DAMBUK",
         "HUNLI",
         "ROING"
       ],
       "PAPUM PARE (CITY)": [
-        "--------------Select------------",
         "BANDERDEWA",
         "CHIMPU",
         "ITANAGAR",
@@ -1251,14 +1206,12 @@
         "WOMEN POLICE STATION"
       ],
       "PAPUM PARE (RURAL)": [
-        "--------------Select------------",
         "BALIJAN",
         "DOIMUKH",
         "KIMIN",
         "SAGALEE"
       ],
       "SIANG EAST": [
-        "--------------Select------------",
         "BOLENG",
         "NARI",
         "OYAN",
@@ -1267,13 +1220,11 @@
         "RUKSING"
       ],
       "SIANG UPPER": [
-        "--------------Select------------",
         "JENGGING",
         "TUTING",
         "YINKIONG"
       ],
       "SIANG WEST": [
-        "--------------Select------------",
         "ALONG",
         "BASAR",
         "GENSI",
@@ -1287,26 +1238,22 @@
         "YOMCHA"
       ],
       "SUBANSIRI LOWER": [
-        "--------------Select------------",
         "RAGA",
         "YAZALI",
         "ZIRO"
       ],
       "SUBANSIRI UPPER": [
-        "--------------Select------------",
         "DAPORIJO",
         "DUMPORIJO",
         "NACHO",
         "TALIHA"
       ],
       "TAWANG": [
-        "--------------Select------------",
         "LUMLA",
         "MUKTO (JANG)",
         "TAWANG"
       ],
       "TIRAP": [
-        "--------------Select------------",
         "DADAM",
         "DEOMALI",
         "KATANG",
@@ -1316,13 +1263,10 @@
       ]
     },
     "ASSAM": {
-      "--------------SELECT------------": [],
       "B.I. ECONOMIC OFFENCE": [
-        "--------------Select------------",
         "BUREUA OF INVEST E.O.,"
       ],
       "BARPETA": [
-        "--------------Select------------",
         "BAGHBOR",
         "BARPETA",
         "BARPETA ROAD",
@@ -1334,7 +1278,6 @@
         "TARABARI"
       ],
       "BASKA": [
-        "--------------Select------------",
         "BAGANPARA",
         "BARAMA",
         "GOBARDHANA",
@@ -1347,14 +1290,12 @@
         "TAMULPUR"
       ],
       "BONGAIGAON": [
-        "--------------Select------------",
         "ABHAYAPURI",
         "BONGAIGAON",
         "JOGIGHOPA",
         "MANIKPUR"
       ],
       "CACHAR": [
-        "--------------Select------------",
         "BORKHOLA",
         "DHOLAI",
         "JIRIGHAT",
@@ -1365,7 +1306,6 @@
         "UDARBOND"
       ],
       "CHIRANG": [
-        "--------------Select------------",
         "AMGURI",
         "BALLAMGURI",
         "BASUGAON",
@@ -1377,14 +1317,12 @@
         "SIDLI"
       ],
       "DARRANG": [
-        "--------------Select------------",
         "DALGAON",
         "DHULA",
         "MANGALDAI",
         "SIPAJHAR"
       ],
       "DHEMAJI": [
-        "--------------Select------------",
         "DHEMAJI",
         "GERUKAMUKH PS",
         "GOGAMUKH",
@@ -1392,7 +1330,6 @@
         "SILAPATHAR"
       ],
       "DHUBRI": [
-        "--------------Select------------",
         "BILASHIPARA",
         "CHAPAR",
         "DHUBRI",
@@ -1402,7 +1339,6 @@
         "SOUTH SALMARA"
       ],
       "DIBRUGARH": [
-        "--------------Select------------",
         "BARBARUAH",
         "CHABUA",
         "DIBRUGARH",
@@ -1418,7 +1354,6 @@
         "TINGKHONG"
       ],
       "GOALPARA": [
-        "--------------Select------------",
         "BAGUAN",
         "DHUPDHARA",
         "DUDHNOI",
@@ -1429,7 +1364,6 @@
         "RANGJULI"
       ],
       "GOLAGHAT": [
-        "--------------Select------------",
         "BOGIJAAN",
         "BOKAKHAT",
         "BORPATHAR",
@@ -1444,7 +1378,6 @@
         "URIUMGHAT"
       ],
       "GOVT. RLY. POLICE": [
-        "--------------Select------------",
         "BADARPUR",
         "BOKAJAN",
         "BONGAIGAON",
@@ -1460,7 +1393,6 @@
         "TINSUKIA"
       ],
       "GUWAHATI CITY": [
-        "--------------Select------------",
         "ALL WOMAN P.S",
         "AZARA",
         "BASISTHA",
@@ -1489,21 +1421,18 @@
         "VIGILANCE AND ANTI-CORRUPTION(V&AC) PS"
       ],
       "HAILAKANDI": [
-        "--------------Select------------",
         "ALGAPUR",
         "HAILAKANDI",
         "KATLICHERA",
         "LALA"
       ],
       "HAMRENG": [
-        "--------------Select------------",
         "BAITHALANGSO PS",
         "HAMREN PS",
         "KHERONI PS",
         "ZIRIKINDING PS"
       ],
       "JORHAT": [
-        "--------------Select------------",
         "BHAGAMUKH",
         "BORHULLA",
         "GARMUR",
@@ -1516,7 +1445,6 @@
         "TITABAR"
       ],
       "KAMRUP": [
-        "--------------Select------------",
         "BAIHATA",
         "BOKO",
         "CHAYGAON",
@@ -1529,7 +1457,6 @@
         "SUALKUCHI"
       ],
       "KARBIANGLONG": [
-        "--------------Select------------",
         "ANJOKPANI PS",
         "BOKAJAN",
         "BOKOLIA PS",
@@ -1548,7 +1475,6 @@
         "SAMELANGSHO PS"
       ],
       "KARIMGANJ": [
-        "--------------Select------------",
         "BADARPUR",
         "KARIMGUNJ",
         "PATHARKANDI",
@@ -1556,7 +1482,6 @@
         "RATABARI"
       ],
       "KOKRAJHAR": [
-        "--------------Select------------",
         "BASHBARI",
         "BOGRIBARI",
         "CHAKRASHILA- BASHBARI",
@@ -1572,7 +1497,6 @@
         "TIPKAI"
       ],
       "LAKHIMPUR": [
-        "--------------Select------------",
         "BIHPURIA",
         "BOGINODI",
         "DHAKUAKHANA",
@@ -1581,7 +1505,6 @@
         "NORTH LAKHIMPUR"
       ],
       "MORIGAON": [
-        "--------------Select------------",
         "DHARAMTUL",
         "JAGIROAD",
         "LAHARIGHAT",
@@ -1591,7 +1514,6 @@
         "MIKIRBHETA"
       ],
       "NAGAON": [
-        "--------------Select------------",
         "DABAKA",
         "DHING",
         "HOJAI",
@@ -1614,7 +1536,6 @@
         "ULUONI"
       ],
       "NALBARI": [
-        "--------------Select------------",
         "BELSOR",
         "GHAGRAPAR",
         "MUKALMUA",
@@ -1622,7 +1543,6 @@
         "TIHU"
       ],
       "NORTH CACHAR HILLS": [
-        "--------------Select------------",
         "DAIYANGMUKH PS",
         "DEHANGI PS",
         "HAFLONG",
@@ -1633,7 +1553,6 @@
         "UMRANGSO"
       ],
       "RIVER P S": [
-        "--------------Select------------",
         "ALOPOTI CHAR RPS",
         "ARNAPURNAGHAT RPS",
         "BADATIGHAT RPS",
@@ -1658,7 +1577,6 @@
         "TEZPUR"
       ],
       "SIBSAGAR": [
-        "--------------Select------------",
         "AMGURI",
         "BAKATA NEMUGURI",
         "BARHAT",
@@ -1680,7 +1598,6 @@
         "SONARI"
       ],
       "SONITPUR": [
-        "--------------Select------------",
         "BEHALI",
         "BISWANATH CHARIALI",
         "DHEKIAJULI",
@@ -1694,11 +1611,9 @@
         "THELAMARA"
       ],
       "SOUTH SALMARA MANKACHAR": [
-        "--------------Select------------",
         "MANKACHAR"
       ],
       "TINSUKIA": [
-        "--------------Select------------",
         "BAGHJAN",
         "BEREKURI",
         "BORDUBI",
@@ -1718,7 +1633,6 @@
         "TINSUKIA"
       ],
       "UDALGURI": [
-        "--------------Select------------",
         "KALAIGAON",
         "KHAIRABARI",
         "MAZBAT",
@@ -1729,9 +1643,7 @@
       ]
     },
     "BIHAR": {
-      "--------------SELECT------------": [],
       "ARARIA": [
-        "--------------Select------------",
         "ARARIA",
         "BHARGAWAN",
         "FORBESGANJ",
@@ -1746,7 +1658,6 @@
         "SIKTI"
       ],
       "ARWAL": [
-        "--------------Select------------",
         "ARWAL",
         "KALER",
         "KARPI",
@@ -1759,7 +1670,6 @@
         "SC/ST"
       ],
       "AURANGABAD": [
-        "--------------Select------------",
         "AMBA",
         "BARUN",
         "DAUD NAGAR",
@@ -1792,7 +1702,6 @@
         "UPHARA"
       ],
       "BAGAHA": [
-        "--------------Select------------",
         "CHAUTARVA",
         "DHANAHA",
         "GOBARDHANA",
@@ -1809,7 +1718,6 @@
         "WALMIKINAGAR"
       ],
       "BANKA": [
-        "--------------Select------------",
         "AMARPUR",
         "BANKA",
         "BAUNSI",
@@ -1823,7 +1731,6 @@
         "SHAMBHUGANJ"
       ],
       "BEGUSARAI": [
-        "--------------Select------------",
         "BACHHWARA",
         "BAKHARI",
         "BALIA",
@@ -1850,7 +1757,6 @@
         "TEGHRA"
       ],
       "BETIAH": [
-        "--------------Select------------",
         "BAIRIYA",
         "BALTHAR",
         "BHANGAHA",
@@ -1877,7 +1783,6 @@
         "YOGAPATTI"
       ],
       "BHABHUA": [
-        "--------------Select------------",
         "ADHAURA",
         "BHABHUA",
         "BHAGWANPUR",
@@ -1894,7 +1799,6 @@
         "SC/ST"
       ],
       "BHAGALPUR": [
-        "--------------Select------------",
         "AKBARNER",
         "AUDHYOGIK",
         "BATH",
@@ -1923,7 +1827,6 @@
         "TRAFFIC"
       ],
       "BHOJPUR": [
-        "--------------Select------------",
         "AGIAON",
         "AGIAON BAZAR",
         "AIYAR",
@@ -1954,7 +1857,6 @@
         "UDWANT NAGAR"
       ],
       "BUXAR": [
-        "--------------Select------------",
         "AUDHYOGIK",
         "BAGENGOLA",
         "BRAHMPUR",
@@ -1974,7 +1876,6 @@
         "SIMRI"
       ],
       "DARBHANGA": [
-        "--------------Select------------",
         "ASHOK PAPER MILLS",
         "BAHADURPUR",
         "BAHERA",
@@ -2003,15 +1904,12 @@
         "SINGWARA"
       ],
       "EAST CHAMPARAN": [
-        "--------------Select------------",
         "Ram Nagar"
       ],
       "EOU": [
-        "--------------Select------------",
         "ECONOMIC OFFENCES UNIT"
       ],
       "GAYA": [
-        "--------------Select------------",
         "AATI",
         "ALIPUR",
         "AMAS",
@@ -2050,7 +1948,6 @@
         "WAZIRGANJ"
       ],
       "GOPALGANJ": [
-        "--------------Select------------",
         "BAIKUNTHPUR",
         "BARAULI",
         "BHORE",
@@ -2072,7 +1969,6 @@
         "YADOPUR"
       ],
       "JAMUI": [
-        "--------------Select------------",
         "BARHAT",
         "CHAKAI",
         "CHANDRADEEP",
@@ -2089,7 +1985,6 @@
         "SONO"
       ],
       "JEHANABAD": [
-        "--------------Select------------",
         "GHOSI",
         "HULASGANJ",
         "JEHANABAD",
@@ -2103,7 +1998,6 @@
         "TEHTA"
       ],
       "KATIHAR": [
-        "--------------Select------------",
         "ABADPUR",
         "AJAM NAGAR",
         "AMDABAD",
@@ -2127,7 +2021,6 @@
         "SC/ST"
       ],
       "KHAGARIA": [
-        "--------------Select------------",
         "ALAULI",
         "BELDAUR",
         "CHAUTHAM",
@@ -2142,21 +2035,19 @@
         "SC/ST"
       ],
       "KISHANGANJ": [
-        "--------------Select------------",
         "BAHADURGANJ",
         "DIGHALBANK",
         "KISHANGANJ",
         "KOCHADHAMAN",
         "Kodhobari",
         "MAHILA",
-        "Paharkatta",
         "POTHIA",
+        "Paharkatta",
         "SC/ST",
         "TEDAGACHH",
         "THAKURGANJ"
       ],
       "LAKHI SARAI": [
-        "--------------Select------------",
         "BARHAHIYA",
         "BIRUPUR",
         "CHANAN",
@@ -2171,7 +2062,6 @@
         "SURYAGARHA"
       ],
       "MADHEPURA": [
-        "--------------Select------------",
         "ALAM NAGAR",
         "BIHARIGANJ",
         "CHAUSA",
@@ -2190,7 +2080,6 @@
         "UDA KISHANGANJ"
       ],
       "MADHUBANI": [
-        "--------------Select------------",
         "ANDHARMATH",
         "ANDHRATHARI",
         "ARER",
@@ -2227,7 +2116,6 @@
         "SC/ST"
       ],
       "MOTHIHARI": [
-        "--------------Select------------",
         "AADAPUR",
         "CHAKIA",
         "CHHATAUNI",
@@ -2271,7 +2159,6 @@
         "TURKAULIA"
       ],
       "MUJAFFARPUR": [
-        "--------------Select------------",
         "AHIYAPUR",
         "AURAI",
         "BARURAJ",
@@ -2305,7 +2192,6 @@
         "VISHWAVIDYALAYA"
       ],
       "MUNGER": [
-        "--------------Select------------",
         "ASAR GANJ",
         "BARIARPUR",
         "DHARHARA",
@@ -2324,7 +2210,6 @@
         "TARAPUR"
       ],
       "NALANDA": [
-        "--------------Select------------",
         "ASTHAWAN",
         "AUNGARI",
         "BIHAR",
@@ -2361,7 +2246,6 @@
         "VENA"
       ],
       "NAUGHACHHIA": [
-        "--------------Select------------",
         "BIHPUR",
         "DHOLBAJJA",
         "GOPALPUR",
@@ -2374,7 +2258,6 @@
         "SC/ST"
       ],
       "NAWADA": [
-        "--------------Select------------",
         "AKBARPUR",
         "GOBINDPUR",
         "HISUA",
@@ -2393,7 +2276,6 @@
         "WARIS ALIGANJ"
       ],
       "PATNA": [
-        "--------------Select------------",
         "AGAMKUAN",
         "AKILPUR",
         "ALAMGANJ",
@@ -2471,7 +2353,6 @@
         "YATAYAT"
       ],
       "PURNEA": [
-        "--------------Select------------",
         "AMAUR",
         "ANGARH",
         "BAISI",
@@ -2494,16 +2375,13 @@
         "SC/ST",
         "TIKAPATTI"
       ],
-      "RAXAUL": [],
       "RLY JAMALPUR": [
-        "--------------Select------------",
         "BHAGALPUR",
         "JAMALPUR",
         "JHAJHA",
         "KIUL"
       ],
       "RLY KATIHAR": [
-        "--------------Select------------",
         "BARAUNI",
         "BEGUSARAI",
         "BIHPUR",
@@ -2515,7 +2393,6 @@
         "SAHARSA"
       ],
       "RLY MUJAFFARPUR": [
-        "--------------Select------------",
         "CHHAPRA",
         "DARBHANGA",
         "Hazipur",
@@ -2529,7 +2406,6 @@
         "SUGAULI"
       ],
       "RLY PATNA": [
-        "--------------Select------------",
         "ARRAH",
         "BAKHTIARPUR",
         "BIHARSHARIF",
@@ -2543,7 +2419,6 @@
         "SON NAGAR"
       ],
       "ROHTAS": [
-        "--------------Select------------",
         "AKORHIGOLA",
         "AMJHAUR",
         "BAGHELA",
@@ -2574,7 +2449,6 @@
         "TILAUTHU"
       ],
       "SAHARSA": [
-        "--------------Select------------",
         "BANGAON",
         "BASANAHI",
         "BIHRA",
@@ -2589,7 +2463,6 @@
         "SONBARSA RAJ"
       ],
       "SAMASTIPUR": [
-        "--------------Select------------",
         "ANGARGHAT",
         "BITHAN",
         "CHAKMEHSI",
@@ -2616,7 +2489,6 @@
         "WARIS NAGAR"
       ],
       "SARAN": [
-        "--------------Select------------",
         "AMNAUR",
         "AVTAR NAGAR",
         "BANIAPUR",
@@ -2651,7 +2523,6 @@
         "TARAIYA"
       ],
       "SHEIKHPURA": [
-        "--------------Select------------",
         "ARIARI",
         "BARBIGHA",
         "BARHIYA",
@@ -2665,7 +2536,6 @@
         "SHEIKHOPUR SARAI"
       ],
       "SHEOHAR": [
-        "--------------Select------------",
         "MAHILA",
         "PIPRAHI",
         "PURNAHIA",
@@ -2675,7 +2545,6 @@
         "TARIYANI"
       ],
       "SITAMARHI": [
-        "--------------Select------------",
         "BAIRGANIA",
         "BAJPATTI",
         "BATHNAHA",
@@ -2698,7 +2567,6 @@
         "SURSAND"
       ],
       "SIWAN": [
-        "--------------Select------------",
         "AANDAR",
         "ASAWN",
         "BARHARIA",
@@ -2725,7 +2593,6 @@
         "SISWAN"
       ],
       "SUPAUL": [
-        "--------------Select------------",
         "BALUA BAZAAR",
         "BHAPTIAHI SARAI",
         "BHIMPUR",
@@ -2748,11 +2615,9 @@
         "TRIVENIGANJ"
       ],
       "SVU": [
-        "--------------Select------------",
         "SPECIAL VIGILANCE UNIT"
       ],
       "VAISHALI": [
-        "--------------Select------------",
         "AUDOGIC CHETRA",
         "BALIGAON",
         "BHAGWANPUR",
@@ -2778,18 +2643,14 @@
         "VAISHALI"
       ],
       "VIGILANCE": [
-        "--------------Select------------",
         "VIGILANCE"
       ],
       "WEST CHAMPARAN": [
-        "--------------Select------------",
         "Jagdishpur"
       ]
     },
     "CHANDIGARH": {
-      "--------------SELECT------------": [],
       "CHANDIGARH": [
-        "--------------Select------------",
         "CENTRAL SECTOR 17",
         "EAST SECTOR 26",
         "MANI MAJRA",
@@ -2804,9 +2665,7 @@
       ]
     },
     "CHHATTISGARH": {
-      "--------------SELECT------------": [],
       "AMBIKAPUR (SARGUJA)": [
-        "--------------Select------------",
         "A.J.K.",
         "AMBIKAPUR",
         "AMBIKAPUR (RURAL)",
@@ -2821,7 +2680,6 @@
         "SITAPUR"
       ],
       "BALOD": [
-        "--------------Select------------",
         "ARJUNDA",
         "BALOD",
         "DEORI",
@@ -2836,7 +2694,6 @@
         "SUREGAON"
       ],
       "BALODA BAZAR": [
-        "--------------Select------------",
         "BALODABAZAR",
         "BHATAPARA CITY",
         "BHATAPARA RURAL",
@@ -2851,7 +2708,6 @@
         "SUHELA"
       ],
       "BALRAMPUR": [
-        "--------------Select------------",
         "BALRAMPUR",
         "BASANTPUR",
         "CHALGALI",
@@ -2866,7 +2722,6 @@
         "TRIKUNDA"
       ],
       "BASTAR": [
-        "--------------Select------------",
         "AJK JAGDALPUR",
         "BANDAJI",
         "BHANPURI",
@@ -2881,7 +2736,6 @@
         "NAGARNAAR"
       ],
       "BEMETARA": [
-        "--------------Select------------",
         "BEMETARA",
         "BERLA",
         "DARHI",
@@ -2892,7 +2746,6 @@
         "SAJA"
       ],
       "BIJAPUR": [
-        "--------------Select------------",
         "AWAPALLI",
         "BASAGUDA",
         "BEDARE",
@@ -2914,7 +2767,6 @@
         "USOOR"
       ],
       "BILASPUR": [
-        "--------------Select------------",
         "A.J.K.",
         "BILHA",
         "CHAKARBHATA",
@@ -2940,7 +2792,6 @@
         "TRAFFIC"
       ],
       "DANTEWADA": [
-        "--------------Select------------",
         "A.J.K",
         "ARANPUR",
         "BACHELI",
@@ -2953,7 +2804,6 @@
         "KUAKONDA"
       ],
       "DHAMTARI": [
-        "--------------Select------------",
         "ARJUNI",
         "BHAKHARA",
         "BORAI",
@@ -2969,7 +2819,6 @@
         "SIHAWA"
       ],
       "DURG": [
-        "--------------Select------------",
         "AJK",
         "AMLESHWAR",
         "ANDA",
@@ -2996,7 +2845,6 @@
         "VAISHALI NAGAR"
       ],
       "GARIYABAND": [
-        "--------------Select------------",
         "AMLIPADAR",
         "CHURA",
         "DEOBHOG",
@@ -3009,16 +2857,13 @@
         "SHOBHA"
       ],
       "GRP RAIPUR": [
-        "--------------Select------------",
         "BHILAI",
         "BILASPUR",
         "DONGARGARH",
         "RAIGARH",
         "RAIPUR"
       ],
-      "JAGDALPUR": [],
       "JANJGIR/CHAMPA": [
-        "--------------Select------------",
         "AJK JANJGIR-CHAMPA",
         "AKALTARA",
         "BALOUDA",
@@ -3040,7 +2885,6 @@
         "SHEORINARAYAN"
       ],
       "JASHPUR": [
-        "--------------Select------------",
         "ASTA",
         "BAGBAHAR",
         "BAGEECHA",
@@ -3056,7 +2900,6 @@
         "TUMLA"
       ],
       "KABIRDHAM (KAWARDHA)": [
-        "--------------Select------------",
         "AJK KABIRDHAM",
         "BHORAM DEV",
         "BODLA",
@@ -3072,7 +2915,6 @@
         "TAREGAON"
       ],
       "KANKER": [
-        "--------------Select------------",
         "AMABEDA",
         "ANTAGARH",
         "BADGAON",
@@ -3093,7 +2935,6 @@
         "TADOKI"
       ],
       "KONDAGAON": [
-        "--------------Select------------",
         "BADE DONGAR",
         "BAYANAR",
         "DHANORA KONDAGAON",
@@ -3106,7 +2947,6 @@
         "VISHRAMPURI"
       ],
       "KORBA": [
-        "--------------Select------------",
         "A.J.K.",
         "BALKO",
         "BANGO",
@@ -3123,7 +2963,6 @@
         "URGA"
       ],
       "KORIYA": [
-        "--------------Select------------",
         "BAIKUNTHPUR",
         "CHARCHA",
         "CHIRMIRI",
@@ -3138,7 +2977,6 @@
         "SONHAT"
       ],
       "MAHASAMUND": [
-        "--------------Select------------",
         "AJK",
         "BAGBAHARA",
         "BASANA",
@@ -3151,7 +2989,6 @@
         "TUMGAON"
       ],
       "MUNGELI": [
-        "--------------Select------------",
         "JARHAGAON",
         "LALPUR",
         "LORMI",
@@ -3160,7 +2997,6 @@
         "SARGAON, MUNGELI"
       ],
       "NARAYANPUR": [
-        "--------------Select------------",
         "BENUR",
         "CHHOTEDONGAR",
         "DHANORA",
@@ -3171,7 +3007,6 @@
         "ORCHA"
       ],
       "RAIGARH": [
-        "--------------Select------------",
         "A.J.K.",
         "BARAMKELA",
         "BHOOPDEOPUR",
@@ -3194,7 +3029,6 @@
         "TRAFFIC"
       ],
       "RAIPUR": [
-        "--------------Select------------",
         "ABHANPUR",
         "AJK, RAIPUR",
         "AMANAKA",
@@ -3233,7 +3067,6 @@
         "VIDHAN SABHA"
       ],
       "RAJNANDGAON": [
-        "--------------Select------------",
         "A.J.K.",
         "AMBAGARH",
         "AOUNDHI",
@@ -3263,7 +3096,6 @@
         "TEREGAON"
       ],
       "SUKMA": [
-        "--------------Select------------",
         "BHEJI",
         "CHINTAGUFA",
         "DORNAPAL",
@@ -3280,7 +3112,6 @@
         "TONGPAL"
       ],
       "SURAJPUR": [
-        "--------------Select------------",
         "AJK",
         "BHATGAON",
         "CHANDANI",
@@ -3298,289 +3129,27 @@
       ]
     },
     "DADRA & NAGAR HAVELI": {
-      "--------------SELECT------------": [],
       "DADRA NGR HAVELI": [
-        "--------------Select------------",
         "KHANVEL",
         "SILVASSA"
       ]
     },
     "DAMAN & DIU": {
-      "--------------SELECT------------": [],
       "DAMAN DIST": [
-        "--------------Select------------",
         "COASTAL P.S",
         "NANI DAMAN"
       ],
       "DIU DIST": [
-        "--------------Select------------",
         "DIU"
       ]
     },
-    "DELHI": {
-      "--------------SELECT------------": [],
-      "CENTRAL": [
-        "--------------Select------------",
-        "ANAND PARBAT",
-        "CHANDNI MAHAL",
-        "D.B.G. ROAD",
-        "DARYA GANJ",
-        "EAST PAHARGANJ",
-        "HAUZ QAZI",
-        "I.P.ESTATE",
-        "JAMA MASJID",
-        "KAMLA MARKET",
-        "KAROL BAGH",
-        "NABI KARIM",
-        "PAHAR GANJ",
-        "PATEL NAGAR",
-        "PRASAD NAGAR",
-        "RAJINDER NAGAR",
-        "RANJIT NAGAR"
-      ],
-      "CRIME BRANCH": [
-        "--------------Select------------",
-        "CRIME BRANCH"
-      ],
-      "DWARKA": [
-        "--------------Select------------",
-        "BABA HARIDAS NAGAR",
-        "BINDA PUR",
-        "CHHAWALA",
-        "DABRI",
-        "DWARKA NORTH",
-        "DWARKA SOUTH",
-        "JAFFARPUR KALAN",
-        "MOHAN GARDEN",
-        "NAJAF GARH",
-        "SECTOR 23 DWARKA",
-        "UTTAM NAGAR"
-      ],
-      "EAST": [
-        "--------------Select------------",
-        "GHAZIPUR",
-        "KALYANPURI",
-        "LAXMI NAGAR",
-        "MADHU VIHAR",
-        "MANDAWLI FAZAL PUR",
-        "MAYUR VIHAR PH-I",
-        "NEW ASHOK NAGAR",
-        "PANDAV NAGAR",
-        "PATPARGANJ INDUSTRIAL AREA",
-        "PREET VIHAR",
-        "SHAKARPUR"
-      ],
-      "EOW": [
-        "--------------Select------------",
-        "ECONOMIC OFFENCES WING"
-      ],
-      "IGI AIRPORT": [
-        "--------------Select------------",
-        "DOMESTIC AIRPORT",
-        "I.G.I.AIRPORT"
-      ],
-      "NEW DELHI": [
-        "--------------Select------------",
-        "BARAKHAMBA ROAD",
-        "CHANKYA PURI",
-        "CONNAUGHT PLACE",
-        "IITF,Pragati Maidan",
-        "KARTAVYA PATH",
-        "MANDIR MARG",
-        "NORTH AVENUE",
-        "PARLIAMENT STREET",
-        "SOUTH AVENUE",
-        "TILAK MARG",
-        "TUGHLAK ROAD"
-      ],
-      "NORTH": [
-        "--------------Select------------",
-        "BARA HINDU RAO",
-        "BURARI",
-        "CIVIL LINES",
-        "GULABI BAGH",
-        "KASHMERI GATE",
-        "KOTWALI",
-        "LAHORI GATE",
-        "MAURICE NAGAR",
-        "ROOP NAGAR",
-        "SADAR BAZAR",
-        "SARAI ROHILLA",
-        "SUBZI MANDI",
-        "TIMARPUR",
-        "WAZIRABAD"
-      ],
-      "NORTH EAST": [
-        "--------------Select------------",
-        "BHAJAN PURA",
-        "DAYAL PUR",
-        "GOKUL PURI",
-        "HARSH VIHAR",
-        "JAFRABAD",
-        "JYOTI NAGAR",
-        "KARAWAL NAGAR",
-        "KHAJURI KHAS",
-        "NAND NAGRI",
-        "NEW USMANPUR",
-        "SEELAMPUR",
-        "SHASTRI PARK",
-        "SONIA VIHAR",
-        "WELCOME"
-      ],
-      "NORTH WEST": [
-        "--------------Select------------",
-        "ADARSH NAGAR",
-        "ASHOK VIHAR",
-        "BHARAT NAGAR",
-        "JAHANGIR PURI",
-        "KESHAV PURAM",
-        "MAHENDRA PARK",
-        "MAURYA ENCLAVE",
-        "MODEL TOWN",
-        "MUKHERJEE NAGAR",
-        "SHALIMAR BAGH",
-        "SUBHASH PLACE"
-      ],
-      "OUTER DISTRICT": [
-        "--------------Select------------",
-        "MANGOL PURI",
-        "MUNDKA",
-        "NANGLOI",
-        "NIHAL VIHAR",
-        "PASCHIM VIHAR EAST",
-        "PASCHIM VIHAR WEST",
-        "RAJ PARK",
-        "RANHOLA",
-        "RANI BAGH",
-        "SULTANPURI"
-      ],
-      "OUTER NORTH": [
-        "--------------Select------------",
-        "ALIPUR",
-        "BAWANA",
-        "BHALSWA DAIRY",
-        "NARELA",
-        "NARELA INDUSTRIAL AREA",
-        "SAMAIPUR BADLI",
-        "SHAHBAD DAIRY",
-        "SWAROOP NAGAR"
-      ],
-      "ROHINI": [
-        "--------------Select------------",
-        "AMAN VIHAR",
-        "BEGUM PUR",
-        "BUDH VIHAR",
-        "K.N. KATJU MARG",
-        "KANJHAWALA",
-        "NORTH ROHINI",
-        "PRASHANT VIHAR",
-        "PREM NAGAR",
-        "SOUTH ROHINI",
-        "VIJAY VIHAR"
-      ],
-      "SHAHDARA": [
-        "--------------Select------------",
-        "ANAND VIHAR",
-        "FARSH BAZAR",
-        "G.T.B. ENCLAVE",
-        "GANDHI NAGAR",
-        "GEETA COLONY",
-        "JAGAT PURI",
-        "KRISHNA NAGAR",
-        "MANSAROVAR PARK",
-        "SEEMAPURI",
-        "SHAHDARA",
-        "VIVEK VIHAR"
-      ],
-      "SOUTH": [
-        "--------------Select------------",
-        "AMBEDKAR NAGAR",
-        "CHITRANJAN PARK",
-        "DEFENCE COLONY",
-        "FATEHPUR BERI",
-        "GREATER KAILASH",
-        "HAUZ KHAS",
-        "K.M. PUR",
-        "LODI COLONY",
-        "MAIDAN GARHI",
-        "MALVIYA NAGAR",
-        "MEHRAULI",
-        "NEB SARAI",
-        "SAKET",
-        "SANGAM VIHAR",
-        "TIGRI"
-      ],
-      "SOUTH WEST": [
-        "--------------Select------------",
-        "DELHI CANTT",
-        "KAPASHERA",
-        "KISHAN GARH",
-        "PALAM VILLAGE",
-        "R. K. PURAM",
-        "SAFDARJUNG ENCLAVE",
-        "SAGAR PUR",
-        "SAROJINI NAGAR",
-        "SOUTH CAMPUS",
-        "VASANT KUNJ NORTH",
-        "VASANT KUNJ SOUTH",
-        "VASANT VIHAR"
-      ],
-      "SOUTH-EAST": [
-        "--------------Select------------",
-        "AMAR COLONY",
-        "BADARPUR",
-        "GOVIND PURI",
-        "HAZARAT NIZAMUDDIN",
-        "JAIT PUR",
-        "JAMIA NAGAR",
-        "KALANDI KUNJ",
-        "KALKAJI",
-        "LAJPAT NAGAR",
-        "NEW FRIENDS COLONY",
-        "OKHLA INDUSTRIAL AREA",
-        "PUL PRAHLAD PUR",
-        "SARITA VIHAR",
-        "SHAHEEN BAGH",
-        "SUNLIGHT COLONY"
-      ],
-      "SPECIAL CELL": [
-        "--------------Select------------",
-        "SPECIAL CELL"
-      ],
-      "SPECIAL POLICE UNIT FOR WOMEN & CHILDREN": [
-        "--------------Select------------",
-        "CRIME (WOMEN) CELL NANAK PURA"
-      ],
-      "VIGILANCE": [
-        "--------------Select------------",
-        "VIGILANCE PS"
-      ],
-      "WEST": [
-        "--------------Select------------",
-        "HARI NAGAR",
-        "INDER PURI",
-        "JANAK PURI",
-        "KHYALA",
-        "KIRTI NAGAR",
-        "MAYAPURI",
-        "MOTI NAGAR",
-        "NARAINA",
-        "PUNJABI BAGH",
-        "RAJOURI GARDEN",
-        "TILAK NAGAR",
-        "VIKASPURI"
-      ]
-    },
     "GOA": {
-      "--------------SELECT------------": [],
       "C I D": [
-        "--------------Select------------",
         "ANTI NARCOTICS CELL",
         "CRIME BRANCH",
         "WOMEN P.S"
       ],
       "NORTH GOA": [
-        "--------------Select------------",
         "AGACAIM / GOA VELHA",
         "ANJUNA",
         "BICHOLIM",
@@ -3599,7 +3168,6 @@
         "VALPOI"
       ],
       "SOUTH GOA": [
-        "--------------Select------------",
         "BETUL COASTAL",
         "CANACONA",
         "CANCONA (TALPONA) COASTAL",
@@ -3620,9 +3188,7 @@
       ]
     },
     "GUJARAT": {
-      "--------------SELECT------------": [],
       "AHMEDABAD CITY": [
-        "--------------Select------------",
         "AIRPORT",
         "AMRAIWADI",
         "ANAND NAGAR",
@@ -3673,7 +3239,6 @@
         "VEJALPUR"
       ],
       "AHMEDABAD RURAL": [
-        "--------------Select------------",
         "ASLALI",
         "BAGODRA",
         "BARWALA",
@@ -3700,7 +3265,6 @@
         "VITHLAPUR"
       ],
       "AHWA (DANGS)": [
-        "--------------Select------------",
         "AHWA",
         "MAHILA",
         "SAPUTARA",
@@ -3708,7 +3272,6 @@
         "WAGHAI"
       ],
       "AMRELI": [
-        "--------------Select------------",
         "AMRELI RURAL",
         "AMRELI TOWN",
         "BABRA",
@@ -3733,7 +3296,6 @@
         "VANDA"
       ],
       "ANAND": [
-        "--------------Select------------",
         "ANAND RURAL",
         "ANAND TOWN",
         "ANKLAO",
@@ -3758,7 +3320,6 @@
         "VIRSAD"
       ],
       "ANTI CORRUPTION": [
-        "--------------Select------------",
         "AD/ACB GODHRA",
         "ANTI CORRUPTION",
         "BANASKANTHA",
@@ -3800,11 +3361,9 @@
         "SABARKANTHA"
       ],
       "ANTI TERRORIST SQUAD(ATS)": [
-        "--------------Select------------",
         "ATS AHMEDABAD"
       ],
       "BANASKANTA/PLNPR": [
-        "--------------Select------------",
         "AGTHALA",
         "AMBAJI",
         "AMIRGADH",
@@ -3835,7 +3394,6 @@
         "VAV"
       ],
       "BHARUCH": [
-        "--------------Select------------",
         "AMOD",
         "ANKLESHWAR CITY",
         "ANKLESHWAR RURAL",
@@ -3860,7 +3418,6 @@
         "WAGRA"
       ],
       "BHAVNAGAR": [
-        "--------------Select------------",
         "A.DN.BHAVNAGAR",
         "ALANG",
         "ALANG MARIN",
@@ -3893,14 +3450,12 @@
         "VARTEJ"
       ],
       "CID CRIME & RAILWAYS (CID)": [
-        "--------------Select------------",
         "AHMEDABAD ZONE(CID)",
         "GANDHINAGAR ZONE (CID)",
         "RAJKOT ZONE (RAJKOT)",
         "VADODARA ZONE (BARODA)"
       ],
       "DAHOD": [
-        "--------------Select------------",
         "BARIA (DEVGADH)",
         "DAHOD RURAL",
         "DAHOD TOWN",
@@ -3919,7 +3474,6 @@
         "SUKHSAR"
       ],
       "GANDHINAGAR": [
-        "--------------Select------------",
         "ADALAJ",
         "CHILODA",
         "DABHODA",
@@ -3936,7 +3490,6 @@
         "TRAFFIC"
       ],
       "JAMNAGAR": [
-        "--------------Select------------",
         "A.DN. JAMNAGAR CITY",
         "B.DN JAMNAGAR CITY",
         "BEDI MARIN",
@@ -3963,14 +3516,13 @@
         "VADINAR MARIN"
       ],
       "JUNAGADH": [
-        "--------------Select------------",
         "BANTWA",
         "BHESAN",
         "BILKHA",
         "CHORWAD",
         "CITY C DIV.",
         "GIRGADHADA",
-        "JUNA GADH CITY  B DIVISION",
+        "JUNA GADH CITY B DIVISION",
         "JUNA GADH TALUKA",
         "JUNAGADH A-DIVISION",
         "KESHOD",
@@ -3993,7 +3545,6 @@
         "VISAVADAR"
       ],
       "KACHCHH EAST(GANDHIDHAM)": [
-        "--------------Select------------",
         "ADHOI",
         "ADIPUR",
         "ANJAR",
@@ -4009,7 +3560,6 @@
         "RAPAR"
       ],
       "KHEDA": [
-        "--------------Select------------",
         "ATARSUMBA",
         "BALASINOR",
         "CHAKLASHI",
@@ -4031,7 +3581,6 @@
         "VIRPUR"
       ],
       "KUTCHH/BHUJ": [
-        "--------------Select------------",
         "ADHOI",
         "ANJAR",
         "BHACHAU",
@@ -4066,7 +3615,6 @@
         "VAYOR"
       ],
       "MEHSANA": [
-        "--------------Select------------",
         "BAVLU",
         "BECHARAJI",
         "KADI",
@@ -4090,7 +3638,6 @@
         "VISNAGAR TALUKA"
       ],
       "NARMADA": [
-        "--------------Select------------",
         "DEDIAPADA",
         "GARUDESHWAR",
         "KEVADIA COLONY",
@@ -4100,7 +3647,6 @@
         "TILAK VADA"
       ],
       "NAVSARI": [
-        "--------------Select------------",
         "BANSADA",
         "BILIMORA",
         "CHIKHLI",
@@ -4113,7 +3659,6 @@
         "NAVSARI RURAL"
       ],
       "PANCHMAHALS": [
-        "--------------Select------------",
         "BARIA",
         "DAHOD RURAL",
         "DAHOD TOWN",
@@ -4143,7 +3688,6 @@
         "VEJALPUR"
       ],
       "PATAN": [
-        "--------------Select------------",
         "BALISANA",
         "BECHARAJI",
         "CHANASAMA",
@@ -4163,7 +3707,6 @@
         "WAGDOD"
       ],
       "PORBANDAR": [
-        "--------------Select------------",
         "BAGAWADAR",
         "KAMALA BAG (PORBANDAR B DIV.)",
         "KIRTI MANDIR (PORBANDAR A DIV.)",
@@ -4176,7 +3719,6 @@
         "RANAWAV"
       ],
       "PROHIBITION": [
-        "--------------Select------------",
         "AHMEDABAD CITY EAST",
         "AHMEDABAD CITY NORTH",
         "AHMEDABAD CITY SOUTH",
@@ -4248,7 +3790,6 @@
         "VIRAMGAM"
       ],
       "RAJKOT CITY": [
-        "--------------Select------------",
         "A.DN. RAJKOT",
         "AAJIDEM",
         "B.DN. RAJKOT",
@@ -4264,7 +3805,6 @@
         "THORALA"
       ],
       "RAJKOT RURAL": [
-        "--------------Select------------",
         "BHADLA",
         "BHAYAVADAR",
         "DHORAJI CITY",
@@ -4291,7 +3831,6 @@
         "WANKANER TALUKA"
       ],
       "SABAR KANTHA": [
-        "--------------Select------------",
         "AMBALIARA",
         "BAYOD",
         "BHILODA",
@@ -4317,7 +3856,6 @@
         "VIJAY NAGAR"
       ],
       "SURAT CITY": [
-        "--------------Select------------",
         "ADAJAN",
         "AMROLI",
         "ATHWALINE",
@@ -4348,7 +3886,6 @@
         "VARACHHROAD"
       ],
       "SURAT RURAL": [
-        "--------------Select------------",
         "BARDOLI",
         "KADODARA GIDC",
         "KAKRAPAR",
@@ -4369,7 +3906,6 @@
         "VYARA"
       ],
       "SURENDRA NAGAR": [
-        "--------------Select------------",
         "CHOTILA",
         "CHUDA",
         "DASADA",
@@ -4390,7 +3926,6 @@
         "WADHWAN"
       ],
       "TAPI": [
-        "--------------Select------------",
         "KAKRAPAR",
         "MAHILA",
         "NIZAR",
@@ -4401,11 +3936,9 @@
         "VYARA"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
         "TRANSPORT DEPT, GUJARAT"
       ],
       "VADODARA CITY": [
-        "--------------Select------------",
         "BAPOD",
         "CHHANI (BAJWA)",
         "CITY (BARODA CITY)",
@@ -4428,7 +3961,6 @@
         "WADI"
       ],
       "VADODARA RURAL": [
-        "--------------Select------------",
         "BARODA TALUKA",
         "BHADARWA",
         "BODELI",
@@ -4454,7 +3986,6 @@
         "WAGHODIA"
       ],
       "VALSAD": [
-        "--------------Select------------",
         "ATUL",
         "BANSDA",
         "BHILAD",
@@ -4477,7 +4008,6 @@
         "VAPI TOWN"
       ],
       "WESTERN RAILWAY AHMEDABAD": [
-        "--------------Select------------",
         "AHMEDABAD",
         "BHAVNAGAR",
         "DHOLA",
@@ -4494,7 +4024,6 @@
         "VIRAMGAM"
       ],
       "WSTN RLY VADODARA": [
-        "--------------Select------------",
         "AHMEDABAD",
         "ANAND",
         "BARODA",
@@ -4520,9 +4049,7 @@
       ]
     },
     "HARYANA": {
-      "--------------SELECT------------": [],
       "AMBALA": [
-        "--------------Select------------",
         "AMBALA CANTT",
         "AMBALA CITY",
         "AMBALA SADAR",
@@ -4541,7 +4068,6 @@
         "Women Police Station Naraingarh, Ambala"
       ],
       "BHIWANI": [
-        "--------------Select------------",
         "BADHRA",
         "BAWANI KHERA",
         "BEHAL",
@@ -4557,17 +4083,14 @@
         "TRAFFIC"
       ],
       "C I D": [
-        "--------------Select------------",
         "C I D"
       ],
       "CHARKHI DADRI": [
-        "--------------Select------------",
         "Bond Kalan",
         "JHOJHU KALAN",
         "Sadar Dadri"
       ],
       "FARIDABAD": [
-        "--------------Select------------",
         "BALLABHGARH CITY",
         "BALLABHGARH SADAR",
         "BHUPANI",
@@ -4592,7 +4115,6 @@
         "TRAFFIC"
       ],
       "FATEHABAD": [
-        "--------------Select------------",
         "BHATTU KALAN",
         "BHUNA",
         "CITY FATEHABAD",
@@ -4604,7 +4126,6 @@
         "TRAFFIC"
       ],
       "GRP AMBALA CANTT": [
-        "--------------Select------------",
         "AMBALA",
         "BAHADURGARH",
         "CHANDIGARH",
@@ -4623,7 +4144,6 @@
         "SONIPAT"
       ],
       "GURGAON": [
-        "--------------Select------------",
         "BADSHAHPUR",
         "BAJGHERA",
         "BHONDSI",
@@ -4660,7 +4180,6 @@
         "WOMEN POLICE STATION WEST ZONE"
       ],
       "HISSAR": [
-        "--------------Select------------",
         "AGROHA",
         "BARWALA",
         "HANSI CITY",
@@ -4673,7 +4192,6 @@
         "UKLANA"
       ],
       "IRRIGATION AND POWER DEPARTMENT": [
-        "--------------Select------------",
         "AMBALA",
         "FARIDABAD",
         "GURGAON",
@@ -4684,9 +4202,6 @@
         "ROHTAK"
       ],
       "JHAJJAR": [
-        "--------------Select------------",
-        "ASHODA",
-        "ASHODA",
         "ASHODA",
         "ASODA",
         "BERI",
@@ -4698,7 +4213,6 @@
         "TRAFFIC BAHADURGARH"
       ],
       "JIND": [
-        "--------------Select------------",
         "ALEWA",
         "GARHI",
         "JIND CITY",
@@ -4712,7 +4226,6 @@
         "UCHANA"
       ],
       "KAITHAL": [
-        "--------------Select------------",
         "CHEEKA",
         "CIVIL LINE KAITHAL",
         "DANDH",
@@ -4727,7 +4240,6 @@
         "TRAFFIC"
       ],
       "KARNAL": [
-        "--------------Select------------",
         "ASSANDH",
         "BUTANA",
         "GHARAUNDA",
@@ -4738,15 +4250,14 @@
         "KUNJPURA",
         "MADHUBAN",
         "MUNAK",
-        "Nigdhu Karnal",
         "NISSING",
+        "Nigdhu Karnal",
         "Ram Nagar Karnal",
         "Sector 32-33 Karnal",
         "TARAORI",
         "TRAFFIC"
       ],
       "KURUKSHETRA": [
-        "--------------Select------------",
         "BABAIN",
         "ISMAILABAD",
         "JHANSA",
@@ -4759,7 +4270,6 @@
         "TRAFFIC"
       ],
       "MAHENDERGARH": [
-        "--------------Select------------",
         "ATELI",
         "CITY NARNAUL",
         "KANINA",
@@ -4770,7 +4280,6 @@
         "TRAFFIC"
       ],
       "MEWAT": [
-        "--------------Select------------",
         "BICCHOR",
         "FEROZEPUR JHIRKA",
         "NAGINA",
@@ -4781,13 +4290,11 @@
         "TRAFFIC"
       ],
       "NUH": [
-        "--------------Select------------",
         "Firozpur Jhirka",
         "Nuh sadar",
         "PUNHANA"
       ],
       "PALWAL": [
-        "--------------Select------------",
         "CAMP PALWAL",
         "CHAND HUT",
         "CITY PALWAL",
@@ -4798,7 +4305,6 @@
         "TRAFFIC"
       ],
       "PANCHKULA": [
-        "--------------Select------------",
         "CHANDIMANDIR",
         "KALKA",
         "MANSA DEVI COMPLEX",
@@ -4809,11 +4315,10 @@
         "TRAFFIC"
       ],
       "PANIPAT": [
-        "--------------Select------------",
         "BAPOLI",
         "CHANDNIBAGH",
-        "Industrial Sector 29 Panipat",
         "ISRANA",
+        "Industrial Sector 29 Panipat",
         "MATLAUDA",
         "MODEL TOWN",
         "PANIPAT CITY",
@@ -4822,7 +4327,6 @@
         "TRAFFIC"
       ],
       "REWARI": [
-        "--------------Select------------",
         "BAWAL",
         "DHARUHERA",
         "JATUSANA",
@@ -4837,7 +4341,6 @@
         "TRAFFIC"
       ],
       "ROHTAK": [
-        "--------------Select------------",
         "ARYA NAGAR ROHTAK",
         "BHAU AKBARPUR",
         "I.M.T. ROHTAK",
@@ -4855,7 +4358,6 @@
         "URBAN ESTATE ROHTAK"
       ],
       "SIRSA": [
-        "--------------Select------------",
         "BARAGUDHA",
         "CITY MANDI DABWALI",
         "DABWALI SADAR",
@@ -4873,7 +4375,6 @@
         "Women Police Station Dabwali,Sirsa"
       ],
       "SONIPAT": [
-        "--------------Select------------",
         "BAHALGARH",
         "BARAUDA",
         "CIVIL LINE SONIPAT",
@@ -4893,7 +4394,6 @@
         "WOMEN PS KHANPUR KALAN"
       ],
       "SPECIAL TASK FORCE (STF)": [
-        "--------------Select------------",
         "STF (NDPS) UNIT, Sirsa",
         "STF Cobra UNIT, Gurugram",
         "STF Hawk (Cyber Cell), Gurugram",
@@ -4907,7 +4407,6 @@
         "STF UNIT-2, Sonipat"
       ],
       "STATE VIGILANCE BUREAU": [
-        "--------------Select------------",
         "ANTI CORRUPTION&VIGILANCE",
         "SVB AMBALA",
         "SVB GURGAON",
@@ -4917,11 +4416,9 @@
         "SVB ROHTAK"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
         "TRANSPORT DEPT, HARYANA"
       ],
       "YAMUNA NAGAR": [
-        "--------------Select------------",
         "BILASPUR",
         "BURIA",
         "CHHACHHRAULI",
@@ -4939,9 +4436,7 @@
       ]
     },
     "HIMACHAL PRADESH": {
-      "--------------SELECT------------": [],
       "ANTI CORRUPTION": [
-        "--------------Select------------",
         "BILASPUR",
         "CHAMBA",
         "DHARAMSHALA",
@@ -4956,14 +4451,12 @@
         "UNA"
       ],
       "BADDI POLICE DISTT": [
-        "--------------Select------------",
         "BADDI",
         "BAROTIWALA",
         "NALAGARH",
         "RAMSHEHAR"
       ],
       "BILASPUR": [
-        "--------------Select------------",
         "BARMANA",
         "BHARARI",
         "GHUMARWIN",
@@ -4973,11 +4466,9 @@
         "TALAI"
       ],
       "C I D": [
-        "--------------Select------------",
         "C I D"
       ],
       "CHAMBA": [
-        "--------------Select------------",
         "BHARMAUR",
         "CHOWARI",
         "DALHOUSIE",
@@ -4988,12 +4479,10 @@
         "TISSA"
       ],
       "GOVT. RLY POLICE": [
-        "--------------Select------------",
         "KANGRA",
         "SHIMLA"
       ],
       "HAMIRPUR": [
-        "--------------Select------------",
         "BADSAR",
         "BHORANJ",
         "NADAUN",
@@ -5001,7 +4490,6 @@
         "SUJANPUR"
       ],
       "KANGRA": [
-        "--------------Select------------",
         "BAIJNATH",
         "BHAWARNA",
         "DEHRA",
@@ -5020,14 +4508,12 @@
         "SHAHPUR"
       ],
       "KINNAUR": [
-        "--------------Select------------",
         "BHABA NAGAR/NICHAR",
         "POOH",
         "RECKONG PEO/KALPA",
         "SANGLA"
       ],
       "KULLU": [
-        "--------------Select------------",
         "ANI",
         "BANJAR (SERAJ)",
         "BHUNTAR",
@@ -5037,13 +4523,11 @@
         "SADAR KULLU"
       ],
       "LAHAUL & SPITI": [
-        "--------------Select------------",
         "KAZA",
         "KEYLONG",
         "UDAIPUR"
       ],
       "MANDI": [
-        "--------------Select------------",
         "AUT",
         "BALH",
         "BSL COLONY SUNDAR NAGAR",
@@ -5056,7 +4540,6 @@
         "SUNDER NAGAR"
       ],
       "SHIMLA": [
-        "--------------Select------------",
         "CHIRGAON",
         "CHOPAL",
         "DHALLI",
@@ -5075,7 +4558,6 @@
         "THEOG"
       ],
       "SIRMAUR": [
-        "--------------Select------------",
         "KALA AMB",
         "NAHAN",
         "PACHHAD",
@@ -5086,7 +4568,6 @@
         "SHILLAI"
       ],
       "SOLAN": [
-        "--------------Select------------",
         "ARKI",
         "BAGGA",
         "BAROTI WALA",
@@ -5099,7 +4580,6 @@
         "SOLAN SADAR"
       ],
       "UNA": [
-        "--------------Select------------",
         "AMB",
         "BANGANA",
         "CHINTPURNI",
@@ -5109,9 +4589,7 @@
       ]
     },
     "JAMMU & KASHMIR": {
-      "--------------SELECT------------": [],
       "ANANTNAG": [
-        "--------------Select------------",
         "ACHHABAL",
         "ANANTNAG",
         "ANTI HUMAN TRAFFICKING",
@@ -5126,14 +4604,12 @@
         "SRIGUFWARA"
       ],
       "AWANTIPORA": [
-        "--------------Select------------",
         "AWANTIPORA",
         "PAMPORE",
         "Police Station Khrew",
         "TRAL"
       ],
       "BADGAM": [
-        "--------------Select------------",
         "BADGAM",
         "BEERWAH",
         "CHADOORA",
@@ -5143,7 +4619,6 @@
         "MAGAM"
       ],
       "BANDIPORA": [
-        "--------------Select------------",
         "ARAGAM",
         "BANDIPORA",
         "GUREZ",
@@ -5153,7 +4628,6 @@
         "TULAIL"
       ],
       "BARAMULLA": [
-        "--------------Select------------",
         "BARAMULLA",
         "BIJHAMA",
         "BUNIYAR",
@@ -5167,20 +4641,16 @@
         "URI"
       ],
       "C B SRINAGAR": [
-        "--------------Select------------",
         "CRIME BRANCH SRINAGAR"
       ],
       "C I D": [
-        "--------------Select------------",
         "CID CI JAMMU",
         "CID CI SRINAGAR"
       ],
       "CB JAMMU": [
-        "--------------Select------------",
         "CRIME BRANCH JAMMU"
       ],
       "DODA": [
-        "--------------Select------------",
         "ASSAR",
         "BHADARWAH",
         "DESA",
@@ -5189,7 +4659,6 @@
         "THATHRI"
       ],
       "GANDERBAL": [
-        "--------------Select------------",
         "GANDERBAL",
         "GUND",
         "KANGAN",
@@ -5199,14 +4668,12 @@
         "SONAMARG"
       ],
       "HANDWARA": [
-        "--------------Select------------",
         "HANDWARA",
         "KRAL GUND",
         "QALAMABAD(MAWAR)",
         "VILLGAM"
       ],
       "JAMMU": [
-        "--------------Select------------",
         "AKHNOOR",
         "AMB GHAROTA",
         "ANTI HUMAN TRAFFICKING",
@@ -5235,13 +4702,11 @@
         "WOMEN CELL"
       ],
       "KARGIL": [
-        "--------------Select------------",
         "DRASS",
         "KARGIL",
         "ZANSKAR"
       ],
       "KATHUA": [
-        "--------------Select------------",
         "BANI",
         "BASOLI",
         "BILLAWAR",
@@ -5252,7 +4717,6 @@
         "RAJBAGH"
       ],
       "KISTWAR": [
-        "--------------Select------------",
         "ATHOLI",
         "CHATROO",
         "DACHAN",
@@ -5261,7 +4725,6 @@
         "WARWAN(INSHAN)"
       ],
       "KULGAM": [
-        "--------------Select------------",
         "DEVSAR",
         "DHAMHAL HANJI PORA",
         "KULGAM",
@@ -5272,7 +4735,6 @@
         "YARIPORA"
       ],
       "KUPWARA": [
-        "--------------Select------------",
         "KARNAH",
         "KERAN",
         "KRALPORA",
@@ -5282,20 +4744,17 @@
         "TREHGAM"
       ],
       "LEH": [
-        "--------------Select------------",
         "LEH",
         "NOBRA",
         "NYOMA",
         "Police Station Women Cell LEH"
       ],
       "PD SOPORE": [
-        "--------------Select------------",
         "DANGI WACHA",
         "PANZALLA",
         "SOPORE"
       ],
       "POONCH": [
-        "--------------Select------------",
         "GURSAI",
         "LORAN",
         "MANDI",
@@ -5304,14 +4763,12 @@
         "SURANKOT"
       ],
       "PULWAMA": [
-        "--------------Select------------",
+        "PULWAMA",
         "Police Station Kakapora",
         "Police Station Litter",
-        "PULWAMA",
         "RAJPORA"
       ],
       "RAILWAYS JAMMU": [
-        "--------------Select------------",
         "GRP JAMMU",
         "GRP KATHUA",
         "GRP KATRA",
@@ -5319,7 +4776,6 @@
         "GRP UDHAMPUR"
       ],
       "RAILWAYS SRINAGAR": [
-        "--------------Select------------",
         "GRP ANANTNAG",
         "GRP AWANTIPORA",
         "GRP BARAMULLA",
@@ -5328,7 +4784,6 @@
         "GRP SRINAGAR"
       ],
       "RAJOURI": [
-        "--------------Select------------",
         "BUDHAL",
         "DARHAL",
         "DHARAMSALA",
@@ -5341,7 +4796,6 @@
         "THANA MANDI"
       ],
       "RAMBAN": [
-        "--------------Select------------",
         "BANIHAL",
         "BATOTE",
         "CHANDERKOTE",
@@ -5351,7 +4805,6 @@
         "RAMSOO"
       ],
       "REASI": [
-        "--------------Select------------",
         "ARNAS",
         "BHAWAN (VAISHNO DEVI)",
         "CHASANA",
@@ -5363,7 +4816,6 @@
         "REASI"
       ],
       "SAMBA": [
-        "--------------Select------------",
         "BARI BRAHMANA",
         "GHAGWAL",
         "PARMANDAL",
@@ -5372,14 +4824,12 @@
         "VIJAYPUR"
       ],
       "SHOPIAN": [
-        "--------------Select------------",
         "HERPORA",
         "KELLER",
         "SHOPIAN",
         "ZAINAPORA"
       ],
       "SRINAGAR": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "BATMALOO",
         "HARWAN",
@@ -5409,7 +4859,6 @@
         "ZAKURA"
       ],
       "UDHAMPUR": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "BASANT GARH",
         "CHENANI",
@@ -5423,9 +4872,7 @@
       ]
     },
     "JHARKHAND": {
-      "--------------SELECT------------": [],
       "BOKARO": [
-        "--------------Select------------",
         "BALIDIH",
         "BERMO",
         "BOKARO STEEL CITY",
@@ -5454,7 +4901,6 @@
         "SIYALJORI"
       ],
       "CHAIBASA": [
-        "--------------Select------------",
         "ANANDPUR",
         "BANDGAON",
         "CHAIBASA MUFASSIL",
@@ -5483,7 +4929,6 @@
         "TONTO"
       ],
       "CHATRA": [
-        "--------------Select------------",
         "BASHISHT NAGAR",
         "CHATRA SADAR",
         "GIDHOR",
@@ -5503,7 +4948,6 @@
         "TANDWA"
       ],
       "DEOGHAR": [
-        "--------------Select------------",
         "BAIDHNATHDHAM MANDIR",
         "CHITARA",
         "DEOGHAR TOWN",
@@ -5522,7 +4966,6 @@
         "SONARAITHARI"
       ],
       "DHANBAD": [
-        "--------------Select------------",
         "BAGHMARA",
         "BALIAPUR",
         "BANKMORE",
@@ -5558,7 +5001,6 @@
         "TUNDI"
       ],
       "DUMKA": [
-        "--------------Select------------",
         "DUMKA TOWN",
         "GOPIKANDER",
         "HANSDIHA",
@@ -5577,11 +5019,9 @@
         "TONGRA"
       ],
       "EAST SINGHBHUM": [
-        "--------------Select------------",
         "MUSABANI"
       ],
       "GARHWA": [
-        "--------------Select------------",
         "BARDIHA",
         "BHANDARIA",
         "BHAWNATHPUR",
@@ -5604,7 +5044,6 @@
         "SC & ST"
       ],
       "GIRIDIH": [
-        "--------------Select------------",
         "AHILYAPUR",
         "BAGODHAR",
         "BENGABAD",
@@ -5630,7 +5069,6 @@
         "TOWN GIRIDIH"
       ],
       "GODDA": [
-        "--------------Select------------",
         "BASANTRAI",
         "BELBADDA",
         "BOARIJOR",
@@ -5650,7 +5088,6 @@
         "THAKUR GANGTI"
       ],
       "GUMLA": [
-        "--------------Select------------",
         "BASIA",
         "BHARNO",
         "BISHUNPUR",
@@ -5670,7 +5107,6 @@
         "SURSANG"
       ],
       "HAZARIBAGH": [
-        "--------------Select------------",
         "ANGO",
         "BARHI",
         "BARKAGAON",
@@ -5695,7 +5131,6 @@
         "TATIJHARIYA"
       ],
       "JAMSHEDPUR": [
-        "--------------Select------------",
         "AZAD NAGAR",
         "BAGVEDA",
         "BAHRAGORA",
@@ -5733,7 +5168,6 @@
         "VISHTUPUR"
       ],
       "JAMTARA": [
-        "--------------Select------------",
         "BAGDEHRI",
         "BINDAPATHAR",
         "JAMTARA NAGAR",
@@ -5747,7 +5181,6 @@
         "SC & ST"
       ],
       "KHUNTI": [
-        "--------------Select------------",
         "ARKI",
         "KARRA",
         "KHUNTI PS",
@@ -5759,7 +5192,6 @@
         "TORPA"
       ],
       "KODERMA": [
-        "--------------Select------------",
         "CHANDWARA",
         "DHAB",
         "DOMCHANCH",
@@ -5773,7 +5205,6 @@
         "TELAIYA"
       ],
       "LATEHAR": [
-        "--------------Select------------",
         "BALUMATH",
         "BARESARH",
         "BARWADIH",
@@ -5789,7 +5220,6 @@
         "SC & ST"
       ],
       "LOHARDAGA": [
-        "--------------Select------------",
         "BAGRU",
         "BHANDRA",
         "JOBANG",
@@ -5803,7 +5233,6 @@
         "SERENADAG"
       ],
       "PAKUR": [
-        "--------------Select------------",
         "AMRAPARA",
         "HIRANPUR",
         "LITTIPARA",
@@ -5817,7 +5246,6 @@
         "TOWN"
       ],
       "PALAMAU": [
-        "--------------Select------------",
         "BISHRAMPUR",
         "CHAINPUR",
         "CHATTARPUR",
@@ -5847,7 +5275,6 @@
         "UNTARI ROAD"
       ],
       "RAIL DHANBAD": [
-        "--------------Select------------",
         "BADHARWA",
         "BARKAKANA",
         "BHOJUDIH",
@@ -5865,7 +5292,6 @@
         "SAHEBGANJ"
       ],
       "RAIL JAMSHEDPUR": [
-        "--------------Select------------",
         "BOKARO",
         "CHAKRADHARPUR",
         "CHANDIL",
@@ -5876,7 +5302,6 @@
         "TATANAGAR"
       ],
       "RAMGARH": [
-        "--------------Select------------",
         "BARKAKANA OP",
         "BARLANGA",
         "BASAL",
@@ -5893,7 +5318,6 @@
         "WEST BOKARO OP"
       ],
       "RANCHI": [
-        "--------------Select------------",
         "ANGARA",
         "ARGODDA",
         "ARGORA",
@@ -5939,7 +5363,6 @@
         "TRAFFIC POLICE STATION"
       ],
       "SAHEBGANJ": [
-        "--------------Select------------",
         "BARHARWA",
         "BARHER",
         "BORIO",
@@ -5955,7 +5378,6 @@
         "TALJHARI"
       ],
       "SARAIKELA": [
-        "--------------Select------------",
         "AADITYAPUR",
         "CHANDIL",
         "CHOUKA",
@@ -5974,7 +5396,6 @@
         "TIRULDIH"
       ],
       "SIMDEGA": [
-        "--------------Select------------",
         "BANU",
         "BOLWA",
         "JALDEGA",
@@ -5991,22 +5412,19 @@
         "T. TANGER"
       ],
       "WEST SINGHBHUM": [
-        "--------------Select------------",
         "GOILKERA"
       ]
     },
     "KARNATAKA": {
-      "--------------SELECT------------": [],
       "BAGALKOT": [
-        "--------------Select------------",
         "AMINGAD",
         "BADAMI",
-        "Bagalkot CEN Crime PS",
         "BAGALKOT RURAL",
         "BAGALKOT TOWN",
         "BAGALKOT TRAFFIC",
         "BANAHATTI",
         "BILAGI",
+        "Bagalkot CEN Crime PS",
         "GULEDGUDDA",
         "HUNGUND",
         "ILKAL",
@@ -6022,7 +5440,6 @@
         "TERADAL"
       ],
       "BANGALORE": [
-        "--------------Select------------",
         "ANEKAL",
         "ANUGONDANAHALLI",
         "ATTIBELE",
@@ -6050,7 +5467,6 @@
         "VISHWANATHAPUR"
       ],
       "BANGALORE CITY": [
-        "--------------Select------------",
         "AIRPORT",
         "AIRPORT TRAFFIC PS",
         "AMRUTHAHALLI",
@@ -6087,12 +5503,12 @@
         "COMMERCIAL STREET",
         "COMMERCIAL STREET TRAFFIC PS",
         "COTTONPET",
+        "CUBBON PARK",
+        "CUBBON PARK TRAFFIC PS",
         "Crime Police Station Bengaluru East I",
         "Crime Police Station Bengaluru East II",
         "Crime Police Station Bengaluru West I",
         "Crime Police Station Bengaluru West II",
-        "CUBBON PARK",
-        "CUBBON PARK TRAFFIC PS",
         "Cyber Crime Police Station",
         "D.J.HALLI",
         "DEVANAHALLI",
@@ -6209,7 +5625,6 @@
         "YESHWANTHPURA"
       ],
       "BELGAUM": [
-        "--------------Select------------",
         "AIGALI",
         "ANKALAGI",
         "ANKALI",
@@ -6218,8 +5633,8 @@
         "BAGEWADI",
         "BAILHONGAL",
         "BASAVESHWAR CHOWK",
-        "Belagavi Women PS",
         "BELGAUM RURAL",
+        "Belagavi Women PS",
         "CAMP",
         "CHIKKODI",
         "DODDAWAD",
@@ -6230,12 +5645,12 @@
         "KAGAWAD",
         "KAKATI",
         "KATAKOL",
-        "Khadakalat PS",
         "KHADEBAZAR",
         "KHANAPUR",
         "KITTUR",
         "KUDCHI",
         "KULGOD",
+        "Khadakalat PS",
         "MALMARUTI",
         "MARIHAL",
         "MARKET",
@@ -6258,13 +5673,12 @@
         "YAMAKAN MARADI"
       ],
       "BELLARY": [
-        "--------------Select------------",
         "APMC YARD",
-        "Ballari CEN Crime PS",
         "BELLARY RURAL",
         "BELLARY TOWN",
         "BELLARY TRAFFIC",
         "BRUCEPET",
+        "Ballari CEN Crime PS",
         "CHITHAWADGI",
         "COWL BAZAR",
         "GADIGANOOR",
@@ -6299,7 +5713,6 @@
         "TORANAGALLU"
       ],
       "BIDAR": [
-        "--------------Select------------",
         "AURAD",
         "BAGDAL",
         "BASAVAKALYANA",
@@ -6333,7 +5746,6 @@
         "SHANTHAPUR"
       ],
       "BIJAPUR": [
-        "--------------Select------------",
         "A.P.M.C.YARD",
         "ADARSH NAGAR",
         "ALAMATTI",
@@ -6360,7 +5772,6 @@
         "ZALKI"
       ],
       "CHAMARAJANAGAR": [
-        "--------------Select------------",
         "BEGUR",
         "CHAMARAJANAGAR EAST",
         "CHAMARAJANAGAR RURAL",
@@ -6378,7 +5789,6 @@
         "YALANDUR"
       ],
       "CHICKMAGALUR": [
-        "--------------Select------------",
         "AJJAMPURA",
         "ALDUR",
         "BALEHONNUR",
@@ -6386,10 +5796,10 @@
         "BANAKAL",
         "BASAVANAHALLI",
         "BIRUR",
-        "Chickmagalur CEN Crime PS",
         "CHICKMAGALUR RURAL",
         "CHICKMAGALUR TOWN",
         "CHICKMAGALUR TRAFFIC",
+        "Chickmagalur CEN Crime PS",
         "GONIBEEDU",
         "HARIHARPURA",
         "JAYAPURA",
@@ -6410,7 +5820,6 @@
         "YAGATI"
       ],
       "CHIKKABALAPURA": [
-        "--------------Select------------",
         "BAGEPALLI",
         "BATLAHALLI",
         "CHELUR",
@@ -6430,7 +5839,6 @@
         "SIDLAGHATTA TOWN"
       ],
       "CHITRADURGA": [
-        "--------------Select------------",
         "ABBINAHOLE",
         "BHARAMASAGARA",
         "CHALLAKERE",
@@ -6453,7 +5861,6 @@
         "THALAK"
       ],
       "COASTAL SECURITY POLICE": [
-        "--------------Select------------",
         "BELEKERI CSPS",
         "BHATKAL C S P",
         "GANGOLLI CSPS",
@@ -6465,11 +5872,9 @@
         "MANGALORE C S P"
       ],
       "CYBER CRIME": [
-        "--------------Select------------",
         "O/O SP/DSP, I/C CYBER CRIME"
       ],
       "DAKSHINA KANNADA": [
-        "--------------Select------------",
         "BELTHANGADI",
         "BUNTWAL",
         "BUNTWAL RURAL",
@@ -6486,7 +5891,6 @@
         "VITTAL"
       ],
       "DAVANAGERE": [
-        "--------------Select------------",
         "ARASIKERE",
         "AZAD NAGAR",
         "BASAVAPATTANA",
@@ -6516,7 +5920,6 @@
         "WOMEN P.S"
       ],
       "DHARWAD": [
-        "--------------Select------------",
         "ALNAVAR",
         "ANNIGERE",
         "DHARWAD RURAL",
@@ -6528,7 +5931,6 @@
         "NAVALGUND"
       ],
       "GADAG": [
-        "--------------Select------------",
         "GADAG RURAL",
         "GADAG TOWN",
         "GADAG TRAFFIC",
@@ -6544,7 +5946,6 @@
         "SHIRAHATTI"
       ],
       "GULBARGA": [
-        "--------------Select------------",
         "ADDITIONAL TRAFFIC",
         "AFZALPUR",
         "ALLAND",
@@ -6586,7 +5987,6 @@
         "YEDRAMI"
       ],
       "HASSAN": [
-        "--------------Select------------",
         "ALUR",
         "ARAKALGUD",
         "ARASIKERE RURAL",
@@ -6600,7 +6000,6 @@
         "GANDASI",
         "GORURU",
         "HALEBEEDU",
-        "Hallymysore PS",
         "HASSAN EXTENSION PS",
         "HASSAN RURAL",
         "HASSAN TOWN",
@@ -6608,6 +6007,7 @@
         "HIRISAVE",
         "HOLENARASIPURA RURAL",
         "HOLENARASIPURA TOWN",
+        "Hallymysore PS",
         "JAVAGAL",
         "KONANUR",
         "NUGGEHALLI",
@@ -6619,7 +6019,6 @@
         "YESALUR"
       ],
       "HAVERI": [
-        "--------------Select------------",
         "ADUR",
         "BANKAPURA",
         "BYADAGI",
@@ -6641,7 +6040,6 @@
         "TADAS"
       ],
       "HUBLI-DHARWAD CITY": [
-        "--------------Select------------",
         "APMC NAVANAGAR",
         "ASHOKANAGAR",
         "BENDIGERI",
@@ -6665,7 +6063,6 @@
         "WOMEN POLICE STATION"
       ],
       "KARNATAKA RAILWAYS": [
-        "--------------Select------------",
         "ARASIKERE",
         "BANGALORE CITY",
         "BANGALORE CONTONMENT",
@@ -6686,7 +6083,6 @@
         "WADI"
       ],
       "KOLAR": [
-        "--------------Select------------",
         "GOWNAPALLI",
         "GULPET",
         "KOLAR RURAL",
@@ -6701,7 +6097,6 @@
         "VEMAGAL"
       ],
       "KOLAR GOLD FIELDS": [
-        "--------------Select------------",
         "ANDERSONPET",
         "BANGARPET",
         "BEML NAGAR",
@@ -6713,7 +6108,6 @@
         "ROBERTSONPET"
       ],
       "KOPPAL": [
-        "--------------Select------------",
         "ALWANDI",
         "BEVOOR",
         "GANGAVATHI RURAL",
@@ -6722,22 +6116,21 @@
         "HANUMASAGAR",
         "KANAKAGIRI",
         "KARATAGI",
-        "Koppal CEN Crime PS",
         "KOPPAL RURAL",
         "KOPPAL TOWN (PI STATION)",
         "KUKANOOR",
         "KUSHTGI",
+        "Koppal CEN Crime PS",
         "MUNIRABAD",
         "TAVAREGERE",
         "YELBURGA"
       ],
       "MADIKERI": [
-        "--------------Select------------",
         "BAGAMANDALA",
         "GONIKOPPA",
-        "Kodagu CEN Crime PS",
         "KUSHALANAGAR",
         "KUTTA",
+        "Kodagu CEN Crime PS",
         "MADEKERI TRAFFIC",
         "MADIKERI RURAL",
         "MADIKERI TOWN",
@@ -6752,7 +6145,6 @@
         "VIRAJAPET TOWN"
       ],
       "MANDYA": [
-        "--------------Select------------",
         "ARAKERE",
         "BASARALU",
         "BELAKAVADI",
@@ -6785,19 +6177,17 @@
         "TRAFFIC"
       ],
       "MANGALORE CITY": [
-        "--------------Select------------",
         "BAJPE",
         "BARKE",
         "Cyber Crime PS Mangaluru City",
         "E and N Crime PS Mangaluru City",
-        "Kankanady Town PS",
         "KAVOOR",
         "KONAJE",
+        "Kankanady Town PS",
         "MANGALORE EAST",
         "MANGALORE EAST TRAFFIC",
         "MANGALORE NORTH",
         "MANGALORE RURAL",
-        "MANGALORE SOUTH",
         "MANGALORE SOUTH",
         "MANGALORE WEST TRAFFIC",
         "MANGALORE WOMEN",
@@ -6809,7 +6199,6 @@
         "URVA"
       ],
       "MYSORE": [
-        "--------------Select------------",
         "BADANAVALU",
         "BANNUR",
         "BEECHANAHALLI",
@@ -6834,7 +6223,6 @@
         "YELWALA"
       ],
       "MYSORE CITY": [
-        "--------------Select------------",
         "ASHOKAPURAM",
         "DEVARAJA",
         "DEVRAJA TRAFFIC",
@@ -6858,7 +6246,6 @@
         "WOMEN POLICE STATION"
       ],
       "RAICHUR": [
-        "--------------Select------------",
         "BALGANOOR",
         "DEVADURG",
         "DEVADURGA TRAFFIC",
@@ -6886,7 +6273,6 @@
         "YERAGERA"
       ],
       "RAMANAGARA": [
-        "--------------Select------------",
         "AKKUR",
         "BIDADI",
         "CHANNAPATNA EAST",
@@ -6901,16 +6287,15 @@
         "KUMBALAGODU",
         "M. K. DODDI",
         "MAGADI",
-        "Ramanagar CEN Crime PS",
         "RAMANAGARA RURAL",
         "RAMANAGARA TOWN",
         "RAMANAGARA TRAFFIC",
+        "Ramanagar CEN Crime PS",
         "SATHANOORU",
         "TALAGHATTAPURA",
         "TAVAREKERE"
       ],
       "SHIMOGA": [
-        "--------------Select------------",
         "AGUMBE",
         "ANAVATTI",
         "BHADRAVATHI NEW TOWN",
@@ -6945,7 +6330,6 @@
         "WOMEN POLICE STATION"
       ],
       "TUMKUR": [
-        "--------------Select------------",
         "AMRUTHUR",
         "ARASIKERE",
         "BADAVANA HALLI",
@@ -6986,7 +6370,6 @@
         "Y.N.HOSAKOTE"
       ],
       "UDUPI": [
-        "--------------Select------------",
         "AJEKAR",
         "AMASEBAILU",
         "BAINDOOR",
@@ -7007,13 +6390,12 @@
         "PADUBIDRI",
         "SHANKARANARAYANA",
         "SHIRVA",
-        "Udupi CEN Crime PS",
         "UDUPI TOWN",
         "UDUPI TRAFFIC",
+        "Udupi CEN Crime PS",
         "WOMEN P.S"
       ],
       "UTTARA KANNADA": [
-        "--------------Select------------",
         "AMBIKANAGAR",
         "ANKOLA",
         "BANAVASI",
@@ -7045,7 +6427,6 @@
         "YELLAPUR"
       ],
       "YADGIRI": [
-        "--------------Select------------",
         "BHIMARAYANAGUDI",
         "GOGI",
         "GURUMITKAL",
@@ -7062,9 +6443,7 @@
       ]
     },
     "KERALA": {
-      "--------------SELECT------------": [],
       "ALAPPUZHA": [
-        "--------------Select------------",
         "ALAPPUZHA NORTH",
         "ALAPPUZHA SOUTH",
         "AMBALAPUZHA",
@@ -7100,7 +6479,6 @@
         "VENMANI"
       ],
       "ERNAKULAM CITY": [
-        "--------------Select------------",
         "AMBALAMEDU",
         "CHERANALLOOR",
         "ELOOR",
@@ -7128,7 +6506,6 @@
         "VANITHA"
       ],
       "ERNAKULAM RURAL": [
-        "--------------Select------------",
         "ALUVA WEST",
         "ALUWA",
         "ANKAMALY",
@@ -7164,7 +6541,6 @@
         "VAZHAKULAM"
       ],
       "IDUKKI": [
-        "--------------Select------------",
         "ADIMALI",
         "CUMBAMETTU",
         "DEVICULAM",
@@ -7194,7 +6570,6 @@
         "VELLATHOOVAL"
       ],
       "KANNUR": [
-        "--------------Select------------",
         "ALACODE",
         "ARALAM",
         "AZHEEKAL COASTAL PS",
@@ -7233,7 +6608,6 @@
         "ULIKKAL"
       ],
       "KASARGODE": [
-        "--------------Select------------",
         "ADHUR",
         "AMBALATHARA",
         "BADIADKA",
@@ -7253,7 +6627,6 @@
         "VIDYANAGAR"
       ],
       "KOLLAM": [
-        "--------------Select------------",
         "ANCHAL",
         "CHADAYAMANGALAM",
         "EAST KALLADA",
@@ -7276,7 +6649,6 @@
         "YERROOR"
       ],
       "KOLLAM CITY": [
-        "--------------Select------------",
         "ANCHALUMMOODU",
         "CHATHANNUR",
         "CHAVARA",
@@ -7296,7 +6668,6 @@
         "SAKTHIKULANGARA"
       ],
       "KOTTAYAM": [
-        "--------------Select------------",
         "AYARKUNNAM",
         "CHANGANASSERRY",
         "CHINGAVANAM",
@@ -7331,7 +6702,6 @@
         "VELLOOR"
       ],
       "KOZHIKODE CITY": [
-        "--------------Select------------",
         "BEYPORE",
         "BEYPORE COASTAL",
         "CHEMMANGADU",
@@ -7352,7 +6722,6 @@
         "VELLAYIL"
       ],
       "KOZHIKODE RURAL": [
-        "--------------Select------------",
         "ATHOLY",
         "BADAGARA",
         "BALUSSERY",
@@ -7376,7 +6745,6 @@
         "VALAYAM"
       ],
       "MALAPPURAM": [
-        "--------------Select------------",
         "AREAKKODE",
         "CHANGARAMKULAM",
         "EDAKKARA",
@@ -7411,7 +6779,6 @@
         "WANDOOR"
       ],
       "PALAKKAD": [
-        "--------------Select------------",
         "AGALI",
         "ALATHUR",
         "CHALISSERRY",
@@ -7446,7 +6813,6 @@
         "WALAYAR"
       ],
       "PATHANAMTHITTA": [
-        "--------------Select------------",
         "ADOOR",
         "ARANMULA",
         "CHITTAR",
@@ -7472,23 +6838,21 @@
         "VECHOOCHIRA"
       ],
       "RAILWAY POLICE": [
-        "--------------Select------------",
-        "ALAPPUZHA  RAILWAY",
-        "ERNAKUMAL  RAILWAY",
-        "KANNUR  RAILWAY",
+        "ALAPPUZHA RAILWAY",
+        "ERNAKUMAL RAILWAY",
+        "KANNUR RAILWAY",
         "KASARAGOD RAILWAY",
-        "KOLLAM     RAILWAY",
-        "KOTTAYAM   RAILWAY",
-        "KOZHIKODE  RAILWAY",
-        "PALAKKAD   RAILWAY",
-        "PARASSALA  RAILWAY",
-        "PUNALUR    RAILWAY",
-        "SHORNUR    RAILWAY",
+        "KOLLAM RAILWAY",
+        "KOTTAYAM RAILWAY",
+        "KOZHIKODE RAILWAY",
+        "PALAKKAD RAILWAY",
+        "PARASSALA RAILWAY",
+        "PUNALUR RAILWAY",
+        "SHORNUR RAILWAY",
         "THIRUVANANTHAPURAM RAILWAY",
-        "THRISSUR   RAILWAY"
+        "THRISSUR RAILWAY"
       ],
       "THIRUVANANTHAPURAM CITY": [
-        "--------------Select------------",
         "CANTONMENT",
         "CITY TRAFFIC",
         "FORT",
@@ -7514,7 +6878,6 @@
         "VIZHINJAM COASTAL"
       ],
       "THIRUVANANTHAPURAM RURAL": [
-        "--------------Select------------",
         "ANJUTHENGU",
         "ARIYANCODE",
         "ARUVIKARA",
@@ -7556,7 +6919,6 @@
         "VIZHINJAM"
       ],
       "THRISSUR": [
-        "--------------Select------------",
         "ALOOR",
         "ANTHIKKAD",
         "ATHIRAPPALLI",
@@ -7589,7 +6951,6 @@
         "WADAKKANCHERRY"
       ],
       "THRISSUR CITY": [
-        "--------------Select------------",
         "CONTROL ROOM",
         "GURUVAYOOR",
         "MANNUTHY",
@@ -7605,7 +6966,6 @@
         "VIYYOOR"
       ],
       "WYNAD": [
-        "--------------Select------------",
         "AMBALAVAYAL",
         "KALPETTA",
         "KENICHIRA",
@@ -7624,16 +6984,12 @@
       ]
     },
     "LADAKH": {
-      "--------------SELECT------------": [],
       "KARGIL": [
-        "--------------Select------------",
         "PADUM"
       ]
     },
     "LAKSHADWEEP": {
-      "--------------SELECT------------": [],
       "LAKSHADWEEP": [
-        "--------------Select------------",
         "AGATTI",
         "AMINI",
         "ANDROTT",
@@ -7650,9 +7006,7 @@
       ]
     },
     "MADHYA PRADESH": {
-      "--------------SELECT------------": [],
       "ALIRAJPUR": [
-        "--------------Select------------",
         "AJK",
         "ALIRAJPUR",
         "AMBUA",
@@ -7668,7 +7022,6 @@
         "UDAIGARH"
       ],
       "ANUPPUR": [
-        "--------------Select------------",
         "A.J.K.",
         "AMARKANTAK",
         "ANNUPPUR",
@@ -7681,7 +7034,6 @@
         "RAJENDRA GRAM"
       ],
       "ASHOKNAGAR": [
-        "--------------Select------------",
         "AJK",
         "ASHOK NAGAR",
         "BAHADURPUR",
@@ -7694,7 +7046,6 @@
         "SHADORA"
       ],
       "BADWANI": [
-        "--------------Select------------",
         "AJK",
         "ANJAD",
         "BADWANI",
@@ -7711,7 +7062,6 @@
         "WARLA"
       ],
       "BALAGHAT": [
-        "--------------Select------------",
         "A.J.K.",
         "BAHELA",
         "BAIHAR",
@@ -7735,7 +7085,6 @@
         "WARASEONI"
       ],
       "BETUL": [
-        "--------------Select------------",
         "A.J.K.",
         "AMLA",
         "ATHNER",
@@ -7755,7 +7104,6 @@
         "SHAHPURA"
       ],
       "BHIND": [
-        "--------------Select------------",
         "A.J.K.",
         "ALAMPUR",
         "AMAYAN",
@@ -7785,7 +7133,6 @@
         "UMRI"
       ],
       "BHOPAL": [
-        "--------------Select------------",
         "A.J.K.",
         "AISHBAG",
         "ASHOKA GARDEN",
@@ -7827,7 +7174,6 @@
         "TILAJAMALPURA"
       ],
       "BURHANPUR": [
-        "--------------Select------------",
         "AJK",
         "GANPATI NAKA",
         "KHAKNAR",
@@ -7839,7 +7185,6 @@
         "SHIKARPURA"
       ],
       "CHHATARPUR": [
-        "--------------Select------------",
         "A.J.K. P.S CHHATARPUR",
         "ALIPURA",
         "BAJNA",
@@ -7876,7 +7221,6 @@
         "SHAHGARH"
       ],
       "CHHINDWARA": [
-        "--------------Select------------",
         "A.J.K.",
         "AMARWADA",
         "BATKAKHAPA",
@@ -7902,17 +7246,14 @@
         "UMRETH"
       ],
       "CID": [
-        "--------------Select------------",
-        "CID  V C",
         "CID H.Q BHOPAL",
+        "CID V C",
         "E O W BHOPAL"
       ],
       "CYBER CELL": [
-        "--------------Select------------",
         "CYBER CELL"
       ],
       "DAMOH": [
-        "--------------Select------------",
         "A.J.K.",
         "BATIAGARH",
         "DAMOH",
@@ -7934,7 +7275,6 @@
         "TENDUKHERA"
       ],
       "DATIA": [
-        "--------------Select------------",
         "A.J.K.",
         "ATRETA",
         "BADONI",
@@ -7960,7 +7300,6 @@
         "UNNAO"
       ],
       "DEWAS": [
-        "--------------Select------------",
         "A.J.K.",
         "BAGLI",
         "BANK NOTE PRESS",
@@ -7982,7 +7321,6 @@
         "VIJAYAGANJ MANDI"
       ],
       "DHAR": [
-        "--------------Select------------",
         "A.J.K.",
         "AMZERA",
         "BADNAWAR",
@@ -8006,7 +7344,6 @@
         "TIRLA"
       ],
       "DINDORI": [
-        "--------------Select------------",
         "AJK",
         "BAJAG",
         "DINDORI",
@@ -8016,7 +7353,6 @@
         "SHAHPURA"
       ],
       "GRP BHOPAL": [
-        "--------------Select------------",
         "AMLA",
         "BHOPAL",
         "BINA",
@@ -8027,7 +7363,6 @@
         "VIDISHA"
       ],
       "GRP INDORE": [
-        "--------------Select------------",
         "BIAORA",
         "GUNA",
         "INDORE",
@@ -8037,7 +7372,6 @@
         "UJJAIN"
       ],
       "GRP JABALPUR": [
-        "--------------Select------------",
         "CHHINDWARA",
         "GADARWARA",
         "JABALPUR",
@@ -8048,7 +7382,6 @@
         "SHAHDOL"
       ],
       "GUNA": [
-        "--------------Select------------",
         "A.J.K.",
         "ARON",
         "BAJRANGGARH",
@@ -8067,7 +7400,6 @@
         "VIJAIPUR"
       ],
       "GWALIOR": [
-        "--------------Select------------",
         "A.J.K.",
         "ANTRI",
         "ARON",
@@ -8107,7 +7439,6 @@
         "VISHVAVIDHYALAYA (JI)"
       ],
       "HARDA": [
-        "--------------Select------------",
         "A.J.K.",
         "CHIPABAR",
         "CIVIL LINE",
@@ -8118,7 +7449,6 @@
         "TIMARNI"
       ],
       "HOSHANGABAD": [
-        "--------------Select------------",
         "A.J.K. HOSHANGABAD",
         "BABAI",
         "BANKHEDI",
@@ -8136,7 +7466,6 @@
         "TAWA NAGAR"
       ],
       "INDORE": [
-        "--------------Select------------",
         "A.J.K.",
         "AERODROME",
         "ANNPURNA",
@@ -8168,7 +7497,7 @@
         "PANDRINATH",
         "PARDESIPURA",
         "RAJENDRA NAGAR",
-        "RAUJI  BAZAR",
+        "RAUJI BAZAR",
         "SADAR BAZAR",
         "SANWER",
         "SANYOGITAGANJ",
@@ -8178,7 +7507,6 @@
         "VIJAY NAGAR"
       ],
       "JABALPUR": [
-        "--------------Select------------",
         "A.J.K.",
         "ADHARTAL",
         "BARELA",
@@ -8215,7 +7543,6 @@
         "SIHORA"
       ],
       "JHABUA": [
-        "--------------Select------------",
         "A.J.K.",
         "JHABUA",
         "KAKANWANI",
@@ -8228,7 +7555,6 @@
         "THANDLA"
       ],
       "KATNI": [
-        "--------------Select------------",
         "A.J.K. KATNI",
         "BAAKAL",
         "BADWARA",
@@ -8246,7 +7572,6 @@
         "VIJAYRAGHAVGARH"
       ],
       "KHANDWA": [
-        "--------------Select------------",
         "A.J.K.",
         "CHHEGAON",
         "DHANGAON",
@@ -8263,7 +7588,6 @@
         "PIPLOD"
       ],
       "KHARGONE": [
-        "--------------Select------------",
         "A.J.K.",
         "BALAKWADA",
         "BALWADA",
@@ -8283,11 +7607,9 @@
         "SANAWAD"
       ],
       "LOKAYUKTA": [
-        "--------------Select------------",
         "LOKAYUKTA"
       ],
       "MANDLA": [
-        "--------------Select------------",
         "A.J.K.",
         "BAMHNI",
         "BICHHIA",
@@ -8304,7 +7626,6 @@
         "TIKARIA"
       ],
       "MANDSAUR": [
-        "--------------Select------------",
         "A.J.K. MANDSAUR",
         "AFZALPUR",
         "BHANPURA",
@@ -8323,7 +7644,6 @@
         "Y.D. NAGAR"
       ],
       "MORENA": [
-        "--------------Select------------",
         "A.J.K.",
         "AMBAH",
         "BAGCHINI",
@@ -8351,11 +7671,9 @@
         "TETRA"
       ],
       "NARCOTICS": [
-        "--------------Select------------",
         "NARCOTICS"
       ],
       "NARSINGHPUR": [
-        "--------------Select------------",
         "A.J.K.",
         "GADARWARA",
         "GOTEGAON",
@@ -8370,7 +7688,6 @@
         "THEMI"
       ],
       "NEEMUCH": [
-        "--------------Select------------",
         "A.J.K.",
         "BAGHANA",
         "JAVAD",
@@ -8383,7 +7700,6 @@
         "SINGOLI"
       ],
       "PANNA": [
-        "--------------Select------------",
         "A.J.K.",
         "AJAI GARH",
         "AMANGANJ",
@@ -8401,7 +7717,6 @@
         "SONWANI KALAN"
       ],
       "RAISEN": [
-        "--------------Select------------",
         "A.J.K.",
         "BAMHORI",
         "BARELI",
@@ -8425,7 +7740,6 @@
         "UMARAOGANJ"
       ],
       "RAJGARH": [
-        "--------------Select------------",
         "A.J.K.",
         "BHOJPUR",
         "BIAORA",
@@ -8446,7 +7760,6 @@
         "ZEERAPUR"
       ],
       "RATLAM": [
-        "--------------Select------------",
         "A.J.K.",
         "ALOT",
         "AUDUOGIC CHETRA",
@@ -8470,7 +7783,6 @@
         "TAL"
       ],
       "REWA": [
-        "--------------Select------------",
         "A.J.K.",
         "AMAHIYA",
         "ANTERELA",
@@ -8501,7 +7813,6 @@
         "VISHAVAVIDYALAYA"
       ],
       "SAGAR": [
-        "--------------Select------------",
         "A.J.K.",
         "AGASOUD",
         "BAHERIYA",
@@ -8537,7 +7848,6 @@
         "SURKHI"
       ],
       "SATNA": [
-        "--------------Select------------",
         "A.J.K.",
         "AMARPATAN",
         "AMDARA",
@@ -8564,7 +7874,6 @@
         "UCHEHRA"
       ],
       "SEHORE": [
-        "--------------Select------------",
         "A.J.K.",
         "AHMADPUR",
         "ASHTA",
@@ -8582,7 +7891,6 @@
         "SIDDIQGANJ"
       ],
       "SEONI": [
-        "--------------Select------------",
         "A.J.K.",
         "AADEGAON",
         "ARI",
@@ -8602,7 +7910,6 @@
         "UGLI"
       ],
       "SHAHDOL": [
-        "--------------Select------------",
         "A.J.K.",
         "AMLAI",
         "BEOHARI",
@@ -8616,7 +7923,6 @@
         "SIDHI"
       ],
       "SHAJAPUR": [
-        "--------------Select------------",
         "A.J.K.",
         "AGAR",
         "AKODIA MANDI",
@@ -8637,7 +7943,6 @@
         "SUSNER"
       ],
       "SHEOPUR": [
-        "--------------Select------------",
         "A.J.K.",
         "AGRA",
         "AVADA",
@@ -8657,7 +7962,6 @@
         "SHEOPUR"
       ],
       "SHIVPURI": [
-        "--------------Select------------",
         "A.J.K.",
         "AMOLA",
         "BADARWAS",
@@ -8688,7 +7992,6 @@
         "TENDUA"
       ],
       "SIDHI": [
-        "--------------Select------------",
         "A.J.K.",
         "AMILIYA",
         "BAHARI",
@@ -8701,7 +8004,6 @@
         "SIDHI KOTWALI"
       ],
       "SINGRAULI": [
-        "--------------Select------------",
         "AJK",
         "BARGAWAN",
         "CHITRANGI",
@@ -8714,11 +8016,9 @@
         "WAIDHAN"
       ],
       "STF": [
-        "--------------Select------------",
         "STF"
       ],
       "TIKAMGARH": [
-        "--------------Select------------",
         "A.J.K.",
         "BALDEV GARH",
         "BARAGAON",
@@ -8740,7 +8040,6 @@
         "TIKAMGARH"
       ],
       "UJJAIN": [
-        "--------------Select------------",
         "A.J.K.",
         "BADNAGAR",
         "BHATPACHLANA",
@@ -8772,7 +8071,6 @@
         "UNHEL"
       ],
       "UMARIYA": [
-        "--------------Select------------",
         "AJK",
         "CHANDIA",
         "INDWAR",
@@ -8782,7 +8080,6 @@
         "UMARIYA"
       ],
       "VIDISHA": [
-        "--------------Select------------",
         "A.J.K.",
         "ANANDPUR",
         "BASODA",
@@ -8806,9 +8103,7 @@
       ]
     },
     "MAHARASHTRA": {
-      "--------------SELECT------------": [],
       "AHMEDNAGAR": [
-        "--------------Select------------",
         "AHMEDNAGAR CAMP",
         "AHMEDNAGAR TALUKA",
         "AKOLE",
@@ -8840,7 +8135,6 @@
         "TOPHKHANA"
       ],
       "AKOLA": [
-        "--------------Select------------",
         "AKOT",
         "AKOT RURAL POLICE STATION",
         "AKOT-FILE",
@@ -8865,7 +8159,6 @@
         "URAL"
       ],
       "AMRAVATI CITY": [
-        "--------------Select------------",
         "BADNERA",
         "BALGAON",
         "BHATKULI",
@@ -8874,7 +8167,6 @@
         "KOTWALI"
       ],
       "AMRAVATI RURAL": [
-        "--------------Select------------",
         "AASEGAON",
         "ACHALPUR",
         "AJANGAON",
@@ -8907,7 +8199,6 @@
         "YEVADA"
       ],
       "AURANGABAD CITY": [
-        "--------------Select------------",
         "BEGAMPURA",
         "C I D C O",
         "CANTONMENT (CHAWANI)",
@@ -8923,7 +8214,6 @@
         "WALUNJ"
       ],
       "AURANGABAD RURAL": [
-        "--------------Select------------",
         "AJANTHA",
         "BIDKIN",
         "CHIKALTHANA",
@@ -8949,7 +8239,6 @@
         "VIRGAON"
       ],
       "BEED": [
-        "--------------Select------------",
         "AMALNER",
         "AMBAJOGAI",
         "AMBAJOGAI RURAL",
@@ -8979,7 +8268,6 @@
         "YOUSUF WADGAON"
       ],
       "BHANDARA": [
-        "--------------Select------------",
         "AANDHALGAON",
         "BHANDARA",
         "DIGHORI POLICE STATION",
@@ -8998,10 +8286,9 @@
         "VARTHI"
       ],
       "BRIHAN MUMBAI CITY": [
-        "--------------Select------------",
         "AGRIPADA",
         "AIR PORT",
-        "AMBOLI  POLICE STATION",
+        "AMBOLI POLICE STATION",
         "ANDHERI",
         "ANTOP HILL",
         "AREY SUB PS",
@@ -9094,7 +8381,6 @@
         "YELLOWGATE"
       ],
       "BULDHANA": [
-        "--------------Select------------",
         "AMDAPUR",
         "ANDHERA",
         "BORAKHEDI",
@@ -9126,7 +8412,6 @@
         "TAMGAON"
       ],
       "CHANDRAPUR": [
-        "--------------Select------------",
         "BALLARSHAHA",
         "BHADRAVATI",
         "BHARI SUB PS",
@@ -9161,7 +8446,6 @@
         "VIRUR"
       ],
       "DHULE": [
-        "--------------Select------------",
         "AZAD NAGAR",
         "CHALISAGAON ROAD POLICE STATION",
         "DEVPUR",
@@ -9179,7 +8463,6 @@
         "SONGIR"
       ],
       "GADCHIROLI": [
-        "--------------Select------------",
         "AHERI",
         "ARMORI",
         "ASARALLI",
@@ -9197,7 +8480,6 @@
         "SIRONCHA"
       ],
       "GONDIA": [
-        "--------------Select------------",
         "AAMGAON",
         "ARJUNI MORGAON",
         "CHINCHGAD",
@@ -9215,7 +8497,6 @@
         "TIRODA"
       ],
       "HINGOLI": [
-        "--------------Select------------",
         "AKHADA BALAPUR",
         "AUNDANAGNATH",
         "BASAMBA",
@@ -9230,7 +8511,6 @@
         "SENAGAON"
       ],
       "JALGAON": [
-        "--------------Select------------",
         "ADAWAD",
         "AMALNER",
         "BHADGAON",
@@ -9267,7 +8547,6 @@
         "ZILLAPETH"
       ],
       "JALNA": [
-        "--------------Select------------",
         "AMBAD",
         "ASTI",
         "BADNAPUR",
@@ -9288,7 +8567,6 @@
         "TEMBURNI"
       ],
       "KOLHAPUR": [
-        "--------------Select------------",
         "AAJRA",
         "BHUDARGAD",
         "CHANDGAD",
@@ -9319,7 +8597,6 @@
         "WADGAON"
       ],
       "LATUR": [
-        "--------------Select------------",
         "AHMEDPUR",
         "AURAD SHAHAJANI",
         "AUSA",
@@ -9345,7 +8622,6 @@
         "VADHONA"
       ],
       "NAGPUR CITY": [
-        "--------------Select------------",
         "AJANI",
         "AMBAZARI",
         "BAJAJ NAGAR POLICE STATION",
@@ -9375,7 +8651,6 @@
         "YASHODHARA NAGAR"
       ],
       "NAGPUR RURAL": [
-        "--------------Select------------",
         "AROLI",
         "BELA",
         "BHIWAPUR",
@@ -9401,7 +8676,6 @@
         "WELTUR"
       ],
       "NANDED": [
-        "--------------Select------------",
         "ARDHAPUR",
         "BARAD",
         "BHAGYANAGAR",
@@ -9440,7 +8714,6 @@
         "VIMANTAL POLICE STATION"
       ],
       "NANDURBAR": [
-        "--------------Select------------",
         "AKKALKUWA",
         "DHADGAON",
         "MHASWAD",
@@ -9454,14 +8727,13 @@
         "VISARWADI"
       ],
       "NASHIK CITY": [
-        "--------------Select------------",
         "ADAGAON POLICE STATION",
         "AMBAD",
         "BHADRAKALI",
         "DEVLALI CAMP",
         "GANGAPUR",
-        "INDRA NAGAR  POLICE STATION",
-        "MSEB  POLICE STATION",
+        "INDRA NAGAR POLICE STATION",
+        "MSEB POLICE STATION",
         "NASIK ROAD",
         "PANCHAVATI",
         "SARKAR WADA",
@@ -9469,7 +8741,6 @@
         "UPANAGAR POLICE STATION"
       ],
       "NASHIK RURAL": [
-        "--------------Select------------",
         "ABHONA",
         "AYESHANAGAR",
         "AZADNAGAR",
@@ -9510,8 +8781,7 @@
         "YEWLA",
         "YEWLA CITY"
       ],
-      "NAVI  MUMBAI": [
-        "--------------Select------------",
+      "NAVI MUMBAI": [
         "APMC",
         "C B D BELAPUR",
         "KALAMBOLI",
@@ -9534,7 +8804,6 @@
         "VASHI"
       ],
       "OSMANABAD": [
-        "--------------Select------------",
         "AMBHI",
         "ANANDNAGAR",
         "BEMBLI",
@@ -9555,7 +8824,6 @@
         "YERMALA"
       ],
       "PARBHANI": [
-        "--------------Select------------",
         "BAMNI",
         "BORI",
         "DAITHANA",
@@ -9575,21 +8843,20 @@
         "TADKALAS"
       ],
       "PUNE CITY": [
-        "--------------Select------------",
         "BHARTI VIDYAPEETH",
         "BHOSARI",
-        "BHOSARI  M.I.D.C.POLICE STATION",
+        "BHOSARI M.I.D.C.POLICE STATION",
         "BIBVEWADI POLICE STATION",
         "BUNDGARDEN",
-        "Chandan Nagar",
         "CHATURSHINGI",
         "CHINCHVAD",
+        "Chandan Nagar",
         "DATTAWADI",
         "DECCAN",
         "FARASKHANA",
         "HADAPSAR",
         "HINJEWADI",
-        "KHADAK  POLICE STATION",
+        "KHADAK POLICE STATION",
         "KHADAKI",
         "KONDHVA",
         "KOREGAON PARK",
@@ -9613,7 +8880,6 @@
         "YERWADA"
       ],
       "PUNE RURAL": [
-        "--------------Select------------",
         "ALANDI DEVACHY",
         "BARAMATI CITY",
         "BARMATI",
@@ -9647,7 +8913,6 @@
         "WALCHAND NAGAR"
       ],
       "RAIGAD": [
-        "--------------Select------------",
         "ALIBAG",
         "DADAR COASTAL POLICE STATION",
         "DIGHI SAGARI",
@@ -9668,7 +8933,7 @@
         "NAGOTHANE",
         "NERAL",
         "PALI",
-        "PANGALOLI COASTAL  POLICE STATION",
+        "PANGALOLI COASTAL POLICE STATION",
         "PEN",
         "POINAD",
         "POLADPUR",
@@ -9676,11 +8941,10 @@
         "REVDANDA",
         "ROHA",
         "SHRIVARDHAN",
-        "TALA  POLICE STATION",
+        "TALA POLICE STATION",
         "VADKHAL"
       ],
       "RAILWAY AURANGABAD": [
-        "--------------Select------------",
         "AURANGABAD",
         "BHUSAWAL",
         "CHALISGAON",
@@ -9693,7 +8957,6 @@
         "SHEGAON POLICE STATION RAILWAY AURANGABAD"
       ],
       "RAILWAY MUMBAI": [
-        "--------------Select------------",
         "ANDHERI",
         "BANDRA",
         "BORIVALI",
@@ -9713,7 +8976,6 @@
         "WADALA"
       ],
       "RAILWAY NAGPUR": [
-        "--------------Select------------",
         "AKOLA",
         "AURANGABAD",
         "BADNERA",
@@ -9732,7 +8994,6 @@
         "WARDHA"
       ],
       "RAILWAY PUNE": [
-        "--------------Select------------",
         "AHMEDNAGAR",
         "DAUND",
         "KURDUWADI",
@@ -9741,7 +9002,6 @@
         "SOLAPUR"
       ],
       "RATNAGIRI": [
-        "--------------Select------------",
         "ALORE",
         "BANKOT",
         "CHIPLUN",
@@ -9761,7 +9021,6 @@
         "SAVARDA"
       ],
       "SANGLI": [
-        "--------------Select------------",
         "AASHTA",
         "AATPADI",
         "CHINCHANI-WANGI",
@@ -9786,7 +9045,6 @@
         "VITA"
       ],
       "SATARA": [
-        "--------------Select------------",
         "AUNDH",
         "BHUIJ",
         "BORGAON",
@@ -9816,7 +9074,6 @@
         "WAI"
       ],
       "SINDHUDURG": [
-        "--------------Select------------",
         "ACHARA",
         "BANDA",
         "DEVGAD",
@@ -9832,7 +9089,6 @@
         "VIJAYDURG"
       ],
       "SOLAPUR CITY": [
-        "--------------Select------------",
         "FAUJDAR CHAWDI",
         "JAIL ROAD",
         "JODBHAVIPETH",
@@ -9842,7 +9098,6 @@
         "VIJAPUR NAKA"
       ],
       "SOLAPUR RURAL": [
-        "--------------Select------------",
         "AKKALKOT NORTH",
         "AKKALKOT SOUTH",
         "AKLUJ",
@@ -9868,7 +9123,6 @@
         "VELAPUR"
       ],
       "THANE CITY": [
-        "--------------Select------------",
         "AMBERNATH",
         "BADLAPUR EAST",
         "BADLAPUR WEST",
@@ -9905,7 +9159,6 @@
         "WAGLE ESTATE"
       ],
       "THANE RURAL": [
-        "--------------Select------------",
         "ARNALA COASTAL POLICE STATION",
         "BHAYANDAR",
         "BHIWANDI TALUKA",
@@ -9945,7 +9198,6 @@
         "WALIV POLICE STATION"
       ],
       "WARDHA": [
-        "--------------Select------------",
         "AARVI",
         "AASHTI",
         "ALLIPUR",
@@ -9965,7 +9217,6 @@
         "WARDHA"
       ],
       "WASHIM": [
-        "--------------Select------------",
         "ANSINGH",
         "ASEGAON",
         "DHANAJ",
@@ -9980,7 +9231,6 @@
         "WASHIM RURAL"
       ],
       "YAVATMAL": [
-        "--------------Select------------",
         "AARNI",
         "BABHULGAON",
         "BITARGAON",
@@ -10013,9 +9263,7 @@
       ]
     },
     "MANIPUR": {
-      "--------------SELECT------------": [],
       "BISHENPUR": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "ARONG NONGMAIKHONG",
         "BISHENPUR",
@@ -10028,12 +9276,10 @@
         "WOMEN PS"
       ],
       "C I D": [
-        "--------------Select------------",
         "BORDER AFFAIRS",
         "CRIME BRANCH"
       ],
       "CHANDEL": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "CHAKPIKARONG",
         "CHANDEL",
@@ -10044,7 +9290,6 @@
         "WOMEN PS"
       ],
       "CHURACHANDPUR": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "CHURACHANDPUR",
         "HENGLEP",
@@ -10055,7 +9300,6 @@
         "WOMEN PS"
       ],
       "IMPHAL EAST": [
-        "--------------Select------------",
         "ANDRO",
         "ANTI HUMAN TRAFFICKING",
         "BOROBEKRA",
@@ -10070,7 +9314,6 @@
         "YANGANGPOKPI"
       ],
       "IMPHAL WEST": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "CITY POLICE STATION",
         "IMPHAL",
@@ -10085,7 +9328,6 @@
         "WOMEN PS"
       ],
       "SENAPATI": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "CHALWA",
         "DZUKO",
@@ -10103,7 +9345,6 @@
         "WOMEN PS"
       ],
       "TAMENGLONG": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "KHOUPUM",
         "NONEY",
@@ -10114,7 +9355,6 @@
         "WOMEN PS"
       ],
       "THOUBAL": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "HEIROK",
         "HIYANGLAM",
@@ -10131,11 +9371,9 @@
         "YAIRIPOK"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
         "TRANSPORT DEPT, MANIPUR"
       ],
       "UKHRUL": [
-        "--------------Select------------",
         "ANTI HUMAN TRAFFICKING",
         "CHASAD",
         "CHINGAI",
@@ -10151,24 +9389,19 @@
       ]
     },
     "MEGHALAYA": {
-      "--------------SELECT------------": [],
       "ANTI CORRUPTION": [
-        "--------------Select------------",
         "ANTI CORRUPTION"
       ],
       "C I D": [
-        "--------------Select------------",
         "C I D",
         "Cyber Crime PS"
       ],
       "EAST JAINTIA HILLS": [
-        "--------------Select------------",
         "GARAMPANI",
         "KHLIEHRIAT",
         "SAIPUNG"
       ],
       "GARO HILLS EAST": [
-        "--------------Select------------",
         "MENDIPATHAR",
         "RONGJENG",
         "SONGSAK",
@@ -10176,7 +9409,6 @@
         "WOMEN PS"
       ],
       "GARO HILLS SOUTH": [
-        "--------------Select------------",
         "BAGHMARA",
         "CHOKPOT",
         "MANGALBIBRA",
@@ -10184,7 +9416,6 @@
         "WOMEN PS"
       ],
       "GARO HILLS WEST": [
-        "--------------Select------------",
         "DADENGIRI",
         "DALU",
         "GAROBADHA",
@@ -10195,7 +9426,6 @@
         "WOMEN PS"
       ],
       "KHASI HILLS EAST": [
-        "--------------Select------------",
         "CHERRA/SOHRA",
         "LABAN",
         "LAITUMKHRAH",
@@ -10211,41 +9441,34 @@
         "WOMEN PS"
       ],
       "KHASI HILLS WEST": [
-        "--------------Select------------",
         "MAIRANG",
         "NONGSTOIN",
         "SHALLANG",
         "WOMEN PS"
       ],
       "NORTH GARO HILLS": [
-        "--------------Select------------",
         "BAJENGDOBA",
         "MENDIPATHAR",
         "RESUBELPARA"
       ],
       "RI-BHOI": [
-        "--------------Select------------",
         "KHANAPARA",
         "NONGPOH",
         "UMIAM",
         "WOMEN PS"
       ],
       "SOUTH WEST GARO HILLS": [
-        "--------------Select------------",
         "AMPATI",
         "MAHENDRAGANJ"
       ],
       "SOUTH WEST KHASI HILLS": [
-        "--------------Select------------",
         "MAWKYRWAT",
         "RANIKOR"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
         "TRANSPORT DEPT, MEGHALAYA"
       ],
       "WEST JAINTIA HILLS": [
-        "--------------Select------------",
         "AMLAREM",
         "DAWKI",
         "JOWAI",
@@ -10253,9 +9476,7 @@
       ]
     },
     "MIZORAM": {
-      "--------------SELECT------------": [],
       "AIZAWL": [
-        "--------------Select------------",
         "AIZAWL",
         "BAWNGKAWN",
         "DARLAWN",
@@ -10267,20 +9488,17 @@
         "VAIVAKAWN"
       ],
       "CHAMPHAI": [
-        "--------------Select------------",
         "CHAMPHAI",
         "KHAWZAWL",
         "NGOPA"
       ],
       "KOLASIB": [
-        "--------------Select------------",
         "BAIRABI",
         "KAWNPUI",
         "KOLASIB",
         "VAIRENGTE"
       ],
       "LAWNGTLAI": [
-        "--------------Select------------",
         "BORAPANSURY",
         "CHAWNGTE",
         "LAWNGTLAI",
@@ -10288,7 +9506,6 @@
         "VASEITLANG"
       ],
       "LUNGLEI": [
-        "--------------Select------------",
         "BUNGHMUN",
         "DEMAGIRI (TLABUNG)",
         "HNAHTHIAL",
@@ -10297,7 +9514,6 @@
         "THINGSAI"
       ],
       "MAMIT": [
-        "--------------Select------------",
         "KANHMUN",
         "KAWRTHAH",
         "MAMIT",
@@ -10305,28 +9521,23 @@
         "WEST PHAILENG"
       ],
       "MIZORAM COMMON": [
-        "--------------Select------------",
         "ANTI CORRUPTION",
         "SPECIAL NARCOTIC",
         "TRANSPORT DEPT, MIZORAM"
       ],
       "SAIHA": [
-        "--------------Select------------",
         "PHURA",
         "SAIHA",
         "TUIPANG"
       ],
       "SERCHHIP": [
-        "--------------Select------------",
         "NORTH VANLAIPHAI",
         "SERCHHIP",
         "THENZAWL"
       ]
     },
     "NAGALAND": {
-      "--------------SELECT------------": [],
       "DIMAPUR": [
-        "--------------Select------------",
         "CITY SIT",
         "DANSIRIPAR",
         "DIMAPUR EAST",
@@ -10339,11 +9550,9 @@
         "TRAFFIC PS"
       ],
       "KIPHIRE": [
-        "--------------Select------------",
         "KIPHIRE"
       ],
       "KOHIMA": [
-        "--------------Select------------",
         "CHIEPHOBOZUO",
         "CRIME PS",
         "KHUZAMA",
@@ -10353,11 +9562,9 @@
         "TSEMENYU"
       ],
       "LONGLENG": [
-        "--------------Select------------",
         "LONGLENG"
       ],
       "MOKOKCHUNG": [
-        "--------------Select------------",
         "CHANGTONGYA",
         "KUBULONG",
         "MANGKOLEMBA",
@@ -10366,7 +9573,6 @@
         "TULI"
       ],
       "MON": [
-        "--------------Select------------",
         "ABOI",
         "CHEN",
         "MON",
@@ -10375,13 +9581,11 @@
         "TOBU"
       ],
       "PEREN": [
-        "--------------Select------------",
         "JALUKIE",
         "KHELMA",
         "PEREN"
       ],
       "PHEK": [
-        "--------------Select------------",
         "CHAZOUBA",
         "CHIZAMI",
         "KHEZHAKENO",
@@ -10390,7 +9594,6 @@
         "PHEK"
       ],
       "TUENSANG": [
-        "--------------Select------------",
         "KIPHIRE",
         "LONGKHIM",
         "LONGLENG",
@@ -10399,14 +9602,12 @@
         "TUENSANG"
       ],
       "WOKHA": [
-        "--------------Select------------",
         "BHANDARI",
         "RALAN",
         "SUNGRO",
         "WOKHA"
       ],
       "ZUNHEBOTO": [
-        "--------------Select------------",
         "AGHUNATO",
         "AKULUTO",
         "GHATHASHI",
@@ -10417,9 +9618,7 @@
       ]
     },
     "ODISHA": {
-      "--------------SELECT------------": [],
       "ANGUL": [
-        "--------------Select------------",
         "ANGUL",
         "ATHAMALLIK",
         "BANARPAL",
@@ -10445,7 +9644,6 @@
         "THAKURGARH"
       ],
       "BALASORE": [
-        "--------------Select------------",
         "BALIAPAL",
         "BAMAPADA (INDUSTRIAL AREA)",
         "BASTA",
@@ -10471,7 +9669,6 @@
         "TOWN"
       ],
       "BARAGARH": [
-        "--------------Select------------",
         "AMBABHANA",
         "ATTABIRA",
         "BARGARH",
@@ -10490,7 +9687,6 @@
         "SPECIAL PS, ENERGY"
       ],
       "BERHAMPUR": [
-        "--------------Select------------",
         "BADABAZAR",
         "BAIDYANATHPUR",
         "DIGAPAHANDI",
@@ -10506,7 +9702,6 @@
         "TRAFFIC PS"
       ],
       "BHADRAK": [
-        "--------------Select------------",
         "AGARPADA",
         "BANSADA",
         "BASUDEBPUR",
@@ -10517,15 +9712,14 @@
         "CHANDBALI",
         "DHAMANAGAR",
         "DHAMARA MARINE",
-        "Dhamara Police Station",
         "DHUSURI",
+        "Dhamara Police Station",
         "NAIKANDIHI",
         "PURUNA BAZAR",
         "SPECIAL PS, ENERGY",
         "TIHIDI"
       ],
       "BOLANGIR": [
-        "--------------Select------------",
         "BANGOMUNDA",
         "BELPADA",
         "KANTABANJI",
@@ -10542,7 +9736,6 @@
         "TUSURA"
       ],
       "BOUDH": [
-        "--------------Select------------",
         "BAUNSUNI",
         "BOUDH",
         "HARABHANGA",
@@ -10552,17 +9745,14 @@
         "SPECIAL PS, ENERGY"
       ],
       "C I D": [
-        "--------------Select------------",
         "CID",
         "CYBER CRIME"
       ],
       "CRIME BRANCH, CUTTACK": [
-        "--------------Select------------",
         "ECONOMIC OFFENCE WING",
         "SPECIAL TASK FORCE"
       ],
       "CUTTACK RURAL": [
-        "--------------Select------------",
         "ATHAGARH",
         "BAIDESWAR",
         "BANKI",
@@ -10582,19 +9772,14 @@
         "TANGI",
         "TIGIRIA"
       ],
-      "DCP, BHUBANESWAR": [],
-      "DCP, CUTTACK": [],
       "DEOGARH": [
-        "--------------Select------------",
         "BARKOT",
         "DEOGARH",
         "KUNDHEIGOLA",
         "REAMAL",
-        "SPECIAL PS, ENERGY",
         "SPECIAL PS, ENERGY"
       ],
       "DHENKANAL": [
-        "--------------Select------------",
         "BALIMI",
         "BHUBAN",
         "BHUSAN STEEL LTD",
@@ -10612,7 +9797,6 @@
         "TUMUSINGHA"
       ],
       "GAJAPATI": [
-        "--------------Select------------",
         "ADAVA",
         "GARABANDHA",
         "GURANDI",
@@ -10626,7 +9810,6 @@
         "SPECIAL PS, ENERGY"
       ],
       "GANJAM": [
-        "--------------Select------------",
         "ASKA",
         "BADAGADA",
         "BHANJANAGAR",
@@ -10653,7 +9836,6 @@
         "TARASING"
       ],
       "GRP CUTTACK": [
-        "--------------Select------------",
         "BALASORE",
         "BERHAMPUR",
         "BHADRAK",
@@ -10663,7 +9845,6 @@
         "PURI GRPS"
       ],
       "GRP ROURKELA": [
-        "--------------Select------------",
         "BOLANGIR",
         "BONDAMUNDA",
         "JEYPORE/KORAPUT",
@@ -10674,11 +9855,9 @@
         "TITILAGARH"
       ],
       "HUMAN RIGHTS PROTECTION CELL": [
-        "--------------Select------------",
         "HUMAN RIGHTS PROTECTION CELL PS"
       ],
       "JAGATSINGHPUR": [
-        "--------------Select------------",
         "ABHAYACHANDPUR",
         "BALIKUDA",
         "BIRIDI",
@@ -10694,7 +9873,6 @@
         "TIRTOL"
       ],
       "JAJPUR": [
-        "--------------Select------------",
         "BADACHANA",
         "BALICHANDRAPUR",
         "BARI RAMACHANDRAPUR",
@@ -10717,7 +9895,6 @@
         "TRAFFIC PS, CHANDIKHOL"
       ],
       "JHARSUGUDA": [
-        "--------------Select------------",
         "BADMAL",
         "BANAHARPALI",
         "BELPAHAR",
@@ -10731,7 +9908,6 @@
         "SPECIAL P.S. (ENERGY)"
       ],
       "KALAHANDI": [
-        "--------------Select------------",
         "BHAWANIPATNA SADAR",
         "BHAWANIPATNA TOWN",
         "BISWANATHPUR",
@@ -10749,7 +9925,6 @@
         "THUAMUL RAMPUR"
       ],
       "KANDHAMAL": [
-        "--------------Select------------",
         "BALIGUDA",
         "BAMUNIGAON",
         "BELGHAR",
@@ -10770,7 +9945,6 @@
         "TUMUDIBANDH"
       ],
       "KENDRAPARA": [
-        "--------------Select------------",
         "AUL",
         "DERABISH",
         "ENERGY",
@@ -10786,7 +9960,6 @@
         "RAJNAGAR"
       ],
       "KEONJHAR": [
-        "--------------Select------------",
         "ANANDPUR",
         "BAMIBARI",
         "BARBIL",
@@ -10814,7 +9987,6 @@
         "TURUMUNGA"
       ],
       "KHURDA": [
-        "--------------Select------------",
         "BALUGAON",
         "BANPUR",
         "BEGUNIA",
@@ -10827,7 +9999,6 @@
         "TANGI"
       ],
       "KORAPUT": [
-        "--------------Select------------",
         "BAIPARIGUDA",
         "BANDHUGAON",
         "BHAIRAB SINGHPUR",
@@ -10854,7 +10025,6 @@
         "SUNABEDA"
       ],
       "MALKANGIRI": [
-        "--------------Select------------",
         "CHITRAKONDA",
         "JODAMBA",
         "KALIMELA",
@@ -10869,7 +10039,6 @@
         "SPECIAL PS, ENERGY"
       ],
       "MAYURBHANJ": [
-        "--------------Select------------",
         "BADAMPAHAR",
         "BADASAHI",
         "BAHALDA",
@@ -10904,7 +10073,6 @@
         "UDALA"
       ],
       "NABARANGPUR": [
-        "--------------Select------------",
         "CHANDAHANDI",
         "DABUGAON",
         "JHARIGAON",
@@ -10920,7 +10088,6 @@
         "UMER KOTE"
       ],
       "NAYAGARH": [
-        "--------------Select------------",
         "BAGHAMARI PS",
         "BANIGOCHHA",
         "DASPALLA",
@@ -10937,7 +10104,6 @@
         "SARANKUL"
       ],
       "NUAPADA": [
-        "--------------Select------------",
         "BODEN",
         "JONK",
         "KHARIAR",
@@ -10947,7 +10113,6 @@
         "SPECIAL PS, ENERGY"
       ],
       "PURI": [
-        "--------------Select------------",
         "ASTARANGA",
         "BALANGA",
         "BALIAPANDA",
@@ -10974,7 +10139,6 @@
         "TRAFFIC PS PURI"
       ],
       "RAYAGADA": [
-        "--------------Select------------",
         "AMBADOLA",
         "ANDHIRAKANCHA",
         "BISAM KATAK",
@@ -10994,7 +10158,6 @@
         "TIKIRI"
       ],
       "ROURKELA": [
-        "--------------Select------------",
         "BANDAMUNDA",
         "BISRA",
         "BONAI",
@@ -11021,7 +10184,6 @@
         "UDIT NAGAR"
       ],
       "SAMBALPUR": [
-        "--------------Select------------",
         "AINTHAPALI",
         "BURLA",
         "CHARMAL",
@@ -11047,7 +10209,6 @@
         "TOWN"
       ],
       "SUBARNAPUR": [
-        "--------------Select------------",
         "BINIKA",
         "BIRMAHARAJPUR",
         "DUNGURIPALI",
@@ -11059,7 +10220,6 @@
         "ULUNDA"
       ],
       "SUNDARGARH": [
-        "--------------Select------------",
         "BARGAON",
         "BHASMA",
         "BIRAMITRAPUR",
@@ -11077,7 +10237,6 @@
         "TOWN"
       ],
       "UPD, CUTTACK": [
-        "--------------Select------------",
         "BADAMBADI",
         "BARANG",
         "BIDANASI",
@@ -11102,7 +10261,6 @@
         "TRAFFIC PS, PHULNAKHARA"
       ],
       "UPD,BHUBANESWAR": [
-        "--------------Select------------",
         "AIR FIELD",
         "AIRPORT",
         "BADAGAD",
@@ -11129,9 +10287,7 @@
       ]
     },
     "PUDUCHERRY": {
-      "--------------SELECT------------": [],
       "KARAIKAL": [
-        "--------------Select------------",
         "COASTAL PS KARAIKAL",
         "EXCISE PS KARAIKAL",
         "FOOD CELL PS KARAIKAL",
@@ -11142,11 +10298,10 @@
         "T.R.PATTINAM",
         "THIRUNALLAR",
         "TOWN",
-        "TRAFFIC  KARAIKAL",
+        "TRAFFIC KARAIKAL",
         "WOMEN PS"
       ],
       "PUDUCHERRY": [
-        "--------------Select------------",
         "ARIANKUPPAM",
         "BAHOUR",
         "CID PS",
@@ -11190,9 +10345,7 @@
       ]
     },
     "PUNJAB": {
-      "--------------SELECT------------": [],
       "AMRITSAR CITY": [
-        "--------------Select------------",
         "A.DIVISION",
         "AIRPORT",
         "B.DIVISION",
@@ -11211,7 +10364,6 @@
         "WOMEN PS"
       ],
       "AMRITSAR RURAL": [
-        "--------------Select------------",
         "AJNALA",
         "BEAS",
         "BHINDI SAIDAN",
@@ -11232,7 +10384,6 @@
         "WOMEN PS"
       ],
       "BARNALA": [
-        "--------------Select------------",
         "BARNALA",
         "BHADAUR",
         "CITY BARNALA",
@@ -11245,7 +10396,6 @@
         "THULIWAL"
       ],
       "BATALA": [
-        "--------------Select------------",
         "CITY BATALA",
         "CIVIL LINE BATALA",
         "DERA BABA NANAK",
@@ -11261,7 +10411,6 @@
         "SRI HARGOBINDPUR"
       ],
       "BHATINDA": [
-        "--------------Select------------",
         "BALIANWALI",
         "CANAL COLONY BATHINDA",
         "CANTT BHATINDA",
@@ -11284,12 +10433,10 @@
         "WOMEN POLICE STATION"
       ],
       "CRIME WING": [
-        "--------------Select------------",
         "PUNJAB STATE CRIME POLICE STATION, SAS NAGAR",
         "PUNJAB STATE CYBER CRIME POLICE STATION, SAS NAGAR"
       ],
       "FARIDKOT": [
-        "--------------Select------------",
         "BAJAKHANA",
         "CITY KOTKAPURA",
         "JAITO",
@@ -11299,7 +10446,6 @@
         "SADIQ"
       ],
       "FATHEGARH SAHIB": [
-        "--------------Select------------",
         "AMLOH",
         "BADALI ALA SINGH",
         "BASSI PATHANA",
@@ -11310,7 +10456,6 @@
         "SIRHIND"
       ],
       "FAZILKA": [
-        "--------------Select------------",
         "ARNI WALA",
         "BAHAW WALA",
         "CITY FAZILKA",
@@ -11323,7 +10468,6 @@
         "SADAR JALALABAD"
       ],
       "FEROZEPUR": [
-        "--------------Select------------",
         "CANTT FEROZEPUR",
         "CITY FEROZEPORE",
         "KULGARI",
@@ -11336,7 +10480,6 @@
         "ZIRA"
       ],
       "GOVT.RLY POLICE": [
-        "--------------Select------------",
         "GRP ABHOR",
         "GRP AMRITSAR",
         "GRP BHATINDA",
@@ -11350,7 +10493,6 @@
         "GRP SIRHIND"
       ],
       "GURDASPUR": [
-        "--------------Select------------",
         "BEHRAMPUR",
         "BHENI MIAN KHAN",
         "CITY GURDASPUR",
@@ -11366,7 +10508,6 @@
         "TIBBER"
       ],
       "HOSHIARPUR": [
-        "--------------Select------------",
         "BULLOWAL",
         "CHABBEWAL",
         "CITY HOSHIARPUR",
@@ -11385,7 +10526,6 @@
         "TANDA"
       ],
       "JALANDHAR CITY": [
-        "--------------Select------------",
         "BAWA KHEL",
         "BHARGO CAMP",
         "CANTT JALANDHAR",
@@ -11404,7 +10544,6 @@
         "WOMEN CELL, JULL"
       ],
       "JALANDHAR RURAL": [
-        "--------------Select------------",
         "ADAMPUR",
         "BHOGPUR",
         "BILGA",
@@ -11421,7 +10560,6 @@
         "WOMEN POLICE STATION"
       ],
       "KAPURTHALA": [
-        "--------------Select------------",
         "BEGOWAL",
         "BHOLATH",
         "DHILWAN",
@@ -11440,7 +10578,6 @@
         "TALWANDI CHAUDHRIAN"
       ],
       "KHANNA": [
-        "--------------Select------------",
         "CITY KHANNA",
         "DORAHA",
         "MACHHIWARA",
@@ -11450,7 +10587,6 @@
         "SDR KHANNA"
       ],
       "LUDHIANA CITY": [
-        "--------------Select------------",
         "DABA",
         "DARESI",
         "DEHLON",
@@ -11482,7 +10618,6 @@
         "WOMEN POLICE STATION"
       ],
       "LUDHIANA RURAL": [
-        "--------------Select------------",
         "CITY JAGRAON",
         "DAKHA (TRANSFERRED TO LUDHIANA CITY)",
         "JAGRAON",
@@ -11493,7 +10628,6 @@
         "WOMEN POLICE STATION"
       ],
       "MANSA": [
-        "--------------Select------------",
         "BARETTA",
         "BHIKHI",
         "BOHA",
@@ -11508,7 +10642,6 @@
         "SDR MANSA"
       ],
       "MOGA": [
-        "--------------Select------------",
         "AJITWAL",
         "BADHNI KALAN",
         "BAGHA PURANA",
@@ -11524,7 +10657,6 @@
         "SMALSAR"
       ],
       "MUKTSAR": [
-        "--------------Select------------",
         "BARIWALA",
         "GIDDER BAHA",
         "KABARWALA",
@@ -11537,7 +10669,6 @@
         "MUKATSAR SADAR"
       ],
       "PATHANKOT": [
-        "--------------Select------------",
         "DHAR KALAN",
         "DIVISION NO. 1 PATHANKOT",
         "DIVISION NO. 2 PATHANKOT",
@@ -11550,7 +10681,6 @@
         "TARAGARH"
       ],
       "PATIALA": [
-        "--------------Select------------",
         "BAKHSHIWALA",
         "BANUR",
         "BHADSON",
@@ -11577,7 +10707,6 @@
         "WOMEN PS"
       ],
       "ROPAR": [
-        "--------------Select------------",
         "ANANDPUR SAHIB",
         "CHAMKAUR SAHIB",
         "CITY ROPAR",
@@ -11589,7 +10718,6 @@
         "SINGH BHAGWANTPUR"
       ],
       "SANGRUR": [
-        "--------------Select------------",
         "AMARGARH",
         "BHAWANIGARH",
         "CHEEMA",
@@ -11613,7 +10741,6 @@
         "SHERPUR"
       ],
       "SAS NAGAR": [
-        "--------------Select------------",
         "BALONGI",
         "CITY KHARAR",
         "DERA BASSI",
@@ -11630,7 +10757,6 @@
         "ZIRAKPUR"
       ],
       "SHAHID BHAGAT SINGH NAGAR": [
-        "--------------Select------------",
         "BALACHAUR",
         "BEHRAM",
         "CITY BANGA",
@@ -11644,7 +10770,6 @@
         "SADAR BANGA"
       ],
       "TARNTARAN": [
-        "--------------Select------------",
         "BHIKHIWIND",
         "CHOHLA SAHIB",
         "CITY PATTI",
@@ -11663,13 +10788,10 @@
       ]
     },
     "RAJASTHAN": {
-      "--------------SELECT------------": [],
       "ACB": [
-        "--------------Select------------",
         "P.S-ACB"
       ],
       "AJMER": [
-        "--------------Select------------",
         "ADARSH NAGAR",
         "ALWAR GATE",
         "ARIAN",
@@ -11706,7 +10828,6 @@
         "VIJAY NAGAR"
       ],
       "ALWAR": [
-        "--------------Select------------",
         "ARAVALI VIHAR",
         "BAHROR",
         "BANSUR",
@@ -11747,7 +10868,6 @@
         "UDYOG NAGAR"
       ],
       "BANSWARA": [
-        "--------------Select------------",
         "AMBAPURA",
         "ANANDPURI",
         "ARTHUNA",
@@ -11766,7 +10886,6 @@
         "SALLOPAT"
       ],
       "BARAN": [
-        "--------------Select------------",
         "ANTA",
         "ATRU",
         "BAPCHA",
@@ -11788,7 +10907,6 @@
         "SHAHBAD"
       ],
       "BARMER": [
-        "--------------Select------------",
         "BAKHASAR",
         "BALOTRA",
         "BARMER RURAL",
@@ -11816,7 +10934,6 @@
         "SIWANA"
       ],
       "BHARATPUR": [
-        "--------------Select------------",
         "ATALBANDH",
         "BAYANA",
         "BHUSAWAR",
@@ -11845,7 +10962,6 @@
         "WEIR"
       ],
       "BHILWARA": [
-        "--------------Select------------",
         "ASIND",
         "BADNOR",
         "BAGOR",
@@ -11881,11 +10997,9 @@
         "SUBHASH NAGAR"
       ],
       "BHIWADI": [
-        "--------------Select------------",
         "TAPUKRA"
       ],
       "BIKANER": [
-        "--------------Select------------",
         "BAJJU",
         "BICHHWAL",
         "CHATTARGARH",
@@ -11914,7 +11028,6 @@
         "SHERUNA (SUDSAR)"
       ],
       "BUNDI": [
-        "--------------Select------------",
         "BASOLI",
         "DABI",
         "DABLANA",
@@ -11935,7 +11048,6 @@
         "TALERA"
       ],
       "CHITTORGARH": [
-        "--------------Select------------",
         "AKOLA",
         "BADISADRI",
         "BADSORA",
@@ -11965,7 +11077,6 @@
         "SHAMBHUPURA"
       ],
       "CHURU": [
-        "--------------Select------------",
         "BHALERI",
         "BHANIPURA",
         "BIDASAR",
@@ -11987,11 +11098,9 @@
         "TARA NAGAR"
       ],
       "CID (CRIME BRANCH)": [
-        "--------------Select------------",
         "SPECIAL POLICE STATION-SOG"
       ],
       "DAUSA": [
-        "--------------Select------------",
         "BANDIKUI",
         "BASWA",
         "KOLWA",
@@ -12011,7 +11120,6 @@
         "SIKANDRA"
       ],
       "DHOLPUR": [
-        "--------------Select------------",
         "BARI",
         "BASAI DANG",
         "BASERI",
@@ -12029,7 +11137,6 @@
         "SIR MATHURA"
       ],
       "DUNGARPUR": [
-        "--------------Select------------",
         "ASPUR",
         "BICHHIWARA",
         "CHITARI",
@@ -12046,7 +11153,6 @@
         "VARDA"
       ],
       "GANGA NAGAR": [
-        "--------------Select------------",
         "ANUPGARH",
         "BIJAI NAGAR",
         "CHUNAWADH",
@@ -12076,7 +11182,6 @@
         "SURATGARH SADAR"
       ],
       "GRP AJMER": [
-        "--------------Select------------",
         "ABU ROAD",
         "AJMER",
         "ALWAR",
@@ -12096,7 +11201,6 @@
         "UDAIPUR"
       ],
       "GRP JODHPUR": [
-        "--------------Select------------",
         "BARMER",
         "BIKANER",
         "HANUMANGARH",
@@ -12107,7 +11211,6 @@
         "SRI GANGA NAGAR"
       ],
       "HANUMANGARGH": [
-        "--------------Select------------",
         "BHADRA",
         "BHIRANI",
         "GOGAMERI",
@@ -12125,7 +11228,6 @@
         "TIBBI"
       ],
       "JAIPUR (WEST)": [
-        "--------------Select------------",
         "BAGRU",
         "BANI PARK",
         "BHANKROTA",
@@ -12144,12 +11246,10 @@
         "VISHWAKARMA"
       ],
       "JAIPUR CITY": [
-        "--------------Select------------",
         "JDA PS",
         "SPECIAL POLICE STATION-SOG"
       ],
       "JAIPUR CITY (EAST)": [
-        "--------------Select------------",
         "ADARSH NAGAR",
         "BAJAJ NAGAR",
         "BASSI",
@@ -12169,7 +11269,6 @@
         "TUNGA"
       ],
       "JAIPUR CITY (NORTH)": [
-        "--------------Select------------",
         "AMER",
         "BATTA BASTI",
         "BRHAMPURI",
@@ -12186,7 +11285,6 @@
         "VIDYADHARNAGAR"
       ],
       "JAIPUR CITY (SOUTH)": [
-        "--------------Select------------",
         "ASHOK NAGAR",
         "CHAKSU",
         "JYOTI NAGAR",
@@ -12203,7 +11301,6 @@
         "VIDHAYAK PURI"
       ],
       "JAIPUR RURAL": [
-        "--------------Select------------",
         "AMARSAR",
         "ANDHI",
         "CHANDWAJI",
@@ -12227,7 +11324,6 @@
         "VIRAT NAGAR"
       ],
       "JAISALMER": [
-        "--------------Select------------",
         "JAISALMER",
         "JHINJHIN YALI",
         "KHURHI",
@@ -12247,7 +11343,6 @@
         "SHAHGARH"
       ],
       "JALORE": [
-        "--------------Select------------",
         "AHORE",
         "BAGARA",
         "BAGORA",
@@ -12266,7 +11361,6 @@
         "SARWANA"
       ],
       "JHALAWAR": [
-        "--------------Select------------",
         "AKLERA",
         "ASNAWAR",
         "BAKANI",
@@ -12294,7 +11388,6 @@
         "UNHAIL"
       ],
       "JHUNJHUNU": [
-        "--------------Select------------",
         "BAGGAR",
         "BISAU",
         "BUHANA",
@@ -12317,7 +11410,6 @@
         "UDAIPUR WATI"
       ],
       "JODHPUR CITY EAST": [
-        "--------------Select------------",
         "BANAD",
         "BANADA",
         "DANGIAWAS",
@@ -12334,7 +11426,6 @@
         "UDAI MANDIR"
       ],
       "JODHPUR CITY WEST": [
-        "--------------Select------------",
         "BASNI",
         "BORANADA",
         "CHOPASANI HOUSING BOARD",
@@ -12349,7 +11440,6 @@
         "SOORSAGAR"
       ],
       "JODHPUR RURAL": [
-        "--------------Select------------",
         "AASOP PS",
         "BALESAR",
         "BAP",
@@ -12370,7 +11460,6 @@
         "SHERGARH"
       ],
       "KARAULI": [
-        "--------------Select------------",
         "BALGHAT",
         "GARHMORA",
         "HINDAUN",
@@ -12391,7 +11480,6 @@
         "TODABHIM"
       ],
       "KOTA CITY": [
-        "--------------Select------------",
         "ANANTPURA",
         "BHIMGANJ MANDI",
         "BORKHERA",
@@ -12413,7 +11501,6 @@
         "VIGYAN NAGAR"
       ],
       "KOTA RURAL": [
-        "--------------Select------------",
         "AYANA",
         "BAPAWAR",
         "BUDADEET",
@@ -12433,7 +11520,6 @@
         "SULTANPUR"
       ],
       "NAGAUR": [
-        "--------------Select------------",
         "BHAWANDA",
         "CHITAWA",
         "DEEDWANA",
@@ -12468,7 +11554,6 @@
         "THANWALA"
       ],
       "PALI": [
-        "--------------Select------------",
         "BAGRI",
         "BALI",
         "DESURI",
@@ -12498,7 +11583,6 @@
         "TAKHATGARH"
       ],
       "PRATAPGARH": [
-        "--------------Select------------",
         "ARNOD",
         "CHOTISADRAI",
         "DEVGARH",
@@ -12516,7 +11600,6 @@
         "SUHAGPURA"
       ],
       "RAJASAMAND": [
-        "--------------Select------------",
         "AMET",
         "BHIM",
         "CHARBHUJA",
@@ -12534,7 +11617,6 @@
         "RELMANGRA"
       ],
       "SAWAI MADHOPUR": [
-        "--------------Select------------",
         "BAMANWAS",
         "BATODA",
         "BHARAWANDA KALAN",
@@ -12553,11 +11635,9 @@
         "WAZIRPUR"
       ],
       "SCRB, JAIPUR CITY": [
-        "--------------Select------------",
         "CYBER POLICE STATION"
       ],
       "SIKAR": [
-        "--------------Select------------",
         "AJITGARH",
         "BALARA",
         "DANTA RAMGARH",
@@ -12583,7 +11663,6 @@
         "UDHYOG NAGAR"
       ],
       "SIROHI": [
-        "--------------Select------------",
         "ABU ROAD SADAR",
         "ABU ROAD SAHAR",
         "ANADARA",
@@ -12601,7 +11680,6 @@
         "SIROHI"
       ],
       "TONK": [
-        "--------------Select------------",
         "ALIGARH",
         "BANETA",
         "BAROONI",
@@ -12626,7 +11704,6 @@
         "UNIARA"
       ],
       "UDAIPUR": [
-        "--------------Select------------",
         "AMBAMATA",
         "BAVALWADA",
         "BEKARIA",
@@ -12673,9 +11750,7 @@
       ]
     },
     "SIKKIM": {
-      "--------------SELECT------------": [],
       "EAST DISTRICT": [
-        "--------------Select------------",
         "CID PS",
         "KUPUP",
         "PAKYONG",
@@ -12689,7 +11764,6 @@
         "VIGILANCE PS"
       ],
       "NORTH DISTRICT": [
-        "--------------Select------------",
         "CHUNGTHANG",
         "LACHEN",
         "LACHUNG",
@@ -12697,7 +11771,6 @@
         "PHODONG"
       ],
       "SOUTH DISTRICT": [
-        "--------------Select------------",
         "HINGDAM",
         "JORETHANG",
         "MELLI",
@@ -12706,7 +11779,6 @@
         "TEMI"
       ],
       "WEST DISTRICT": [
-        "--------------Select------------",
         "GAYZING",
         "KALUK",
         "NAYA BAZAR",
@@ -12716,9 +11788,7 @@
       ]
     },
     "TAMIL NADU": {
-      "--------------SELECT------------": [],
       "ADYAR": [
-        "--------------Select------------",
         "ADYAR",
         "AW-PS ADYAR",
         "AW-PS GUINDY",
@@ -12736,7 +11806,6 @@
         "VELACHERY"
       ],
       "ANNA NAGAR": [
-        "--------------Select------------",
         "AMINJIKARAI",
         "ANNA NAGAR",
         "ARUMBAKKAM",
@@ -12753,7 +11822,6 @@
         "VILLIVAKKAM"
       ],
       "ARIYALUR": [
-        "--------------Select------------",
         "ANDIMADAM",
         "ARIYALUR",
         "AWPS ARIYALUR",
@@ -12782,9 +11850,7 @@
         "VENGANUR",
         "VICKRAMANGALAM"
       ],
-      "C I D": [],
       "COIMBATORE": [
-        "--------------Select------------",
         "ALANDURAI",
         "ALIYUR",
         "ANAMALAI",
@@ -12846,7 +11912,6 @@
         "VEDAKKIPALAYAM"
       ],
       "COIMBATORE CITY": [
-        "--------------Select------------",
         "AIRPORT , SECURITY BRANCH & CORE CELL",
         "AW-PS CENTRAL",
         "AW-PS EAST @ RAMANATHAPURAM",
@@ -12884,20 +11949,19 @@
         "SIT",
         "TASK FORCE, SECURITY BRANCH & CORE CELL",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TEW  KUNIYAMUTHUR (TRAFFIC ENFORCEMENT WING)",
-        "TEW  RATHINAPURI (TRAFFIC ENFORCEMENT WING)",
-        "TEW  SINGANALLUR(TRAFFIC ENFORCEMENT WING)",
         "TEW BAZAAR(TRAFFIC ENFORCEMENT WING)",
         "TEW COIMBATORE EAST(TRAFFIC ENFORCEMENT WING)",
         "TEW KATOOR (TRAFFIC ENFORCEMENT WING)",
-        "TEW PEELAMEDU  (TRAFFIC ENFORCEMENT WING)",
+        "TEW KUNIYAMUTHUR (TRAFFIC ENFORCEMENT WING)",
+        "TEW PEELAMEDU (TRAFFIC ENFORCEMENT WING)",
         "TEW PODANUR(TRAFFIC ENFORCEMENT WING)",
         "TEW R.N.PURAM(TRAFFIC ENFORCEMENT WING)",
         "TEW R.S.PURAM (TRAFFIC ENFORCEMENT WING)",
         "TEW RACE COURSE (TRAFFIC ENFORCEMENT WING)",
-        "TEW SAIBABA COLONY  (TRAFFIC ENFORCEMENT WING)",
+        "TEW RATHINAPURI (TRAFFIC ENFORCEMENT WING)",
+        "TEW SAIBABA COLONY (TRAFFIC ENFORCEMENT WING)",
         "TEW SARAVANANMPATTI (TRAFFIC ENFORCEMENT WING)",
-        "TEW SELVAPURAM  (TRAFFIC ENFORCEMENT WING)",
+        "TEW SELVAPURAM (TRAFFIC ENFORCEMENT WING)",
         "TEW SINGANALLUR(TRAFFIC ENFORCEMENT WING)",
         "TIW KATOOR(TRAFFIC INVESTIGATION WING)",
         "TIW R.S PURAM(TRAFFIC INVESTIGATION WING)",
@@ -12906,7 +11970,6 @@
         "VARIETY HALL ROAD"
       ],
       "CUDDALORE": [
-        "--------------Select------------",
         "ALADI",
         "ANNAMALAINAGAR",
         "AVINANKUDI",
@@ -12986,7 +12049,6 @@
         "VIRUDHACHALAM"
       ],
       "DHARMAPURI": [
-        "--------------Select------------",
         "A.PALLIPATTI",
         "ADIYAMANKOTTAI",
         "AW-PS HARUR",
@@ -13028,7 +12090,6 @@
         "THOPPUR"
       ],
       "DINDIGUL": [
-        "--------------Select------------",
         "AMBADURAI",
         "AMBILIKKAI",
         "AMMAYANAICKANUR",
@@ -13070,9 +12131,9 @@
         "P.C.R DINDIGUL",
         "P.E.W DINDIGUL",
         "P.E.W PALANI",
-        "PALANI  TECHNICAL SERVICES CELL,PTB UNIT @ TSP XIV BN",
         "PALANI ADIVARAM",
         "PALANI TALUK",
+        "PALANI TECHNICAL SERVICES CELL,PTB UNIT @ TSP XIV BN",
         "PALANI TOWN",
         "PATTIVEERANPATTI",
         "Q-BRANCH",
@@ -13084,12 +12145,12 @@
         "SWAMINATHAPURAM",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
         "TECHNICAL SERVICES CELL,PTB, REPEATER,KODAIKANAL",
-        "TEW DINDIGUL L TOWN  NORTH   (TRAFFIC ENFORCEMENT WING)",
+        "TEW DINDIGUL L TOWN NORTH (TRAFFIC ENFORCEMENT WING)",
         "TEW DINDIGUL L TOWN SOUTH (TRAFFIC ENFORCEMENT WING)",
         "TEW KODAIKANAL (TRAFFIC ENFORCEMENT WING)",
         "TEW ODDANCHATRAM(TRAFFIC ENFORCEMENT WING)",
         "TEW PALANI (TRAFFIC ENFORCEMENT WING)",
-        "TEW VEDASANDUR  (TRAFFIC ENFORCEMENT WING)",
+        "TEW VEDASANDUR (TRAFFIC ENFORCEMENT WING)",
         "THADICOMBU",
         "THANDIKUDI",
         "TSP XIV BATTALION, ARMED POLICE,PALANI",
@@ -13098,9 +12159,7 @@
         "VILAMPATTI",
         "VIRUVEEDU"
       ],
-      "EOW": [],
       "ERODE": [
-        "--------------Select------------",
         "AMMAPET",
         "ANDHIYUR",
         "APPAKOODAL",
@@ -13163,11 +12222,9 @@
         "THINGALUR",
         "VARAPPALAYAM",
         "VELLITIRUPPUR",
-        "VELLODE",
         "VELLODE"
       ],
       "FLOWER BAZAR": [
-        "--------------Select------------",
         "AW-PS KOTHAVALCHAVADI",
         "AWPS HARBOUR",
         "AWPS HIGH COURT",
@@ -13185,9 +12242,6 @@
         "SEVEN WELLS"
       ],
       "GREATER CHENNAI": [
-        "--------------Select------------",
-        "FLYING SQUAD   TEW",
-        "KOYEMBEDU TEW",
         "ABIRAMAPURAM",
         "ADAMBAKKAM",
         "ADAYAR",
@@ -13209,7 +12263,7 @@
         "ASHOK NAGAR",
         "ASHOK NAGAR TEW",
         "AVADI",
-        "AVADI TECHNICAL SERVICES CELL,PTB UNIT @ TSP RC AVADI  BN",
+        "AVADI TECHNICAL SERVICES CELL,PTB UNIT @ TSP RC AVADI BN",
         "AVADI TEW",
         "AVADI, TECHNICAL SERVICES CELL,PTB UNIT @ TSP II BN.",
         "AVADI, TECHNICAL SERVICES CELL,PTB UNIT @ TSP V BN.",
@@ -13260,7 +12314,7 @@
         "CBCID-OCU HQS",
         "CBCID-OCU-1",
         "CBCID-OCU-2",
-        "CENTRAL FLYING SQUAD  TEW",
+        "CENTRAL FLYING SQUAD TEW",
         "CHEMMANCHERY",
         "CHEMMENCHERRY TEW",
         "CHETPET",
@@ -13268,7 +12322,7 @@
         "CHITLAPAKKAM",
         "CHOOLAIMEDU",
         "CHROMEPET",
-        "CHROMPET  TEW",
+        "CHROMPET TEW",
         "CMBT",
         "COASTAL SECURITY GROUP",
         "CRIME (SIT)",
@@ -13282,14 +12336,15 @@
         "DR. R. KRISHNAN NAGAR",
         "E.O.W",
         "EGMORE",
-        "EGMORE  TEW",
+        "EGMORE TEW",
         "ELEPHANT GATE",
-        "ELEPHANT GATE  TEW",
+        "ELEPHANT GATE TEW",
         "ENNORE",
         "ESPLANADE",
         "FISHING HARBOUR",
         "FLOWER BAZAAR",
         "FLOWER BAZAAR TEW",
+        "FLYING SQUAD TEW",
         "FORESHORE ESTATE",
         "FORT ST GEORGE",
         "FSL",
@@ -13321,13 +12376,14 @@
         "KORUKKUPET",
         "KOTHAVALCHAVADI",
         "KOTTURPURAM",
-        "KOTTURPURAM  TEW",
+        "KOTTURPURAM TEW",
         "KOYAMBEDU",
+        "KOYEMBEDU TEW",
         "KUMARAN NAGAR",
         "KUMARAN NAGAR TEW",
         "KUNRATHUR",
         "M.K.B. NAGAR",
-        "MADAVARAM  TEW",
+        "MADAVARAM TEW",
         "MADHAVARAM",
         "MADIPAKKAM",
         "MADIPAKKAM TEW",
@@ -13358,10 +12414,10 @@
         "NORTH BEACH TEW",
         "NUGAMBAKKAM TEW",
         "NUNGAMBAKKAM",
-        "OCIU  WEST",
         "OCIU CENTRAL",
         "OCIU NORTH",
         "OCIU SOUTH",
+        "OCIU WEST",
         "OTTERI",
         "P.C.R",
         "P.E.W AMBATTUR",
@@ -13400,7 +12456,7 @@
         "REGIMENTAL CENTRE, ARMED POLICE,AVADI",
         "ROYALA NAGAR",
         "ROYAPETTAH",
-        "ROYAPETTAH  TEW",
+        "ROYAPETTAH TEW",
         "ROYAPURAM",
         "ROYAPURAM TEW",
         "SAIDAPET",
@@ -13421,7 +12477,7 @@
         "SIT HQS",
         "SMALL ARMS,ARMED POLICE, AVADI, CHENNAI,",
         "SOCIAL JUSTICE AND HUMAN RIGHTS HQS",
-        "SOUNDARAPANDIANAR ANGADI  TEW",
+        "SOUNDARAPANDIANAR ANGADI TEW",
         "SOUNDARAPANDIYANAR ANGADI",
         "SPECIAL DIVISION CID",
         "SRMC",
@@ -13522,7 +12578,6 @@
         "ZAM BAZAR"
       ],
       "GRP CHENNAI": [
-        "--------------Select------------",
         "ARAKKONAM",
         "AVADI",
         "BASIN BRIDGE",
@@ -13551,7 +12606,6 @@
         "UDHAGAMANDALAM"
       ],
       "GRP TRICHY": [
-        "--------------Select------------",
         "CHIDAMBARAM",
         "D C B",
         "DINDIGUL",
@@ -13580,7 +12634,6 @@
         "VIRUDHUNAGAR"
       ],
       "KANCHEEPURAM": [
-        "--------------Select------------",
         "ACHIRAPAKKAM",
         "AW-PS CHENGALPATTU",
         "AW-PS MELMARUVATHUR",
@@ -13652,7 +12705,6 @@
         "WALAJABAD (K3)"
       ],
       "KANYAKUMARI": [
-        "--------------Select------------",
         "ANJU GRAMAM",
         "ARALVOIMOZHI",
         "ARUGANI",
@@ -13721,7 +12773,6 @@
         "VELLICHANTHAI"
       ],
       "KARUR": [
-        "--------------Select------------",
         "ARAVAKURICHI",
         "AW-PS KULITHALAI",
         "AW-PS-KARUR",
@@ -13748,18 +12799,17 @@
         "SBCID",
         "SDFPB",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TEW  KARUR TOWN",
-        "TEW  PASUPATHIPALAYAM",
-        "Thanthonimalai PS",
+        "TEW KARUR TOWN",
+        "TEW PASUPATHIPALAYAM",
         "THENNILAI",
         "THOGAMALAI",
+        "Thanthonimalai PS",
         "VELAYUTHANPALAYAM",
         "VELLIYANAI",
         "VENGAL",
         "VENGAMEDU"
       ],
       "KILPAUK": [
-        "--------------Select------------",
         "AW-PS SECRETARIAT COLONY",
         "AWPS AYANAVARAM",
         "AWPS KILPAUK",
@@ -13779,7 +12829,6 @@
         "VEPERY"
       ],
       "KRISHNAGIRI": [
-        "--------------Select------------",
         "ANCHETTY",
         "AWPS BARGUR(DPI)",
         "AWPS DENKALAIKOTTAI(DPI)",
@@ -13826,14 +12875,13 @@
         "TECHNICAL SERVICES CELL,PTB, REPEATER ,PACHAMALAI",
         "TEW KRISHNAGIRI TOWN (TRAFFIC ENFORCEMENT WING)",
         "THALLY",
-        "TIW HOSUR  (TRAFFIC INVESTIGATION WING)",
+        "TIW HOSUR (TRAFFIC INVESTIGATION WING)",
         "TSP VII BATTALION , ARMED POLICE,POCHAMPALLI",
         "UTHANAPALLI",
         "UTHANGARAI",
         "VEPPANAPALLI"
       ],
       "MADURAI": [
-        "--------------Select------------",
         "ALANGANALLUR",
         "APPANTHIRUPATHY",
         "AUSTINPATTI",
@@ -13892,7 +12940,6 @@
         "T.RAMANATHAPURAM",
         "TECHNICAL SERVICES CELL,PTB UNIT @ TSP VI BN.",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
         "THIRUMANGALAM NH TRAFFIC PS, TEW",
         "THIRUMANGALAM TALUK",
         "THIRUMANGALAM TOWN",
@@ -13914,7 +12961,6 @@
         "VILLOOR"
       ],
       "MADURAI CITY": [
-        "--------------Select------------",
         "ANNANAGAR",
         "AW-PS-MADURAI SOUTH",
         "AW-PS-TOWN",
@@ -13970,7 +13016,6 @@
         "VILAKHUTHOON"
       ],
       "MYLAPORE": [
-        "--------------Select------------",
         "ABIRAMAPURAM",
         "ASHOK NAGAR",
         "AW-PS MYLAPORE",
@@ -13992,7 +13037,6 @@
         "VIRUGAMBAKKAM"
       ],
       "NAGAPATTINAM": [
-        "--------------Select------------",
         "ANAIKARANCHATRAM",
         "AW-PS SIRKALI",
         "AW-PS VEDARANYAM",
@@ -14031,9 +13075,9 @@
         "SEMBANARKOIL",
         "SIRKALI",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TEW  NAGAPATTINAM (TRAFFIC ENFORCEMENT WING)",
         "TEW MYLADUTHURAI",
-        "TEW SIRKALI  (TRAFFIC ENFORCEMENT WING)",
+        "TEW NAGAPATTINAM (TRAFFIC ENFORCEMENT WING)",
+        "TEW SIRKALI (TRAFFIC ENFORCEMENT WING)",
         "THALAINAYAR",
         "THIRUKUVALAI",
         "THIRUVENKADU",
@@ -14049,7 +13093,6 @@
         "VOIMEDU"
       ],
       "NAMAKKAL": [
-        "--------------Select------------",
         "AW-PS RASIPURAM",
         "AW-PS TIRUCHENGODE",
         "AW-PS-NAMAKKAL",
@@ -14096,7 +13139,6 @@
         "VENNANDUR"
       ],
       "NILGIRIS": [
-        "--------------Select------------",
         "AMBALAMOOLA",
         "ARUVANKADU",
         "AW-PS COONUR",
@@ -14148,7 +13190,6 @@
         "WELLINGTON"
       ],
       "PERAMBALUR": [
-        "--------------Select------------",
         "ARUMBAVOOR",
         "CBCID",
         "CCIW",
@@ -14173,7 +13214,6 @@
         "WOMEN P.S-PERAMBALUR"
       ],
       "PUDUKKOTTAI": [
-        "--------------Select------------",
         "ALANGUDY",
         "ANNAVASAL",
         "ARANTHANGI",
@@ -14233,7 +13273,6 @@
         "VIRALIMALAI"
       ],
       "PULIANTHOPE": [
-        "--------------Select------------",
         "AWPS MKB NAGAR",
         "AWPS PERAVALLORE",
         "AWPS PULIANTHOPE",
@@ -14250,7 +13289,6 @@
         "VYASARPADI"
       ],
       "RAMANATHAPURAM": [
-        "--------------Select------------",
         "ABIRAMAM",
         "AW-PS KEELAKARAI",
         "AW-PS PARAMAKUDI",
@@ -14321,7 +13359,6 @@
         "VALINOKKAM"
       ],
       "SALEM": [
-        "--------------Select------------",
         "ATTAIYANPATTI",
         "ATTUR",
         "AW-PS ATHUR",
@@ -14373,9 +13410,9 @@
         "SHEVAROY , TECHNICAL SERVICES CELL, PTB, REPEATER",
         "STEEL PLANT",
         "TECHNICAL SERVICES CELL ,PTB, MAINTENANCE",
-        "TEW  ATTUR HIGHWAY TRAFFIC (TRAFFIC ENFORCEMENT WING)",
-        "TEW  METUR(TRAFFIC ENFORCEMENT WING)",
+        "TEW ATTUR HIGHWAY TRAFFIC (TRAFFIC ENFORCEMENT WING)",
         "TEW AUTHUR (TRAFFIC ENFORCEMENT WING)",
+        "TEW METUR(TRAFFIC ENFORCEMENT WING)",
         "TEW OMALUR HIGHWAY TRAFFIC (TRAFFIC ENFORCEMENT WING)",
         "TEW OMLUR (TRAFFIC ENFORCEMENT WING)",
         "TEW SANKAGIRI(TRAFFIC ENFORCEMENT WING)",
@@ -14390,7 +13427,6 @@
         "YERCAUD"
       ],
       "SALEM CITY": [
-        "--------------Select------------",
         "AMMAPET",
         "ANNADANAPATTY",
         "AW-PS SOORAMANGALAM",
@@ -14419,7 +13455,6 @@
         "TEW SOUTH, SALEM CITY,"
       ],
       "SIVAGANGAI": [
-        "--------------Select------------",
         "ALAGAPPAPURAM",
         "ARAVAYAL",
         "AW-PS DEVAKOTTAI",
@@ -14483,7 +13518,6 @@
         "VELAYUTHAPATTINAM"
       ],
       "T NAGAR": [
-        "--------------Select------------",
         "ASHOK NAGAR",
         "AW-PS ASHOK NAGAR",
         "AWPS MAMBALAM",
@@ -14503,7 +13537,6 @@
         "VIRUGAMBAKKAM"
       ],
       "THANJAVUR": [
-        "--------------Select------------",
         "ADIRAMAPATTINAM",
         "AMMAPET",
         "AW-PS PATTUKOTTAI",
@@ -14581,8 +13614,6 @@
         "VATTATHIKOTTAI"
       ],
       "THENI": [
-        "--------------Select------------",
-        "TEW BODINAYAKKANUR",
         "ALLINAGARAM",
         "ANDIPATTI",
         "AW-PS ANDIPATTI",
@@ -14626,9 +13657,10 @@
         "SBCID",
         "SDFPB",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TEW   THENI",
-        "TEW  PERIYAKULAM",
+        "TEW BODINAYAKKANUR",
         "TEW CUMBUM",
+        "TEW PERIYAKULAM",
+        "TEW THENI",
         "THENI",
         "THENKARAI",
         "THEVARAM",
@@ -14638,7 +13670,6 @@
         "VEERAPANDI"
       ],
       "THIRUNELVELI": [
-        "--------------Select------------",
         "ACHANPUDUR",
         "ALANKULAM",
         "ALWARKURICHI",
@@ -14702,9 +13733,9 @@
         "Q-BRANCH",
         "RADHAPURAM",
         "SAMBAVARVADAKARAI",
-        "SANKARANKOIL  TRAFFIC PS,, TEW",
         "SANKARANKOIL TALUK",
         "SANKARANKOIL TOWN",
+        "SANKARANKOIL TRAFFIC PS,, TEW",
         "SBCID",
         "SDFPB",
         "SEETHABARPANALLUR",
@@ -14722,7 +13753,7 @@
         "TECHNICAL SERVICES CELL,PTB UNIT @ TSP IX BN.MANIMUTHAR",
         "TECHNICAL SERVICES CELL,PTB UNIT @ TSP XII BN.MANDAPAM @ MANIMUTHAR",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TENKASI  TRAFFIC PS, TEW",
+        "TENKASI TRAFFIC PS, TEW",
         "THALAIYUTHU",
         "THENKASI",
         "THIRUKKURUNGUDI",
@@ -14745,7 +13776,6 @@
         "VIJAYANARAYANAM"
       ],
       "THIRUVALLUR": [
-        "--------------Select------------",
         "ARAMBAKKAM",
         "ARANI",
         "AW-PS THIRUVALLUR",
@@ -14799,7 +13829,6 @@
         "VENGAL"
       ],
       "THIRUVANNAMALAI": [
-        "--------------Select------------",
         "ANAKKAVOOR",
         "ARNI TALUK",
         "ARNI TOWN",
@@ -14846,9 +13875,9 @@
         "SOCIAL JUSTICE AND HUMAN RIGHTS",
         "TECHNICAL SERVICES CELL ,PTB, REPEATER,MELPET",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
-        "TEW  ARNI (TRAFFIC ENFORCEMENT WING)",
-        "TEW  THIRUVANNAMALAI TOWN((TRAFFIC ENFORCEMENT WING)",
+        "TEW ARNI (TRAFFIC ENFORCEMENT WING)",
         "TEW CHEYYAR (TRAFFIC ENFORCEMENT WING)",
+        "TEW THIRUVANNAMALAI TOWN((TRAFFIC ENFORCEMENT WING)",
         "THACHAMPET",
         "THANDRAMPET",
         "THANIPADI",
@@ -14865,7 +13894,6 @@
         "VETTAVALAM"
       ],
       "THOOTHUKUDI": [
-        "--------------Select------------",
         "ALWARTHIRUNAGIRI",
         "ARUMUGANERI",
         "AUTHOOR",
@@ -14939,8 +13967,8 @@
         "THIRUCHENDUR",
         "THOOTHUKUDI CENTRAL CRIME",
         "THOOTHUKUDI CENTRAL TRAFFIC WING ,TEW",
-        "THOOTHUKUDI SOUTH  TRAFFIC WING ,TEW",
         "THOOTHUKUDI SOUTH CRIME",
+        "THOOTHUKUDI SOUTH TRAFFIC WING ,TEW",
         "TIRUCHENDUR,TEW",
         "TIW MILLAPURAM",
         "TUTICORIN CENTRAL",
@@ -14949,7 +13977,6 @@
         "VILATHIKULAM"
       ],
       "TIRUCHIRAPALLI": [
-        "--------------Select------------",
         "AW-PS LALGUDI",
         "AW-PS MANAPARAI",
         "AW-PS MUSIRI",
@@ -15016,7 +14043,6 @@
         "VATHALAI"
       ],
       "TIRUNELVELI CITY": [
-        "--------------Select------------",
         "AW-PS TIRUNELVELI JUNCTION",
         "AW-PS-PALAYAMKOTTAI",
         "C C B",
@@ -15033,7 +14059,7 @@
         "SBCID",
         "TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
         "TEW JUNCTION (TRAFFIC ENFORCEMENT WING)",
-        "TEW PALAYAMKOTTAI  (TRAFFIC ENFORCEMENT WING)",
+        "TEW PALAYAMKOTTAI (TRAFFIC ENFORCEMENT WING)",
         "TEW TIRUNELVELI TOWN ((TRAFFIC ENFORCEMENT WING)",
         "THATCHANALLUR",
         "TIRUNELVELI JUNCTION",
@@ -15041,7 +14067,6 @@
         "TIW (TRAFFIC INVESTIGATION WING)"
       ],
       "TIRUPPUR": [
-        "--------------Select------------",
         "ALANGIYAM",
         "AMARAVATHI",
         "ANUPPARPALAYAM",
@@ -15099,7 +14124,6 @@
         "VELLAKOIL"
       ],
       "TIRUVARUR": [
-        "--------------Select------------",
         "ALIVALAM",
         "AW-PS THIRUTHURAIPOONDI",
         "AW-PS-MANNARGUDI",
@@ -15151,7 +14175,6 @@
         "VIKRAPANDIYAM"
       ],
       "TRICHIRAPALLI CITY": [
-        "--------------Select------------",
         "AIRPORT",
         "AIRPORT , SECURITY BRANCH & CORE CELL",
         "ANTIVICE SQUARD",
@@ -15191,7 +14214,6 @@
         "URAIYUR"
       ],
       "TRIPLICANE": [
-        "--------------Select------------",
         "ANNA SALAI",
         "ANNA SQUARE",
         "AW-PS THOUSAND LIGHTS",
@@ -15210,7 +14232,6 @@
         "ZAM BAZAR"
       ],
       "VELLORE": [
-        "--------------Select------------",
         "ALANGAYAM",
         "AMBALUR",
         "AMBUR TALUK",
@@ -15307,7 +14328,6 @@
         "WALAJAPET"
       ],
       "VILLUPURAM": [
-        "--------------Select------------",
         "ANANDAPURAM",
         "ARAKANDANALLUR",
         "AUROVILLE",
@@ -15335,7 +14355,7 @@
         "GINGEE",
         "KACHIRAPALAYAM",
         "KALLAKURICHI",
-        "KALLAKURICHI  TEW (TRAFFIC ENFORCEMENT WING)",
+        "KALLAKURICHI TEW (TRAFFIC ENFORCEMENT WING)",
         "KANDACHIPURAM",
         "KANDAMANGALAM",
         "KANJANUR",
@@ -15377,23 +14397,22 @@
         "TSP X BATTALION, ARMED POLICE",
         "ULUNDUR PET",
         "ULUNTHURPET TECHNICAL SERVICES CELL,PTB UNIT @ TSP X BN.",
-        "ULUNTHURPETTAI  TEW (TRAFFIC ENFORCEMENT WING)",
+        "ULUNTHURPETTAI TEW (TRAFFIC ENFORCEMENT WING)",
         "VADAPONPARAPPI",
         "VALATHY",
         "VALAVANUR",
         "VANUR",
         "VARANJARAM",
         "VELLIMEDUPETTAI",
-        "VICKERAVANDI  TEW (TRAFFIC ENFORCEMENT WING)",
+        "VICKERAVANDI TEW (TRAFFIC ENFORCEMENT WING)",
         "VIKRAVANDI",
-        "VILLUPURAM  TEW (TRAFFIC ENFORCEMENT WING)",
         "VILLUPURAM TALUK",
         "VILLUPURAM TECHNICAL SERVICES CELL,PTB, MAINTENANCE",
+        "VILLUPURAM TEW (TRAFFIC ENFORCEMENT WING)",
         "VILLUPURAM TOWN",
         "VILLUPURAM WEST"
       ],
       "VIRUDHUNAGAR": [
-        "--------------Select------------",
         "A.MUKKULAM",
         "ALANKULAM",
         "AMATHUR",
@@ -15482,7 +14501,6 @@
         "WATRAP"
       ],
       "WASHERMENPET": [
-        "--------------Select------------",
         "AW-PS WASHERMENPET",
         "AWPS ROYAPURAM",
         "AWPS THIRUVOTTIYUR",
@@ -15502,9 +14520,7 @@
       ]
     },
     "TELANGANA": {
-      "--------------SELECT------------": [],
       "ADILABAD": [
-        "--------------Select------------",
         "ADILABAD II TOWN",
         "ADILABAD RURAL",
         "ADILABAD TOWN",
@@ -15580,7 +14596,6 @@
         "WOMEN PS"
       ],
       "CYBERABAD": [
-        "--------------Select------------",
         "ALWAL",
         "ALWAL TRAFFIC",
         "BALA NAGAR",
@@ -15637,7 +14652,6 @@
         "YACHARAM"
       ],
       "HYDERABAD CITY": [
-        "--------------Select------------",
         "ABID ROAD",
         "ABIDS TRAFFIC (TROOP BAZAR TRAFFIC)",
         "AFZALGUNJ",
@@ -15663,7 +14677,7 @@
         "CHIKKADAPALLI",
         "CHIKKADAPALLI TRAFFIC",
         "CHILAKALAGUDA",
-        "CYBER CRIME  CCS",
+        "CYBER CRIME CCS",
         "DABEERPURA",
         "FALAKHANUMA (SHAMSHEER GUNJ)",
         "FALAKNUMA TRAFFIC",
@@ -15731,7 +14745,6 @@
         "W.P.S. SOUTH ZONE"
       ],
       "KARIMNAGAR": [
-        "--------------Select------------",
         "ADIVIMUTHARAM",
         "BASANTH NAGAR",
         "BEJJANKI",
@@ -15804,7 +14817,6 @@
         "YELLAREDDIPET"
       ],
       "KHAMMAM": [
-        "--------------Select------------",
         "ALLAPALLI",
         "ASWAPURAM",
         "ASWARAOPET",
@@ -15872,7 +14884,6 @@
         "YERRUPALEM"
       ],
       "MAHABOOBNAGAR": [
-        "--------------Select------------",
         "ACHAMPET",
         "ADDAKUL",
         "AIZE",
@@ -15950,7 +14961,6 @@
         "WOMEN P.S"
       ],
       "MEDAK": [
-        "--------------Select------------",
         "ALLADURG",
         "BDL BHANUR",
         "BEGUMPET",
@@ -16014,7 +15024,6 @@
         "ZARASANGAM"
       ],
       "NALGONDA": [
-        "--------------Select------------",
         "ALIER",
         "ALWAL",
         "ARVAPALLI",
@@ -16090,7 +15099,6 @@
         "YADAGIRI GUTTA"
       ],
       "NIZAMABAD": [
-        "--------------Select------------",
         "ARMOOR",
         "BALKONDA",
         "BANSWADA",
@@ -16139,7 +15147,6 @@
         "YELLAREDDY"
       ],
       "RANGAREDDY": [
-        "--------------Select------------",
         "BANTARAM",
         "BASHEERABAD",
         "CHENGUMAL",
@@ -16163,7 +15170,6 @@
         "YATAL"
       ],
       "WARANGAL": [
-        "--------------Select------------",
         "BACHANNAPET",
         "BHUPALPALLY (M)",
         "CHENNARAOPET",
@@ -16212,10 +15218,7 @@
       ]
     },
     "TRIPURA": {
-      "--------------SELECT------------": [],
-      "AGARTALA": [],
       "DHALAI": [
-        "--------------Select------------",
         "AMBASA",
         "AMBASSA GRP",
         "CHAILENGTA PS",
@@ -16233,7 +15236,6 @@
         "SALEMA"
       ],
       "GOMATI": [
-        "--------------Select------------",
         "BIRGANJ PS",
         "GARJEE PS",
         "KAKRABAN PS",
@@ -16248,7 +15250,6 @@
         "WOMEN PS R K PUR"
       ],
       "KHOWAI": [
-        "--------------Select------------",
         "CHAMPAHOWR PS",
         "KALYANPUR PS",
         "KHOWAI PS",
@@ -16257,7 +15258,6 @@
         "TELIAMURAGRP"
       ],
       "NORTH": [
-        "--------------Select------------",
         "ANANDA BAZAR PS",
         "CHURAI BARI",
         "DAMCHERRA",
@@ -16270,7 +15270,6 @@
         "VANGHMUN"
       ],
       "SEPAHIJALA": [
-        "--------------Select------------",
         "BISHALGHAR PS",
         "BISRAMGANJ PS",
         "JATRAPUR PS",
@@ -16281,7 +15280,6 @@
         "TAKARJALA PS"
       ],
       "SOUTH": [
-        "--------------Select------------",
         "BAIKHORA",
         "BELONIA",
         "MANU BAZAR",
@@ -16290,14 +15288,12 @@
         "SANTIR BAZAR"
       ],
       "UNAKOTI": [
-        "--------------Select------------",
         "Fatikroy PS",
         "KAILASHAHAR PS",
         "KUMARGHAT PS",
         "PECHARTHAL PS"
       ],
       "WEST": [
-        "--------------Select------------",
         "AD NAGARPS",
         "AGARTALA GRP",
         "AIRPORT PS",
@@ -16323,9 +15319,7 @@
       ]
     },
     "UTTAR PRADESH": {
-      "--------------SELECT------------": [],
       "AGRA": [
-        "--------------Select------------",
         "ACHHNERA",
         "BAH",
         "BARHAN",
@@ -16370,7 +15364,6 @@
         "TAJGANJ"
       ],
       "ALIGARH": [
-        "--------------Select------------",
         "AKRABAD",
         "ATRAULI",
         "BANNADEVI",
@@ -16410,7 +15403,6 @@
         "VIJAYGARH"
       ],
       "AMBEDKAR NAGAR": [
-        "--------------Select------------",
         "AHIRAULI BAZAR",
         "AKBARPUR",
         "ALAPUR",
@@ -16433,7 +15425,6 @@
         "TANDA"
       ],
       "AMETHI": [
-        "--------------Select------------",
         "AMETHI",
         "BAZAR SHUKUL",
         "DEEH",
@@ -16454,19 +15445,15 @@
         "SHEORATANGANJ"
       ],
       "AMROHA": [
-        "--------------Select------------",
         "ADAMPUR",
         "AMROHA",
-        "Dhanora Mandi",
-        "DIDAULI"
+        "DIDAULI",
+        "Dhanora Mandi"
       ],
       "ANTI CORRUPTION": [
-        "--------------Select------------",
         "ANTI CORRUPTION"
       ],
-      "ANTI POWER THEFT": [],
       "AYODHYA": [
-        "--------------Select------------",
         "AKBARPUR",
         "ALAPUR",
         "AYODHYA KOTWALI",
@@ -16502,7 +15489,6 @@
         "TARUN"
       ],
       "AZAMGARH": [
-        "--------------Select------------",
         "AHRAULA",
         "ATRAULIA",
         "BARDAH",
@@ -16530,7 +15516,6 @@
         "TARWA"
       ],
       "BADAUN": [
-        "--------------Select------------",
         "ALAPUR",
         "BILSI",
         "BINAWAR",
@@ -16557,7 +15542,6 @@
         "ZARIF NAGAR"
       ],
       "BAGHPAT": [
-        "--------------Select------------",
         "AMINAGAR SARAI",
         "BAGHPAT",
         "BALENI",
@@ -16572,7 +15556,6 @@
         "SINGHAWALI AHIR"
       ],
       "BAHRAICH": [
-        "--------------Select------------",
         "BAUNDI",
         "BHINGA",
         "DARGAHSAREEF",
@@ -16602,7 +15585,6 @@
         "VISHESHARGANJ"
       ],
       "BALLIA": [
-        "--------------Select------------",
         "BAIRIA",
         "BANSDIH",
         "BANSDIH ROAD",
@@ -16627,7 +15609,6 @@
         "UBHAON"
       ],
       "BALRAMPUR": [
-        "--------------Select------------",
         "GAISRI",
         "GAURA CHAURAHA",
         "HARRIYA",
@@ -16643,7 +15624,6 @@
         "UTRAULA"
       ],
       "BANDA": [
-        "--------------Select------------",
         "ATARRA",
         "BABERU",
         "BADAUSA",
@@ -16672,7 +15652,6 @@
         "TINDWARI"
       ],
       "BARABANKI": [
-        "--------------Select------------",
         "ASANDRA",
         "BADDUPUR",
         "BADOTSARAI",
@@ -16700,7 +15679,6 @@
         "TIKAIT NAGAR"
       ],
       "BAREILLY": [
-        "--------------Select------------",
         "ALIGANJ",
         "ANWALA",
         "BAHERHI",
@@ -16734,7 +15712,6 @@
         "VISHRAT GANJ"
       ],
       "BASTI": [
-        "--------------Select------------",
         "BAKHIRA",
         "CHHAWANI",
         "DUBAULIA",
@@ -16759,7 +15736,6 @@
         "WALTER GANJ"
       ],
       "BIJNOR": [
-        "--------------Select------------",
         "AFZALGARH",
         "BADHAPUR",
         "CHANDPUR",
@@ -16785,7 +15761,6 @@
         "SYOHARA"
       ],
       "BULANDSHAHAR": [
-        "--------------Select------------",
         "AGOUTA",
         "AHAR",
         "AHMAD GARH",
@@ -16794,9 +15769,6 @@
         "AURANGABAD",
         "BHAWAN BAHADUR NAGAR",
         "CHHATTRI",
-        "CHOLA",
-        "CHOLA",
-        "CHOLA",
         "CHOLA",
         "DANKAUR",
         "DEBAI",
@@ -16823,7 +15795,6 @@
         "UPARKOT"
       ],
       "CHANDAULI": [
-        "--------------Select------------",
         "ALI NAGAR",
         "BABURI",
         "BALUA",
@@ -16841,7 +15812,6 @@
         "SYED RAZA"
       ],
       "CHITRAKOOT": [
-        "--------------Select------------",
         "BAHILPURWA",
         "BARGAH",
         "KARVI KOTWALI NAGAR",
@@ -16852,9 +15822,7 @@
         "RAIPURA",
         "RAJAPUR"
       ],
-      "DEO PRAYAG": [],
       "DEORIA": [
-        "--------------Select------------",
         "BAGHICHGHAT",
         "BANKATA",
         "BARHAJ",
@@ -16875,7 +15843,6 @@
         "TARKULHA"
       ],
       "ETAH": [
-        "--------------Select------------",
         "ALIGANJ",
         "AMAPUR",
         "AWAGARH",
@@ -16895,7 +15862,6 @@
         "NAYAGAON",
         "NICHAULI",
         "NIDHAULI KALAN",
-        "NIDHAULI KALAN",
         "PATIALI",
         "PILUA",
         "QUDIR GANJ",
@@ -16909,7 +15875,6 @@
         "SORON"
       ],
       "ETAWAH": [
-        "--------------Select------------",
         "ACHHALDA",
         "AIRWAKATRA",
         "AJITMAL",
@@ -16943,7 +15908,6 @@
         "VEDPURA"
       ],
       "FARUKHABAD": [
-        "--------------Select------------",
         "KAIMGANJ",
         "KAMALGANJ",
         "MAUDARWAJA",
@@ -16951,7 +15915,6 @@
         "SHAMSABAD"
       ],
       "FATEHGARH": [
-        "--------------Select------------",
         "AMRITPUR",
         "BISHUNGARH",
         "CHHIBRAMAU",
@@ -16975,7 +15938,6 @@
         "TIRWA"
       ],
       "FATEHPUR": [
-        "--------------Select------------",
         "ASOTHAR",
         "AUNG",
         "BAKEWAR",
@@ -16998,7 +15960,6 @@
         "THARIAON"
       ],
       "FIROZABAD": [
-        "--------------Select------------",
         "BASAI MOHAMMADPUR",
         "EKA",
         "FIROZABAD NORTH",
@@ -17022,7 +15983,6 @@
         "TUNDLA"
       ],
       "GAUTAM BUDDHA NAGAR": [
-        "--------------Select------------",
         "BETA-2",
         "BISRIKH",
         "DADRI",
@@ -17052,7 +16012,6 @@
         "SURAJPUR"
       ],
       "GHAZIABAD": [
-        "--------------Select------------",
         "BABUGARH",
         "BAHADUR GARAH",
         "BHOJPUR",
@@ -17097,7 +16056,6 @@
         "VIJAY NAGAR"
       ],
       "GHAZIPUR": [
-        "--------------Select------------",
         "BADESAR",
         "BAHARIYA BAD",
         "BHANWARKOL",
@@ -17124,7 +16082,6 @@
         "SUHAWAL"
       ],
       "GONDA": [
-        "--------------Select------------",
         "BALRAMPUR DEHAT",
         "BALRAMPUR NAGAR",
         "CHHAPIA",
@@ -17157,7 +16114,6 @@
         "WAZIRGANJ"
       ],
       "GORAKHPUR": [
-        "--------------Select------------",
         "BANSGAON",
         "BARHALGANJ",
         "BELGHAT",
@@ -17186,7 +16142,6 @@
         "URWA BAZAR"
       ],
       "GRP AGRA": [
-        "--------------Select------------",
         "AGRA CANTT(GRP)",
         "AGRA FORT",
         "ALIGARH",
@@ -17201,7 +16156,6 @@
         "TUNDLA"
       ],
       "GRP ALLAHABAD": [
-        "--------------Select------------",
         "ALLAHABAD",
         "FATEHPUR",
         "JAUNPUR",
@@ -17211,7 +16165,6 @@
         "VARANASI"
       ],
       "GRP GORAKHPUR": [
-        "--------------Select------------",
         "ANAND NAGAR",
         "AZAMGARH",
         "BALIA",
@@ -17225,7 +16178,6 @@
         "MAU"
       ],
       "GRP JHANSI": [
-        "--------------Select------------",
         "BANDA",
         "BHIMSEN",
         "JHANSI",
@@ -17236,7 +16188,6 @@
         "ORAI"
       ],
       "GRP LUCKNOW": [
-        "--------------Select------------",
         "AGRA CANTT",
         "AGRA FORT",
         "AKBARPUR",
@@ -17288,7 +16239,6 @@
         "VARANASI CANTT"
       ],
       "GRP MORADABAD": [
-        "--------------Select------------",
         "BADAUN",
         "BARAUT",
         "BAREILLY CITY",
@@ -17305,7 +16255,6 @@
         "SHAMLI"
       ],
       "HAMIRPUR": [
-        "--------------Select------------",
         "BEWAR",
         "CHIKASI",
         "JALALPUR",
@@ -17321,7 +16270,6 @@
         "SUMER PUR"
       ],
       "HAPUR": [
-        "--------------Select------------",
         "BABUGARH",
         "BAHADURGARH",
         "DHAULANA",
@@ -17333,7 +16281,6 @@
         "SIMBHABALI"
       ],
       "HARDOI": [
-        "--------------Select------------",
         "ARBAL",
         "ATRAULI",
         "BAGHAULI",
@@ -17360,7 +16307,6 @@
         "TANDIAWAN"
       ],
       "HATHRAS": [
-        "--------------Select------------",
         "CHANDPA",
         "HASSAIN",
         "HATHRAS GATE",
@@ -17374,7 +16320,6 @@
         "SIKANDRA RAO KOTWALI"
       ],
       "JALAUN": [
-        "--------------Select------------",
         "AIT",
         "ATA",
         "CHURKHI",
@@ -17396,7 +16341,6 @@
         "SIRSA KALAR"
       ],
       "JAUNPUR": [
-        "--------------Select------------",
         "BADLAPUR",
         "BAKSA",
         "BARSATHI",
@@ -17426,7 +16370,6 @@
         "ZAFRABAD"
       ],
       "JHANSI": [
-        "--------------Select------------",
         "BABINA",
         "BARAGAON",
         "BARUA SAGAR",
@@ -17455,7 +16398,6 @@
         "ULDAN"
       ],
       "JYOTIBAPHULLEYNAGAR": [
-        "--------------Select------------",
         "ADAMPUR",
         "AMROHA DEHAT",
         "AMROHA NAGAR",
@@ -17471,7 +16413,6 @@
         "SAID NAGLI"
       ],
       "KANNAUJ": [
-        "--------------Select------------",
         "BISHVA GARH",
         "CHHIBRAMAU",
         "GURSAHAIGANJ",
@@ -17484,7 +16425,6 @@
         "VISHNUGARH"
       ],
       "KANPUR CITY": [
-        "--------------Select------------",
         "ANWARGANJ",
         "ARMAPUR",
         "BABUPURWA",
@@ -17532,7 +16472,6 @@
         "SWARUP NAGAR"
       ],
       "KANPUR DEHAT": [
-        "--------------Select------------",
         "AKBARPUR",
         "AMRAHAT (GOHANI)",
         "BARAUR",
@@ -17557,7 +16496,6 @@
         "SIKANDARA"
       ],
       "KANSHIRAM NAGAR": [
-        "--------------Select------------",
         "AMAPUR",
         "DHOLNA",
         "GANJ DUNDWARA",
@@ -17571,11 +16509,9 @@
         "SUNGARHI"
       ],
       "KASGANJ": [
-        "--------------Select------------",
         "KASGANJ"
       ],
       "KAUSHAMBI": [
-        "--------------Select------------",
         "CHARWA",
         "KARARI",
         "KAUSHAMBI",
@@ -17589,7 +16525,6 @@
         "SARAI AQIL"
       ],
       "KHIRI": [
-        "--------------Select------------",
         "BHIRA",
         "CHANDAN CHAUKI",
         "DHAURAHRA",
@@ -17615,7 +16550,6 @@
         "TIKONIA"
       ],
       "KUSHI NAGAR": [
-        "--------------Select------------",
         "AHIRAULI BAZAR",
         "BARWA PATTI",
         "HANUMANGANJ",
@@ -17635,7 +16569,6 @@
         "VISHUNPURA"
       ],
       "LALITPUR": [
-        "--------------Select------------",
         "BALA BEHAT",
         "BANPUR",
         "BAR",
@@ -17653,7 +16586,6 @@
         "TALBEHAT"
       ],
       "LUCKNOW": [
-        "--------------Select------------",
         "ALAMBAGH",
         "ALIGANJ",
         "AMINABAD",
@@ -17701,7 +16633,6 @@
         "WAZIRGANJ"
       ],
       "MAHOBA": [
-        "--------------Select------------",
         "AJNAR",
         "CHARKHARI",
         "KABRAI",
@@ -17714,7 +16645,6 @@
         "SRINAGAR"
       ],
       "MAHRAJGANJ": [
-        "--------------Select------------",
         "BARGADAHWA BAZAR",
         "BRIJMANGANJ",
         "CHOWK",
@@ -17734,7 +16664,6 @@
         "THUTHI BARI"
       ],
       "MAINPURI": [
-        "--------------Select------------",
         "ALLAU",
         "BARNAHAL",
         "BEWAR",
@@ -17751,7 +16680,6 @@
         "VICHAWAN"
       ],
       "MATHURA": [
-        "--------------Select------------",
         "BALDEO",
         "BARSANA",
         "CHHATA",
@@ -17777,7 +16705,6 @@
         "YAMUNAPAR"
       ],
       "MAU": [
-        "--------------Select------------",
         "CHIRAIYAKOT",
         "DAKSHINTOLA",
         "DOHARIGHAT",
@@ -17791,7 +16718,6 @@
         "SARAI LAKHANSI"
       ],
       "MEERUT": [
-        "--------------Select------------",
         "AMITNAGAR SARAI",
         "BAHSUMA",
         "BALAINI",
@@ -17830,20 +16756,12 @@
         "RAILWAY ROAD",
         "RAMALA",
         "ROHATA",
-        "ROHATA",
-        "ROHATA",
-        "ROHATA",
-        "ROHATA",
-        "ROHATA",
-        "ROHATA",
-        "ROHATA",
         "SADAR BAZAR",
         "SARDHANA",
         "SAROORPUR",
         "TRANSPORT NAGAR"
       ],
       "MIRZAPUR": [
-        "--------------Select------------",
         "ADALHAT",
         "AHRAURA",
         "CHILHA",
@@ -17861,7 +16779,6 @@
         "ZIGNA"
       ],
       "MORADABAD": [
-        "--------------Select------------",
         "ADAMPUR",
         "AMROHA",
         "AMROHA DEHAT",
@@ -17903,7 +16820,6 @@
         "THAKUR DWARA"
       ],
       "MUZAFFAR NAGAR": [
-        "--------------Select------------",
         "ADARSH MANDI SHYAMLI",
         "BABARI",
         "BHAWAN",
@@ -17935,7 +16851,6 @@
         "TITAVI"
       ],
       "ORRAIA": [
-        "--------------Select------------",
         "ACHHALDA",
         "AJITMAL",
         "ARWA KATRA",
@@ -17948,7 +16863,6 @@
         "SAHAIL"
       ],
       "PILIBHIT": [
-        "--------------Select------------",
         "AMARIA",
         "BARKHERA",
         "BILSANDA",
@@ -17964,7 +16878,6 @@
         "SUNGARHI"
       ],
       "PRATAPGARH": [
-        "--------------Select------------",
         "AASPUR DEOSARA",
         "ANTOO",
         "BAGHRAI",
@@ -17987,7 +16900,6 @@
         "UDAIPUR"
       ],
       "PRAYAGRAJ": [
-        "--------------Select------------",
         "ATTARSUIYA",
         "BAHARIA",
         "BARA",
@@ -18015,8 +16927,8 @@
         "KORAON",
         "KOSAMBI",
         "KOTWALI",
-        "Kotwali- Kumbh",
         "KYDGANJ",
+        "Kotwali- Kumbh",
         "LALPUR",
         "MAHILA THANA",
         "MANDA",
@@ -18043,7 +16955,6 @@
         "UTTRAON"
       ],
       "RAE BARELI": [
-        "--------------Select------------",
         "BACHHRAWAN",
         "BHADOKHAR",
         "DALMAU",
@@ -18069,7 +16980,6 @@
         "UNCHAHAR"
       ],
       "RAMPUR": [
-        "--------------Select------------",
         "AZIM NAGAR",
         "BHOT",
         "BILASPUR",
@@ -18087,7 +16997,6 @@
         "TANDA"
       ],
       "SAHARANPUR": [
-        "--------------Select------------",
         "BARGAON",
         "BEHARIGARH",
         "BEHAT",
@@ -18112,7 +17021,6 @@
         "TEEETRAU"
       ],
       "SAMBHAL": [
-        "--------------Select------------",
         "ASMAULI",
         "BAHJOI",
         "BANIATHER",
@@ -18126,7 +17034,6 @@
         "SAMBHAL"
       ],
       "SANT KABEER NAGAR": [
-        "--------------Select------------",
         "BAKHIRA",
         "DUDHARA",
         "GHANGHATA",
@@ -18135,7 +17042,6 @@
         "MEHDAWAL"
       ],
       "SANT RAVI DAS NAGAR": [
-        "--------------Select------------",
         "AURAI",
         "BHADOHI",
         "CHAURI",
@@ -18147,7 +17053,6 @@
         "SURIAYAWN"
       ],
       "SHAHJAHANPUR": [
-        "--------------Select------------",
         "ALLAHGANJ",
         "BANDA",
         "GARHIYA RANGEEN",
@@ -18173,7 +17078,6 @@
         "TILHAR"
       ],
       "SHAMLI": [
-        "--------------Select------------",
         "ADARSHMANDI",
         "BABRI",
         "GARHIPUKHTA",
@@ -18184,7 +17088,6 @@
         "VAWAN"
       ],
       "SHRAVASTI": [
-        "--------------Select------------",
         "BHINGA",
         "GILAULA",
         "IKAUNA",
@@ -18195,7 +17098,6 @@
         "VISESARGANJ"
       ],
       "SIDHARTH NAGAR": [
-        "--------------Select------------",
         "ALIGARHWA",
         "BANSI",
         "BHAWANI GANJ",
@@ -18217,7 +17119,6 @@
         "USKA BAZAR"
       ],
       "SITAPUR": [
-        "--------------Select------------",
         "ATARIA",
         "BISWAN",
         "HARGAON",
@@ -18245,7 +17146,6 @@
         "THANGAON"
       ],
       "SONBHADRA": [
-        "--------------Select------------",
         "ANPARA",
         "BABHANI",
         "BIJPUR",
@@ -18270,7 +17170,6 @@
         "VINDAM GANJ"
       ],
       "SULTANPUR": [
-        "--------------Select------------",
         "AKHANDNAGAR",
         "BALDI RAI",
         "CHANDA",
@@ -18291,11 +17190,9 @@
         "SANGRAMPUR"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
         "TRANSPORT DEPT, U.P."
       ],
       "UNNAO": [
-        "--------------Select------------",
         "ACHALGANJ",
         "AJGAIN",
         "ASIWAN",
@@ -18317,7 +17214,6 @@
         "SOHRA MAU"
       ],
       "VARANASI": [
-        "--------------Select------------",
         "ADAMPUR",
         "ALI NAGAR",
         "BABURI",
@@ -18364,9 +17260,7 @@
       ]
     },
     "UTTARAKHAND": {
-      "--------------SELECT------------": [],
       "ALMORA": [
-        "--------------Select------------",
         "BHATRAUJ KHAN",
         "DWARHAT",
         "KOTWALI ALMORA",
@@ -18377,14 +17271,12 @@
         "SOMESHWAR"
       ],
       "BAGESHWAR": [
-        "--------------Select------------",
         "BAIJNATH",
         "JHIRAULI",
         "KAPKOT",
         "KOTWALI BAGESHWAR"
       ],
       "CHAMOLI": [
-        "--------------Select------------",
         "BADRINATH",
         "CHAMOLI",
         "GOPESHWAR",
@@ -18394,7 +17286,6 @@
         "THARALI"
       ],
       "CHAMPAWAT": [
-        "--------------Select------------",
         "BANBASA",
         "KOTWALI CHAMPAWAT",
         "LOHAGHAT",
@@ -18404,7 +17295,6 @@
         "TANAKPUR"
       ],
       "DEHRADUN": [
-        "--------------Select------------",
         "BASANT VIHAR",
         "CANTT",
         "CHAKRATA",
@@ -18426,7 +17316,6 @@
         "VIKAS NAGAR"
       ],
       "HARIDWAR": [
-        "--------------Select------------",
         "BAHADRABAD",
         "BHAGWANPUR",
         "BUGGAWALA",
@@ -18447,7 +17336,6 @@
         "SHYAMPUR"
       ],
       "NAINITAL": [
-        "--------------Select------------",
         "BETALGHAT",
         "BHIMTAL",
         "BHOWALI",
@@ -18463,7 +17351,6 @@
         "TALLITAL"
       ],
       "PAURI GARHWAL": [
-        "--------------Select------------",
         "DEO PRAYAG",
         "DHUMAKOT",
         "KALAGAD",
@@ -18479,7 +17366,6 @@
         "WOMEN P.S. SRINAGAR"
       ],
       "PITHORAGARH": [
-        "--------------Select------------",
         "ASKOT",
         "BALUWAKOT",
         "BERINAG",
@@ -18495,12 +17381,10 @@
         "THAL"
       ],
       "RUDRAPRAYAG": [
-        "--------------Select------------",
         "RUDRAPRAYAG",
         "UKHIMATH"
       ],
       "TEHRI GARHWAL": [
-        "--------------Select------------",
         "CHAMBA",
         "DEVPRAYAG",
         "GHANSALI",
@@ -18510,7 +17394,6 @@
         "TEHRI"
       ],
       "UDHAM SINGH NAGAR": [
-        "--------------Select------------",
         "BAJPUR",
         "DINESHPUR",
         "GADAR PUR",
@@ -18525,7 +17408,6 @@
         "SITARGANJ"
       ],
       "UTTAR KASHI": [
-        "--------------Select------------",
         "BARKOTE",
         "DHARASU",
         "KOTWALI UTTAR KASHI",
@@ -18534,13 +17416,10 @@
       ]
     },
     "WEST BENGAL": {
-      "--------------SELECT------------": [],
       "ANTI CORRUPTION": [
-        "--------------Select------------",
         "ANTI CORRUPTION"
       ],
       "ASANSOL DURGAPUR POLICE COMMISSIONERATE": [
-        "--------------Select------------",
         "ANDAL",
         "ASANSOL NORTH",
         "ASANSOL SOUTH",
@@ -18560,7 +17439,6 @@
         "SALANPUR"
       ],
       "BANKURA": [
-        "--------------Select------------",
         "BANKURA (SADAR)",
         "BARIKUL",
         "BARJORA",
@@ -18586,7 +17464,6 @@
         "TALDANGRA"
       ],
       "BARRACKPORE POLICE COMMISSIONERATE": [
-        "--------------Select------------",
         "BARANAGAR",
         "BARRACKPUR",
         "BELGHORIA",
@@ -18601,7 +17478,6 @@
         "TITAGARH"
       ],
       "BEHALA DIVISION(SOUTH WEST DIVISION)": [
-        "--------------Select------------",
         "BEHALA",
         "HARIDEVPUR",
         "PARNASREE",
@@ -18609,7 +17485,6 @@
         "THAKURPUKUR"
       ],
       "BIDHANNAGAR POLICE COMMISSIONERATE": [
-        "--------------Select------------",
         "AIRPORT",
         "BAGUIATI",
         "BIDHANNAGAR(EAST)",
@@ -18622,7 +17497,6 @@
         "NEW TOWN"
       ],
       "BIRBHUM": [
-        "--------------Select------------",
         "BOLPUR",
         "DUBRAJPUR",
         "ILLAMBAZAR",
@@ -18643,7 +17517,6 @@
         "SURI"
       ],
       "BURDWAN": [
-        "--------------Select------------",
         "ASANSOL NORTH",
         "ASANSOL SOUTH",
         "AUSGRAM",
@@ -18669,9 +17542,7 @@
         "RAINA",
         "RANIGANJ"
       ],
-      "C I D": [],
       "COOCH BEHAR": [
-        "--------------Select------------",
         "BAXIRHAT",
         "DINHATA",
         "GHOKSADANGA",
@@ -18685,7 +17556,6 @@
         "TUFANGANJ"
       ],
       "DAKSHIN DINAJPUR": [
-        "--------------Select------------",
         "BALURGHAT",
         "BANSHIHARI",
         "GANGARAMPUR",
@@ -18696,7 +17566,6 @@
         "TAPAN"
       ],
       "DARJEELING": [
-        "--------------Select------------",
         "DARJEELING SADAR PS",
         "GORUBATHAN",
         "JALDHAKA",
@@ -18715,7 +17584,6 @@
         "SUKHIAPOKRI"
       ],
       "HOOGHLY": [
-        "--------------Select------------",
         "ARAMBAG",
         "BALAGARH",
         "BHADRESWAR",
@@ -18743,7 +17611,6 @@
         "UTTARPARA"
       ],
       "HOWRAH": [
-        "--------------Select------------",
         "AMTA",
         "BAGNAN",
         "BANTRA",
@@ -18759,7 +17626,6 @@
         "ULUBERIA"
       ],
       "HOWRAH GRP": [
-        "--------------Select------------",
         "ANDAL",
         "ASANSOL",
         "AZIM GANJ",
@@ -18776,7 +17642,6 @@
         "SURI"
       ],
       "HOWRAH POLICE COMMISSIONERATE": [
-        "--------------Select------------",
         "BALLY",
         "BANTRA",
         "BELUR",
@@ -18793,7 +17658,6 @@
         "WOMEN PS"
       ],
       "JADAVPUR DIVISION(SOUTH SUBURBAN DIVISION)": [
-        "--------------Select------------",
         "BANSDRONI",
         "GARFA",
         "JADAVPUR",
@@ -18804,7 +17668,6 @@
         "SURVEY PARK"
       ],
       "JALPAIGURI": [
-        "--------------Select------------",
         "ALIPURDUAR",
         "BANARHAT",
         "BIRPARA",
@@ -18823,7 +17686,6 @@
         "SAMUKTALA"
       ],
       "JHARGRAM": [
-        "--------------Select------------",
         "BELABERIA",
         "BELPAHARI",
         "BINPUR",
@@ -18834,7 +17696,6 @@
         "SANKRAIL"
       ],
       "KHARAGPUR GRP": [
-        "--------------Select------------",
         "ADRA",
         "BANKURA",
         "HALDIA",
@@ -18845,7 +17706,6 @@
         "SHALIMAR"
       ],
       "KOLKATA CENTRAL DIVISION": [
-        "--------------Select------------",
         "BOWBAZAR",
         "BURRABAZAR",
         "GIRISH PARK",
@@ -18857,7 +17717,6 @@
         "TALTOLLA"
       ],
       "KOLKATA EASTERN SUB-DIVISION": [
-        "--------------Select------------",
         "BELIAGHATA",
         "BENIAPUKUR",
         "ENTALLY",
@@ -18869,7 +17728,6 @@
         "ULTADANGA"
       ],
       "KOLKATA NORTH DIVISION": [
-        "--------------Select------------",
         "AMHERST STREET",
         "BURTOLLA",
         "CHITPUR",
@@ -18880,11 +17738,9 @@
         "TALA"
       ],
       "KOLKATA POLICE CYBER HQ": [
-        "--------------Select------------",
         "CYBER PS"
       ],
       "KOLKATA PORT DIVISION": [
-        "--------------Select------------",
         "EKBALPUR",
         "GARDENREACH",
         "METIABRUZ",
@@ -18897,7 +17753,6 @@
         "WEST PORT POLICE STATION"
       ],
       "KOLKATA SOUTH DIVISION": [
-        "--------------Select------------",
         "ALIPORE",
         "BALLYGANJ",
         "BHOWANIPUR",
@@ -18915,7 +17770,6 @@
         "TOLLYGANJ"
       ],
       "KOLKATA SOUTH EASTERN DIVISION": [
-        "--------------Select------------",
         "BALLYGUNGE",
         "GARIAHAT",
         "KARAYA",
@@ -18926,7 +17780,6 @@
         "TOPSIA"
       ],
       "MALDA": [
-        "--------------Select------------",
         "BAISHNABNAGAR",
         "BAMONGOLA",
         "CHANCHAL",
@@ -18940,7 +17793,6 @@
         "RATUA"
       ],
       "MURSHIDABAD": [
-        "--------------Select------------",
         "BELDANGA",
         "BERHAMPORE",
         "BHAGWANGOLA",
@@ -18969,7 +17821,6 @@
         "SUTI"
       ],
       "NADIA": [
-        "--------------Select------------",
         "CHAKDAH",
         "CHAPRA",
         "DHANTALA",
@@ -18993,7 +17844,6 @@
         "THANARPARA"
       ],
       "NORTH 24 PARGANAS": [
-        "--------------Select------------",
         "AIR PORT",
         "AMDANGA",
         "ASHOKENAGAR",
@@ -19018,7 +17868,6 @@
         "SWARUPNAGAR"
       ],
       "PASCHIM MEDINIPUR": [
-        "--------------Select------------",
         "ANANDAPUR",
         "BELDA",
         "CHANDRAKONA",
@@ -19045,7 +17894,6 @@
         "SALBONI"
       ],
       "PURBA MEDINIPUR": [
-        "--------------Select------------",
         "BHAGAWANPUR",
         "BHOWANIPUR",
         "BHUPATINAGAR",
@@ -19072,7 +17920,6 @@
         "TAMLUK"
       ],
       "PURULIA": [
-        "--------------Select------------",
         "ARSHA",
         "BAGHMUNDI",
         "BALARAMPUR",
@@ -19096,7 +17943,6 @@
         "SANTURI"
       ],
       "SEALDAH GRP": [
-        "--------------Select------------",
         "BALLYGUNGE (SEALDAH)",
         "BARASAT",
         "BARUIPUR",
@@ -19112,8 +17958,7 @@
         "SONARPUR"
       ],
       "SILIGURI GRP": [
-        "--------------Select------------",
-        "ALIPURDUAR  JN",
+        "ALIPURDUAR JN",
         "BALURGHAT GRPS",
         "DALKHOLA",
         "MALDA(T)",
@@ -19124,13 +17969,11 @@
         "SILIGURI(T)"
       ],
       "SILIGURI POLICE COMMISONERATE": [
-        "--------------Select------------",
         "BAGDOGRA",
         "BAGDOGRA INVES.CNTRE",
         "MATIGARA"
       ],
       "SOUTH 24 PARGANAS": [
-        "--------------Select------------",
         "BARUIPUR",
         "BASANTI",
         "BEHALA",
@@ -19177,11 +18020,9 @@
         "USTHI"
       ],
       "TRANSPORT DEPT": [
-        "--------------Select------------",
         "TRANSPORT DEPT, W. BENGAL"
       ],
       "UTTAR DINAJPUR": [
-        "--------------Select------------",
         "CHAKULIA",
         "CHOPRA",
         "GOALPUKHAR",

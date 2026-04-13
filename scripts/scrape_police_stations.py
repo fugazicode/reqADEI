@@ -11,6 +11,8 @@ Usage:
 
   python scripts/scrape_police_stations.py --scrape [--limit N] [--headed]
       Log in, open the tenant form, iterate states, write national JSON.
+
+  For a static national list from CSV instead, see scripts/build_national_stations_json.py.
 """
 from __future__ import annotations
 
