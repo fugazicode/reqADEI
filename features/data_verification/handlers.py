@@ -835,6 +835,13 @@ async def district_selected(
         "tenanted_addr": "tenant.tenanted_address.district",
         "perm_addr": "tenant.address.district",
     }.get(section, "tenant.address.district")
+    station_path = {
+        "tenanted_addr": "tenant.tenanted_address.police_station",
+        "perm_addr": "tenant.address.police_station",
+        "owner": "owner.address.police_station",
+    }.get(section)
+    if station_path:
+        PayloadAccessor.set(session.payload, station_path, None)
     PayloadAccessor.set(session.payload, district_path, district_name)
 
     # Now ask for station
@@ -970,6 +977,7 @@ async def small_dropdown_selected(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
+    station_lookup: StationLookup,
     bot: Bot,
 ) -> None:
     await callback.answer()
@@ -990,13 +998,54 @@ async def small_dropdown_selected(
         return
     field_path = keys[idx]
     PayloadAccessor.set(session.payload, field_path, value)
+
+    perm_state_change = section == "perm_addr" and field_path == "tenant.address.state"
+    if perm_state_change:
+        PayloadAccessor.set(session.payload, "tenant.address.district", None)
+        PayloadAccessor.set(session.payload, "tenant.address.police_station", None)
+
+    chat_id = callback.message.chat.id  # type: ignore[union-attr]
+
+    if perm_state_change:
+        session.current_editing_field = "tenant.address.district"
+        session_store.set(user_id, session)
+        await _delete_prompt(bot, chat_id, session)
+        await _refresh_overview(
+            bot,
+            chat_id,
+            session,
+            section,
+            user_id=user_id,
+            session_store=session_store,
+        )
+        districts = station_lookup.districts_for_perm_addr(value)
+        if not districts:
+            await state.set_state(_SECTION_STATES["perm_addr"])
+            session.current_editing_field = None
+            msg = await callback.message.answer(  # type: ignore[union-attr]
+                "No districts are loaded for this state yet. "
+                "Run `python scripts/scrape_police_stations.py` to refresh national data, "
+                "or contact support.",
+            )
+            session.last_prompt_message_id = msg.message_id
+            session_store.set(user_id, session)
+            return
+        await state.set_state(ReviewStates.PICKING_PERM_DISTRICT)
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            "Select district:",
+            reply_markup=district_picker_keyboard("perm_addr", districts),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+        return
+
     session.current_editing_field = None
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
-    await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+    await _delete_prompt(bot, chat_id, session)
     await _refresh_overview(
         bot,
-        callback.message.chat.id,  # type: ignore[union-attr]
+        chat_id,
         session,
         section,
         user_id=user_id,
