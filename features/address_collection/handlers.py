@@ -19,6 +19,8 @@ from infrastructure.groq_parser import GroqParser, GroqParsingError
 from infrastructure.session_store import SessionStore
 from shared.models.form_payload import AddressData
 from utils.payload_accessor import PayloadAccessor
+from utils.station_autopick import auto_pick_station
+from utils.station_lookup import StationLookup
 
 LOGGER = logging.getLogger(__name__)
 router = Router(name="address_collection")
@@ -34,6 +36,7 @@ async def tenanted_address_received(
     state: FSMContext,
     session_store: SessionStore,
     groq_parser: GroqParser,
+    station_lookup: StationLookup,
 ) -> None:
     user_id = message.from_user.id
     session = session_store.get(user_id)
@@ -82,6 +85,12 @@ async def tenanted_address_received(
     # Tenanted premises are always in Delhi
     addr.state = "DELHI"
     addr.country = "INDIA"
+
+    if addr.district and not addr.police_station:
+        stations = station_lookup.stations_for_district(str(addr.district))
+        picked = auto_pick_station(stations)
+        if picked:
+            addr.police_station = picked
 
     session_store.set(user_id, session)
     await state.set_state(ReviewStates.REVIEWING_TENANTED_ADDR)

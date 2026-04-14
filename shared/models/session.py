@@ -45,6 +45,9 @@ class FormSession:
     # Edit tracking — set when user selects a field to edit from an overview.
     current_editing_field: Optional[str] = None
 
+    # True when the user explicitly edits police station (skip auto-pick).
+    station_picker_forced: bool = False
+
     # Message management
     # overview_message_id: the overview message edited in-place on every field update.
     overview_message_id: Optional[int] = None

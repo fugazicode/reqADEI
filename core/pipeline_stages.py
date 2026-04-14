@@ -13,6 +13,8 @@ from shared.models.session import FormSession, ImageRecord
 from shared.portal_enums import STATES
 from utils.aadhaar import mask_aadhaar, validate_aadhaar
 from utils.payload_accessor import PayloadAccessor
+from utils.station_autopick import auto_pick_station
+from utils.station_lookup import StationLookup
 
 # Must match keys in features/submission/form_filler.py DISTRICT_VALUES.
 _DELHI_DISTRICT_KEYS: frozenset[str] = frozenset(
@@ -79,6 +81,12 @@ def _normalise_delhi_district(raw: str) -> str:
     return collapsed
 
 
+def _is_india_country(country: str | None) -> bool:
+    if not country:
+        return True
+    return str(country).strip().upper() == "INDIA"
+
+
 class ImageParsingStage(PipelineStage):
     name = "parse_image"
 
@@ -86,10 +94,12 @@ class ImageParsingStage(PipelineStage):
         self,
         groq_parser: GroqParser,
         bot: Bot,
+        station_lookup: StationLookup,
         analytics_store: AnalyticsStore | None = None,
     ) -> None:
         self._groq_parser = groq_parser
         self._bot = bot
+        self._station_lookup = station_lookup
         self._analytics = analytics_store
         self._logger = logging.getLogger(__name__)
 
@@ -194,6 +204,26 @@ class ImageParsingStage(PipelineStage):
                 district_path,
                 _normalise_delhi_district(str(raw_district)),
             )
+
+        station_path = f"{target_prefix}.address.police_station"
+        if not PayloadAccessor.get(session.payload, station_path):
+            country = PayloadAccessor.get(session.payload, f"{target_prefix}.address.country")
+            if _is_india_country(country):
+                district = PayloadAccessor.get(session.payload, district_path)
+                if district:
+                    stations: list[str] = []
+                    if target_prefix == "owner":
+                        stations = self._station_lookup.stations_for_district(str(district))
+                    else:
+                        state = PayloadAccessor.get(session.payload, f"{target_prefix}.address.state")
+                        if state:
+                            stations = self._station_lookup.stations_for_perm_addr(
+                                str(state),
+                                str(district),
+                            )
+                    picked = auto_pick_station(stations)
+                    if picked:
+                        PayloadAccessor.set(session.payload, station_path, picked)
 
         if target_prefix == "tenant" and not PayloadAccessor.get(
             session.payload,

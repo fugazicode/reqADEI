@@ -37,8 +37,13 @@ async def cancel_root(message: Message, state: FSMContext, session_store: Sessio
     await message.answer("Form cancelled. Send /start to begin again.")
 
 
-def _build_pipeline(groq_parser: GroqParser, bot: Bot, analytics_store: AnalyticsStore) -> PipelineEngine:
-    return PipelineEngine([ImageParsingStage(groq_parser, bot, analytics_store)])
+def _build_pipeline(
+    groq_parser: GroqParser,
+    bot: Bot,
+    analytics_store: AnalyticsStore,
+    station_lookup: StationLookup,
+) -> PipelineEngine:
+    return PipelineEngine([ImageParsingStage(groq_parser, bot, station_lookup, analytics_store)])
 
 
 async def _session_cleanup_loop(session_store: SessionStore) -> None:
@@ -68,11 +73,12 @@ async def run() -> None:
     station_lookup = StationLookup(
         stations_file=base_dir / "data" / "delhi_police_stations.json",
         national_file=base_dir / "data" / "national_police_stations.json",
+        unified_file=base_dir / "data" / "police_stations.json",
     )
 
     analytics_store = AnalyticsStore(base_dir / "data" / "analytics.db")
 
-    pipeline = _build_pipeline(groq_parser, bot, analytics_store)
+    pipeline = _build_pipeline(groq_parser, bot, analytics_store, station_lookup)
 
     submission_worker = SubmissionWorker(
         bot=bot,

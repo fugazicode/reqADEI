@@ -24,7 +24,7 @@ OWNER_FIELDS: dict[str, FieldMeta] = {
     "owner.relation_type":             FieldMeta("Relation Type",         DROPDOWN, "RELATION_TYPES"),
     "owner.occupation":                FieldMeta("Occupation",            DROPDOWN, "OCCUPATIONS"),
     "owner.address.village_town_city": FieldMeta("Village / Town / City", FREE_TEXT),
-    "owner.address.country":           FieldMeta("Country",               FREE_TEXT),
+    "owner.address.country":           FieldMeta("Country",               DROPDOWN, "COUNTRIES"),
     "owner.address.state":             FieldMeta("State",                 DROPDOWN, "STATES"),
     "owner.address.district":          FieldMeta("District",              DROPDOWN, "DISTRICTS"),
     "owner.address.police_station":    FieldMeta("Police Station",        DROPDOWN, "STATIONS"),
@@ -77,7 +77,7 @@ TENANTED_ADDR_MANDATORY = {
 # All 5 address fields are always mandatory regardless of country value.
 PERM_ADDR_FIELDS: dict[str, FieldMeta] = {
     "tenant.address.village_town_city": FieldMeta("Village / Town / City", FREE_TEXT),
-    "tenant.address.country":           FieldMeta("Country",               FREE_TEXT),
+    "tenant.address.country":           FieldMeta("Country",               DROPDOWN, "COUNTRIES"),
     "tenant.address.state":             FieldMeta("State",                 DROPDOWN, "STATES"),
     "tenant.address.district":          FieldMeta("District",              DROPDOWN, "DISTRICTS"),
     "tenant.address.police_station":    FieldMeta("Police Station",        DROPDOWN, "STATIONS"),
