@@ -20,6 +20,21 @@ from features.submission.portal_session import (
 from shared.portal_enums import ADDRESS_DOC_TYPES, OWNER_OCCUPATIONS, TENANCY_PURPOSES
 from shared.models.form_payload import FormPayload
 
+NOT_APPLICABLE_LABEL = "---Not applicable---"
+
+
+def _is_india_country(country: str | None) -> bool:
+    if not country:
+        return True
+    return country.strip().upper() == "INDIA"
+
+
+def _is_delhi_state(state: str | None) -> bool:
+    if not state:
+        return False
+    normalized = state.strip().lower()
+    return normalized in ("delhi", "nct of delhi", "national capital territory of delhi")
+
 
 DISTRICT_VALUES: dict[str, str] = {
     "CENTRAL": "8162",
@@ -1018,6 +1033,12 @@ class FormFiller:
             "tenantPermanentPincode",
             self._payload.tenant.address.pincode,
         )
+        perm_country = self._payload.tenant.address.country
+        if perm_country and not _is_india_country(perm_country):
+            await self._select_by_label("tenantPermanentCountry", perm_country)
+            await self._select_by_label("tenantPermanentState", NOT_APPLICABLE_LABEL)
+            await self._select_by_label("tenantPermanentDistrict", NOT_APPLICABLE_LABEL)
+            return
         if self._payload.tenant.address.state:
             state_value = STATE_VALUES.get(self._payload.tenant.address.state.upper())
             if state_value:
@@ -1150,6 +1171,109 @@ class FormFiller:
             self._payload.owner.address.tehsil_block_mandal,
         )
         await self._fill_text("ownerPincode", self._payload.owner.address.pincode)
+
+        owner_country = self._payload.owner.address.country
+        if owner_country and not _is_india_country(owner_country):
+            await self._select_by_label("ownerCountry", owner_country)
+            await self._select_by_label("ownerState", NOT_APPLICABLE_LABEL)
+            await self._select_by_label("ownerDistrict", NOT_APPLICABLE_LABEL)
+            return
+
+        owner_state = self._payload.owner.address.state
+        if owner_state and not _is_delhi_state(owner_state):
+            state_value = STATE_VALUES.get(owner_state.upper())
+            if state_value:
+                try:
+                    async with self._page.expect_response(
+                        lambda r: "getdistricts" in r.url,
+                        timeout=15000,
+                    ) as response_info:
+                        await self._js_select("ownerState", state_value)
+                    await response_info.value
+                    await self._wait_for_options("ownerDistrict")
+                except PlaywrightTimeoutError:
+                    self._logger.warning(
+                        "Owner state selection did not trigger district load for '%s'",
+                        owner_state,
+                    )
+                    if not await self._wait_for_options("ownerDistrict"):
+                        await self._js_select_by_label("ownerState", owner_state)
+                        await self._wait_for_options("ownerDistrict")
+            else:
+                self._logger.warning(
+                    "Unknown owner address state '%s' — attempting label select",
+                    owner_state,
+                )
+                try:
+                    async with self._page.expect_response(
+                        lambda r: "getdistricts" in r.url,
+                        timeout=15000,
+                    ) as response_info:
+                        await self._js_select_by_label("ownerState", owner_state)
+                    await response_info.value
+                except PlaywrightTimeoutError:
+                    self._logger.warning(
+                        "Owner state label select did not trigger district load for '%s'",
+                        owner_state,
+                    )
+                await self._wait_for_options("ownerDistrict")
+
+            owner_district = self._payload.owner.address.district
+            if owner_district:
+                district_value = DISTRICT_VALUES.get(owner_district.upper())
+                try:
+                    async with self._page.expect_response(
+                        lambda r: "getpolicestations" in r.url,
+                        timeout=15000,
+                    ) as response_info:
+                        if district_value:
+                            await self._js_select("ownerDistrict", district_value)
+                        else:
+                            await self._js_select_by_label("ownerDistrict", owner_district)
+                    await response_info.value
+                except PlaywrightTimeoutError:
+                    self._logger.warning(
+                        "Owner district selection did not trigger station load for '%s'",
+                        owner_district,
+                    )
+                await self._wait_for_options("ownerPoliceStation")
+            else:
+                self._logger.warning(
+                    "Owner district missing for non-Delhi state '%s'",
+                    owner_state,
+                )
+
+            owner_station = self._payload.owner.address.police_station
+            if owner_station:
+                station_value = POLICE_STATION_VALUES.get(owner_station.upper())
+                try:
+                    if station_value:
+                        await self._js_select("ownerPoliceStation", station_value)
+                    else:
+                        await self._js_select_by_label("ownerPoliceStation", owner_station)
+                except Exception:
+                    self._logger.warning(
+                        "Could not select owner police station '%s'",
+                        owner_station,
+                    )
+
+            await self._page.evaluate(
+                """([districtField, stationField, hiddenDistrict, hiddenStation]) => {
+                    const d = document.querySelector('[name="' + districtField + '"]');
+                    const s = document.querySelector('[name="' + stationField + '"]');
+                    const hd = document.querySelector('[name="' + hiddenDistrict + '"]');
+                    const hs = document.querySelector('[name="' + hiddenStation + '"]');
+                    if (hd && d && !hd.value) hd.value = d.value || '';
+                    if (hs && s && !hs.value) hs.value = s.value || '';
+                }""",
+                [
+                    "ownerDistrict",
+                    "ownerPoliceStation",
+                    "hiddenownerDistrict",
+                    "hiddenownerPStation",
+                ],
+            )
+            return
 
         # Country/state are pre-selected in static HTML (India/Delhi).
         # Changing either triggers checkForOtherCountry and clears downstream selects.

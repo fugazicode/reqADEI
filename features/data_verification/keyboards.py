@@ -28,6 +28,8 @@ _CONFIRM_LABELS: dict[str, str] = {
     "perm_addr":     "✅ Confirm & Submit",                # 19 chars
 }
 
+_MANUAL_STATION_SECTIONS = {"owner", "perm_addr"}
+
 
 def overview_keyboard(section: str) -> InlineKeyboardMarkup:
     """Overview keyboard: Edit Fields button + Confirm/Next button."""
@@ -100,6 +102,40 @@ def occupation_search_results_keyboard(section: str, results: list[str]) -> Inli
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+# ── Country picker (paged) ──────────────────────────────────────────────────
+
+def country_picker_keyboard(
+    section: str,
+    countries: list[str] | tuple[str, ...],
+    page: int = 0,
+) -> InlineKeyboardMarkup:
+    per_page = 8
+    items = list(countries)
+    total_pages = max(1, math.ceil(len(items) / per_page))
+    start = page * per_page
+    chunk = items[start: start + per_page]
+
+    buttons: list[list[InlineKeyboardButton]] = []
+    for offset, name in enumerate(chunk):
+        idx = start + offset
+        buttons.append([
+            InlineKeyboardButton(
+                text=name,
+                callback_data=f"picker:country:{section}:{idx}",
+            )
+        ])
+
+    nav: list[InlineKeyboardButton] = []
+    if page > 0:
+        nav.append(InlineKeyboardButton(text="◀", callback_data=f"picker:country_page:{section}:{page - 1}"))
+    if page < total_pages - 1:
+        nav.append(InlineKeyboardButton(text="▶", callback_data=f"picker:country_page:{section}:{page + 1}"))
+    if nav:
+        buttons.append(nav)
+    buttons.append([InlineKeyboardButton(text="← Back", callback_data=f"overview:back:{section}")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 # ── District / station pickers ───────────────────────────────────────────────
 
 def district_picker_keyboard(section: str, districts: list[str], page: int = 0) -> InlineKeyboardMarkup:
@@ -109,10 +145,11 @@ def district_picker_keyboard(section: str, districts: list[str], page: int = 0) 
     chunk = districts[start: start + per_page]
 
     buttons: list[list[InlineKeyboardButton]] = []
-    for name in chunk:
+    for offset, name in enumerate(chunk):
+        idx = start + offset
         buttons.append([InlineKeyboardButton(
             text=name.title(),
-            callback_data=f"picker:district:{section}:{name}",
+            callback_data=f"picker:district:{section}:{idx}",
         )])
 
     nav: list[InlineKeyboardButton] = []
@@ -133,19 +170,25 @@ def station_picker_keyboard(section: str, district: str, stations: list[str], pa
     chunk = stations[start: start + per_page]
 
     buttons: list[list[InlineKeyboardButton]] = []
-    for name in chunk:
+    for offset, name in enumerate(chunk):
+        idx = start + offset
         buttons.append([InlineKeyboardButton(
             text=name.title(),
-            callback_data=f"picker:station:{section}:{district}:{name}",
+            callback_data=f"picker:station:{section}:{idx}",
         )])
 
     nav: list[InlineKeyboardButton] = []
     if page > 0:
-        nav.append(InlineKeyboardButton(text="◀", callback_data=f"picker:stn_page:{section}:{district}:{page - 1}"))
+        nav.append(InlineKeyboardButton(text="◀", callback_data=f"picker:stn_page:{section}:{page - 1}"))
     if page < total_pages - 1:
-        nav.append(InlineKeyboardButton(text="▶", callback_data=f"picker:stn_page:{section}:{district}:{page + 1}"))
+        nav.append(InlineKeyboardButton(text="▶", callback_data=f"picker:stn_page:{section}:{page + 1}"))
     if nav:
         buttons.append(nav)
+    if section in _MANUAL_STATION_SECTIONS:
+        buttons.append([InlineKeyboardButton(
+            text="⌨️ Type station manually",
+            callback_data=f"picker:station_manual:{section}",
+        )])
     buttons.append([InlineKeyboardButton(text="← Pick District Again", callback_data=f"picker:district_reselect:{section}")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

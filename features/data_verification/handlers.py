@@ -23,6 +23,7 @@ from aiogram.types import CallbackQuery, Message
 
 from features.data_verification.keyboards import (
     cancel_edit_keyboard,
+    country_picker_keyboard,
     district_picker_keyboard,
     field_selector_keyboard,
     occupation_quick_keyboard,
@@ -57,6 +58,7 @@ from infrastructure.analytics_store import AnalyticsStore
 from infrastructure.session_store import SessionStore
 from shared import portal_enums
 from utils.payload_accessor import PayloadAccessor
+from utils.station_autopick import auto_pick_station
 from utils.station_lookup import StationLookup
 
 LOGGER = logging.getLogger(__name__)
@@ -91,6 +93,8 @@ _OVERVIEW_BUILDERS = {
     "tenanted_addr": build_tenanted_addr_overview_text,
     "perm_addr": build_perm_addr_overview_text,
 }
+
+NOT_APPLICABLE_LABEL = "---Not applicable---"
 
 def _edit_state_ids(*states: State) -> frozenset[str]:
     return frozenset(s.state for s in states)
@@ -152,23 +156,123 @@ _OCC_SEARCH_STATES = (
 
 
 def _district_list_for_picker(section: str, session, station_lookup: StationLookup) -> list[str]:
-    if section == "perm_addr":
-        st = PayloadAccessor.get(session.payload, "tenant.address.state")
-        if not st:
+    if section in {"owner", "perm_addr"}:
+        country = _country_value_for_section(section, session)
+        if not _is_india_country(country):
             return []
-        return station_lookup.districts_for_perm_addr(str(st))
+        state_value = _state_value_for_section(section, session)
+        if not state_value:
+            if section == "owner":
+                return station_lookup.district_names()
+            return []
+        return station_lookup.districts_for_perm_addr(str(state_value))
     return station_lookup.district_names()
 
 
 def _stations_for_picker(
     section: str, session, station_lookup: StationLookup, district: str
 ) -> list[str]:
-    if section == "perm_addr":
-        st = PayloadAccessor.get(session.payload, "tenant.address.state")
-        if not st:
+    if section in {"owner", "perm_addr"}:
+        country = _country_value_for_section(section, session)
+        if not _is_india_country(country):
             return []
-        return station_lookup.stations_for_perm_addr(str(st), district)
+        state_value = _state_value_for_section(section, session)
+        if not state_value:
+            if section == "owner":
+                return station_lookup.stations_for_district(district)
+            return []
+        return station_lookup.stations_for_perm_addr(str(state_value), district)
     return station_lookup.stations_for_district(district)
+
+
+def _district_path_for_section(section: str) -> str | None:
+    return {
+        "owner": "owner.address.district",
+        "tenanted_addr": "tenant.tenanted_address.district",
+        "perm_addr": "tenant.address.district",
+    }.get(section)
+
+
+def _state_path_for_section(section: str) -> str | None:
+    return {
+        "owner": "owner.address.state",
+        "perm_addr": "tenant.address.state",
+    }.get(section)
+
+
+def _state_value_for_section(section: str, session) -> str | None:
+    state_path = _state_path_for_section(section)
+    if not state_path:
+        return None
+    state = PayloadAccessor.get(session.payload, state_path)
+    if state is None:
+        return None
+    state_text = str(state).strip()
+    return state_text or None
+
+
+def _district_value_for_section(section: str, session) -> str | None:
+    district_path = _district_path_for_section(section)
+    if not district_path:
+        return None
+    district = PayloadAccessor.get(session.payload, district_path)
+    if district is None:
+        return None
+    district_text = str(district).strip()
+    return district_text or None
+
+
+def _station_path_for_section(section: str) -> str | None:
+    return {
+        "owner": "owner.address.police_station",
+        "tenanted_addr": "tenant.tenanted_address.police_station",
+        "perm_addr": "tenant.address.police_station",
+    }.get(section)
+
+
+def _country_path_for_section(section: str) -> str | None:
+    return {
+        "owner": "owner.address.country",
+        "perm_addr": "tenant.address.country",
+    }.get(section)
+
+
+def _country_value_for_section(section: str, session) -> str | None:
+    path = _country_path_for_section(section)
+    if not path:
+        return None
+    country = PayloadAccessor.get(session.payload, path)
+    if country is None:
+        return None
+    country_text = str(country).strip()
+    return country_text or None
+
+
+def _is_india_country(country: str | None) -> bool:
+    if not country:
+        return True
+    return country.strip().upper() == "INDIA"
+
+
+def _apply_non_india_defaults(section: str, session) -> None:
+    base = "owner.address" if section == "owner" else "tenant.address"
+    PayloadAccessor.set(session.payload, f"{base}.state", NOT_APPLICABLE_LABEL)
+    PayloadAccessor.set(session.payload, f"{base}.district", NOT_APPLICABLE_LABEL)
+    PayloadAccessor.set(session.payload, f"{base}.police_station", NOT_APPLICABLE_LABEL)
+
+
+def _clear_non_india_defaults(section: str, session) -> None:
+    base = "owner.address" if section == "owner" else "tenant.address"
+    for field in ("state", "district", "police_station"):
+        path = f"{base}.{field}"
+        if PayloadAccessor.get(session.payload, path) == NOT_APPLICABLE_LABEL:
+            PayloadAccessor.set(session.payload, path, None)
+
+
+def _is_non_india_section(section: str, session) -> bool:
+    if section not in {"owner", "perm_addr"}:
+        return False
+    return not _is_india_country(_country_value_for_section(section, session))
 
 
 # ── Helper to refresh overview message in-place ──────────────────────────────
@@ -211,6 +315,44 @@ async def _delete_prompt(bot: Bot, chat_id: int, session) -> None:
         except Exception:
             pass
         session.last_prompt_message_id = None
+
+
+async def _prompt_manual_station_entry(
+    *,
+    bot: Bot,
+    chat_id: int,
+    session,
+    section: str,
+    state: FSMContext,
+    user_id: int,
+    session_store: SessionStore,
+) -> None:
+    station_path = _station_path_for_section(section)
+    if not station_path:
+        return
+    edit_state = {
+        "owner": ReviewStates.EDITING_OWNER_FIELD,
+        "tenant": ReviewStates.EDITING_TENANT_FIELD,
+        "tenanted_addr": ReviewStates.EDITING_TENANTED_ADDR_FIELD,
+        "perm_addr": ReviewStates.EDITING_PERM_ADDR_FIELD,
+    }.get(section)
+    if not edit_state:
+        return
+    session.current_editing_field = station_path
+    session.station_picker_forced = True
+    session_store.set(user_id, session)
+    await state.set_state(edit_state)
+    await _delete_prompt(bot, chat_id, session)
+    meta = _ALL_FIELDS.get(station_path)
+    label = meta.label if meta else "Police Station"
+    msg = await bot.send_message(
+        chat_id,
+        f"Enter new value for *{label}*:",
+        reply_markup=cancel_edit_keyboard(section),
+        parse_mode="Markdown",
+    )
+    session.last_prompt_message_id = msg.message_id
+    session_store.set(user_id, session)
 
 
 # ── Overview: Confirm buttons ─────────────────────────────────────────────────
@@ -373,6 +515,7 @@ async def overview_back(callback: CallbackQuery, state: FSMContext, session_stor
     await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
     await state.set_state(_SECTION_STATES[section])
     session.current_editing_field = None
+    session.station_picker_forced = False
     session_store.set(user_id, session)
     await _refresh_overview(
         bot,
@@ -454,6 +597,25 @@ async def edit_field_selected(
     # DROPDOWN routing
     enum_key = meta.enum_key or ""
 
+    if enum_key in ("STATES", "DISTRICTS", "STATIONS") and _is_non_india_section(section, session):
+        _apply_non_india_defaults(section, session)
+        session.current_editing_field = None
+        session.station_picker_forced = False
+        session_store.set(user_id, session)
+        await state.set_state(_SECTION_STATES[section])
+        await callback.message.answer(  # type: ignore[union-attr]
+            "State, District, and Police Station are not applicable for non-India addresses."
+        )
+        await _refresh_overview(
+            bot,
+            chat_id,
+            session,
+            section,
+            user_id=user_id,
+            session_store=session_store,
+        )
+        return
+
     if enum_key == "OCCUPATIONS":
         pick_state = {
             "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
@@ -467,29 +629,40 @@ async def edit_field_selected(
         session.last_prompt_message_id = msg.message_id
         session_store.set(user_id, session)
 
+    elif enum_key == "COUNTRIES":
+        pick_state = {
+            "owner": ReviewStates.PICKING_OWNER_DROPDOWN,
+            "perm_addr": ReviewStates.PICKING_PERM_DROPDOWN,
+        }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
+        await state.set_state(pick_state)
+        msg = await callback.message.answer(  # type: ignore[union-attr]
+            "Select country:",
+            reply_markup=country_picker_keyboard(section, portal_enums.COUNTRIES.values),
+        )
+        session.last_prompt_message_id = msg.message_id
+        session_store.set(user_id, session)
+
     elif enum_key == "DISTRICTS":
+        session.station_picker_forced = False
         pick_state = {
             "tenanted_addr": ReviewStates.PICKING_TENANTED_DISTRICT,
             "perm_addr": ReviewStates.PICKING_PERM_DISTRICT,
             "owner": ReviewStates.PICKING_OWNER_DISTRICT,
         }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
         await state.set_state(pick_state)
-        if section == "perm_addr":
-            perm_state = PayloadAccessor.get(session.payload, "tenant.address.state")
-            if not perm_state:
-                await state.set_state(_SECTION_STATES["perm_addr"])
-                msg = await callback.message.answer(  # type: ignore[union-attr]
-                    "Please set *State* first (edit the State field), then choose district.",
-                    parse_mode="Markdown",
-                )
-                session.last_prompt_message_id = msg.message_id
-                session_store.set(user_id, session)
-                return
-            districts = station_lookup.districts_for_perm_addr(str(perm_state))
-        else:
-            districts = station_lookup.district_names()
-        if section == "perm_addr" and not districts:
+        state_value = _state_value_for_section(section, session) if section in {"owner", "perm_addr"} else None
+        if section == "perm_addr" and not state_value:
             await state.set_state(_SECTION_STATES["perm_addr"])
+            msg = await callback.message.answer(  # type: ignore[union-attr]
+                "Please set *State* first (edit the State field), then choose district.",
+                parse_mode="Markdown",
+            )
+            session.last_prompt_message_id = msg.message_id
+            session_store.set(user_id, session)
+            return
+        districts = _district_list_for_picker(section, session, station_lookup)
+        if section in {"owner", "perm_addr"} and state_value and not districts:
+            await state.set_state(_SECTION_STATES[section])
             msg = await callback.message.answer(  # type: ignore[union-attr]
                 "No districts are loaded for this state yet. "
                 "Run `python scripts/scrape_police_stations.py` to refresh national data, "
@@ -520,22 +693,19 @@ async def edit_field_selected(
             "owner": ReviewStates.PICKING_OWNER_DISTRICT,
         }.get(section, ReviewStates.PICKING_TENANTED_DISTRICT)
         await state.set_state(pick_state)
-        if section == "perm_addr":
-            perm_state = PayloadAccessor.get(session.payload, "tenant.address.state")
-            if not perm_state:
-                await state.set_state(_SECTION_STATES["perm_addr"])
-                msg = await callback.message.answer(  # type: ignore[union-attr]
-                    "Please set *State* first (edit the State field), then choose police station.",
-                    parse_mode="Markdown",
-                )
-                session.last_prompt_message_id = msg.message_id
-                session_store.set(user_id, session)
-                return
-            districts = station_lookup.districts_for_perm_addr(str(perm_state))
-        else:
-            districts = station_lookup.district_names()
-        if section == "perm_addr" and not districts:
+        state_value = _state_value_for_section(section, session) if section in {"owner", "perm_addr"} else None
+        if section == "perm_addr" and not state_value:
             await state.set_state(_SECTION_STATES["perm_addr"])
+            msg = await callback.message.answer(  # type: ignore[union-attr]
+                "Please set *State* first (edit the State field), then choose police station.",
+                parse_mode="Markdown",
+            )
+            session.last_prompt_message_id = msg.message_id
+            session_store.set(user_id, session)
+            return
+        districts = _district_list_for_picker(section, session, station_lookup)
+        if section in {"owner", "perm_addr"} and state_value and not districts:
+            await state.set_state(_SECTION_STATES[section])
             msg = await callback.message.answer(  # type: ignore[union-attr]
                 "No districts are loaded for this state yet. "
                 "Run `python scripts/scrape_police_stations.py` to refresh national data.",
@@ -543,6 +713,7 @@ async def edit_field_selected(
             session.last_prompt_message_id = msg.message_id
             session_store.set(user_id, session)
             return
+        session.station_picker_forced = True
         msg = await callback.message.answer(  # type: ignore[union-attr]
             "Select district first to choose a police station:",
             reply_markup=district_picker_keyboard(section, districts),
@@ -557,9 +728,12 @@ async def edit_field_selected(
         }.get(section, ReviewStates.PICKING_OWNER_DROPDOWN)
         await state.set_state(pick_state)
         fidx = _SECTION_FIELD_KEYS[section].index(field_path)
+        state_options = tuple(station_lookup.state_names())
+        if not state_options:
+            state_options = portal_enums.STATES.values
         msg = await callback.message.answer(  # type: ignore[union-attr]
             "Select state:",
-            reply_markup=small_dropdown_keyboard(section, fidx, portal_enums.STATES.values),
+            reply_markup=small_dropdown_keyboard(section, fidx, state_options),
         )
         session.last_prompt_message_id = msg.message_id
         session_store.set(user_id, session)
@@ -618,6 +792,8 @@ async def _handle_free_text_edit(
         PayloadAccessor.set(session.payload, field_path, raw)
     await _delete_prompt(bot, message.chat.id, session)
     await message.delete()
+    if field_path.endswith(".police_station"):
+        session.station_picker_forced = False
     session.current_editing_field = None
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
@@ -769,11 +945,86 @@ async def occ_search_tenant(message: Message, state: FSMContext, session_store: 
 
 @router.message(ReviewStates.PICKING_PERM_DROPDOWN)
 async def perm_dropdown_text(message: Message, bot: Bot) -> None:
-    await message.answer("Please use the buttons above to select a state.")
+    await message.answer("Please use the buttons above to make a selection.")
     try:
         await message.delete()
     except Exception:
         pass
+
+
+# ── Country picker ──────────────────────────────────────────────────────────
+
+@router.callback_query(
+    StateFilter(*_SMALL_DROPDOWN_STATES),
+    F.data.startswith("picker:country_page:"),
+)
+async def country_page(
+    callback: CallbackQuery,
+    session_store: SessionStore,
+) -> None:
+    await callback.answer()
+    parts = callback.data.split(":")  # type: ignore[union-attr]
+    if len(parts) < 4:
+        return
+    section = parts[2]
+    page = int(parts[3])
+    countries = list(portal_enums.COUNTRIES.values)
+    await callback.message.edit_reply_markup(  # type: ignore[union-attr]
+        reply_markup=country_picker_keyboard(section, countries, page)
+    )
+
+
+@router.callback_query(
+    StateFilter(*_SMALL_DROPDOWN_STATES),
+    F.data.startswith("picker:country:"),
+)
+async def country_selected(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+    bot: Bot,
+) -> None:
+    await callback.answer()
+    parts = callback.data.split(":")  # type: ignore[union-attr]
+    if len(parts) < 4:
+        return
+    section = parts[2]
+    idx_raw = parts[3]
+    if not idx_raw.isdigit():
+        return
+    idx = int(idx_raw)
+    countries = list(portal_enums.COUNTRIES.values)
+    if idx >= len(countries):
+        return
+
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    country_path = _country_path_for_section(section)
+    if not country_path:
+        return
+
+    country_value = countries[idx]
+    PayloadAccessor.set(session.payload, country_path, country_value)
+
+    if _is_india_country(country_value):
+        _clear_non_india_defaults(section, session)
+    else:
+        _apply_non_india_defaults(section, session)
+
+    session.current_editing_field = None
+    session_store.set(user_id, session)
+    await state.set_state(_SECTION_STATES[section])
+    await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+    await _refresh_overview(
+        bot,
+        callback.message.chat.id,  # type: ignore[union-attr]
+        session,
+        section,
+        user_id=user_id,
+        session_store=session_store,
+    )
 
 
 # ── District / station pickers ────────────────────────────────────────────────
@@ -821,13 +1072,25 @@ async def district_selected(
 ) -> None:
     await callback.answer()
     parts = callback.data.split(":", 3)  # type: ignore[union-attr]
+    if len(parts) < 4:
+        return
     section = parts[2]
-    district_name = parts[3]
+    district_token = parts[3]
 
     user_id = callback.from_user.id
     session = session_store.get(user_id)
     if not session:
         return
+
+    districts = _district_list_for_picker(section, session, station_lookup)
+    if district_token.isdigit():
+        idx = int(district_token)
+        if idx >= len(districts):
+            return
+        district_name = districts[idx]
+    else:
+        # Backward compatibility for old callback payloads with raw district names.
+        district_name = district_token
 
     # Persist district (may be owner, tenanted, or perm address district)
     district_path = session.current_editing_field or {
@@ -835,14 +1098,43 @@ async def district_selected(
         "tenanted_addr": "tenant.tenanted_address.district",
         "perm_addr": "tenant.address.district",
     }.get(section, "tenant.address.district")
-    station_path = {
-        "tenanted_addr": "tenant.tenanted_address.police_station",
-        "perm_addr": "tenant.address.police_station",
-        "owner": "owner.address.police_station",
-    }.get(section)
+    station_path = _station_path_for_section(section)
     if station_path:
         PayloadAccessor.set(session.payload, station_path, None)
     PayloadAccessor.set(session.payload, district_path, district_name)
+
+    if station_path and not session.station_picker_forced:
+        stations = _stations_for_picker(section, session, station_lookup, district_name)
+        picked = auto_pick_station(stations)
+        if picked:
+            PayloadAccessor.set(session.payload, station_path, picked)
+            session.current_editing_field = None
+            session.station_picker_forced = False
+            session_store.set(user_id, session)
+            await state.set_state(_SECTION_STATES[section])
+            await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
+            await _refresh_overview(
+                bot,
+                callback.message.chat.id,  # type: ignore[union-attr]
+                session,
+                section,
+                user_id=user_id,
+                session_store=session_store,
+            )
+            return
+
+    stations = _stations_for_picker(section, session, station_lookup, district_name)
+    if not stations and section in {"owner", "perm_addr"}:
+        await _prompt_manual_station_entry(
+            bot=bot,
+            chat_id=callback.message.chat.id,  # type: ignore[union-attr]
+            session=session,
+            section=section,
+            state=state,
+            user_id=user_id,
+            session_store=session_store,
+        )
+        return
 
     # Now ask for station
     station_state = {
@@ -852,7 +1144,6 @@ async def district_selected(
     }.get(section, ReviewStates.PICKING_TENANTED_STATION)
     await state.set_state(station_state)
 
-    stations = _stations_for_picker(section, session, station_lookup, district_name)
     await callback.message.edit_text(  # type: ignore[union-attr]
         f"District: *{district_name.title()}*\n\nNow select the police station:",
         reply_markup=station_picker_keyboard(section, district_name, stations),
@@ -889,6 +1180,14 @@ async def district_reselect(
             return
         districts = station_lookup.district_names()
     else:
+        station_path = {
+            "tenanted_addr": "tenant.tenanted_address.police_station",
+            "perm_addr": "tenant.address.police_station",
+            "owner": "owner.address.police_station",
+        }.get(section)
+        if station_path:
+            PayloadAccessor.set(session.payload, station_path, None)
+            session_store.set(user_id, session)
         districts = _district_list_for_picker(section, session, station_lookup)
     await callback.message.edit_text(  # type: ignore[union-attr]
         "Select district:",
@@ -906,23 +1205,76 @@ async def station_page(
     station_lookup: StationLookup,
 ) -> None:
     await callback.answer()
-    parts = callback.data.split(":", 4)  # type: ignore[union-attr]
+    parts = callback.data.split(":")  # type: ignore[union-attr]
+    if len(parts) < 4:
+        return
+
     section = parts[2]
-    district = parts[3]
-    page = int(parts[4])
+    district: str | None
+    page: int
+
+    # New compact payload: picker:stn_page:{section}:{page}
+    # Legacy payload: picker:stn_page:{section}:{district}:{page}
+    if len(parts) >= 5:
+        district = parts[3]
+        page = int(parts[4])
+    else:
+        district = None
+        page = int(parts[3])
+
     user_id = callback.from_user.id
     session = session_store.get(user_id)
+
     if session is None:
         if section == "perm_addr":
             await callback.message.answer(  # type: ignore[union-attr]
                 "Session expired. Please send /start to begin again."
             )
             return
+        if not district:
+            await callback.message.answer(  # type: ignore[union-attr]
+                "Please pick district again."
+            )
+            return
         stations = station_lookup.stations_for_district(district)
     else:
+        district = district or _district_value_for_section(section, session)
+        if not district:
+            await callback.message.answer(  # type: ignore[union-attr]
+                "Please pick district again."
+            )
+            return
         stations = _stations_for_picker(section, session, station_lookup, district)
+
     await callback.message.edit_reply_markup(  # type: ignore[union-attr]
         reply_markup=station_picker_keyboard(section, district, stations, page)
+    )
+
+
+@router.callback_query(
+    StateFilter(*_STATION_PICKER_STATES),
+    F.data.startswith("picker:station_manual:"),
+)
+async def station_manual_entry(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+    bot: Bot,
+) -> None:
+    await callback.answer()
+    section = callback.data.split(":")[2]  # type: ignore[union-attr]
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+    await _prompt_manual_station_entry(
+        bot=bot,
+        chat_id=callback.message.chat.id,  # type: ignore[union-attr]
+        session=session,
+        section=section,
+        state=state,
+        user_id=user_id,
+        session_store=session_store,
     )
 
 
@@ -934,17 +1286,43 @@ async def station_selected(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
+    station_lookup: StationLookup,
     bot: Bot,
 ) -> None:
     await callback.answer()
-    parts = callback.data.split(":", 4)  # type: ignore[union-attr]
+    parts = callback.data.split(":")  # type: ignore[union-attr]
+    if len(parts) < 4:
+        return
+
     section = parts[2]
-    district = parts[3]
-    station_name = parts[4]
+    station_name: str | None = None
 
     user_id = callback.from_user.id
     session = session_store.get(user_id)
     if not session:
+        return
+
+    if len(parts) >= 5:
+        # Backward compatibility for old callback payload with raw district/station.
+        station_name = parts[4]
+    else:
+        station_token = parts[3]
+        district = _district_value_for_section(section, session)
+        if not district:
+            await callback.message.answer(  # type: ignore[union-attr]
+                "Please pick district again."
+            )
+            return
+        stations = _stations_for_picker(section, session, station_lookup, district)
+        if station_token.isdigit():
+            idx = int(station_token)
+            if idx >= len(stations):
+                return
+            station_name = stations[idx]
+        else:
+            station_name = station_token
+
+    if not station_name:
         return
 
     station_path = {
@@ -954,6 +1332,7 @@ async def station_selected(
     }.get(section, "tenant.address.police_station")
     PayloadAccessor.set(session.payload, station_path, station_name)
     session.current_editing_field = None
+    session.station_picker_forced = False
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
     await _delete_prompt(bot, callback.message.chat.id, session)  # type: ignore[union-attr]
@@ -999,47 +1378,19 @@ async def small_dropdown_selected(
     field_path = keys[idx]
     PayloadAccessor.set(session.payload, field_path, value)
 
+    owner_state_change = section == "owner" and field_path == "owner.address.state"
     perm_state_change = section == "perm_addr" and field_path == "tenant.address.state"
+    if owner_state_change:
+        PayloadAccessor.set(session.payload, "owner.address.district", None)
+        PayloadAccessor.set(session.payload, "owner.address.police_station", None)
     if perm_state_change:
         PayloadAccessor.set(session.payload, "tenant.address.district", None)
         PayloadAccessor.set(session.payload, "tenant.address.police_station", None)
 
     chat_id = callback.message.chat.id  # type: ignore[union-attr]
 
-    if perm_state_change:
-        session.current_editing_field = "tenant.address.district"
-        session_store.set(user_id, session)
-        await _delete_prompt(bot, chat_id, session)
-        await _refresh_overview(
-            bot,
-            chat_id,
-            session,
-            section,
-            user_id=user_id,
-            session_store=session_store,
-        )
-        districts = station_lookup.districts_for_perm_addr(value)
-        if not districts:
-            await state.set_state(_SECTION_STATES["perm_addr"])
-            session.current_editing_field = None
-            msg = await callback.message.answer(  # type: ignore[union-attr]
-                "No districts are loaded for this state yet. "
-                "Run `python scripts/scrape_police_stations.py` to refresh national data, "
-                "or contact support.",
-            )
-            session.last_prompt_message_id = msg.message_id
-            session_store.set(user_id, session)
-            return
-        await state.set_state(ReviewStates.PICKING_PERM_DISTRICT)
-        msg = await callback.message.answer(  # type: ignore[union-attr]
-            "Select district:",
-            reply_markup=district_picker_keyboard("perm_addr", districts),
-        )
-        session.last_prompt_message_id = msg.message_id
-        session_store.set(user_id, session)
-        return
-
     session.current_editing_field = None
+    session.station_picker_forced = False
     session_store.set(user_id, session)
     await state.set_state(_SECTION_STATES[section])
     await _delete_prompt(bot, chat_id, session)
