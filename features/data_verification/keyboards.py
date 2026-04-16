@@ -22,10 +22,10 @@ _SECTION_FIELDS: dict[str, dict[str, FieldMeta]] = {
 }
 
 _CONFIRM_LABELS: dict[str, str] = {
-    "owner":         "✅ Confirm Owner → Tenanted Addr",   # 32 chars
+    "owner":         "✅ Confirm Owner → Tenant ID",       # 28 chars
     "tenant":        "✅ Confirm Tenant → Perm. Address",  # 33 chars
-    "tenanted_addr": "✅ Confirm Address → Tenant ID",     # 30 chars
-    "perm_addr":     "✅ Confirm & Submit",                # 19 chars
+    "tenanted_addr": "✅ Confirm & Submit",                # 19 chars
+    "perm_addr":     "✅ Confirm Tenant Details → Tenanted Addr",
 }
 
 _MANUAL_STATION_SECTIONS = {"owner", "perm_addr"}

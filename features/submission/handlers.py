@@ -3,14 +3,25 @@ from __future__ import annotations
 
 import logging
 
+from aiogram import Router
+from aiogram.filters import Command
 from aiogram.types import Message
 
 from features.submission.submission_worker import SubmissionWorker
 from infrastructure.analytics_store import AnalyticsStore
+from infrastructure.payment_service import PaymentService
 from shared.models.session import FormSession
 from shared.models.submission_input import SubmissionInput
 
 LOGGER = logging.getLogger(__name__)
+router = Router(name="submission")
+
+
+@router.message(Command("payment"))
+async def resend_payment_link(message: Message, payment_service: PaymentService) -> None:
+    if not message.from_user:
+        return
+    await payment_service.resend_payment_link(message.from_user.id)
 
 
 async def trigger_submission(
@@ -26,6 +37,14 @@ async def trigger_submission(
 
     if session.payload.tenant and session.payload.tenant.tenanted_address is None:
         LOGGER.warning("Submitting without tenanted_address — possible data gap")
+
+    if analytics_store and session.analytics_session_id is None:
+        try:
+            session.analytics_session_id = await analytics_store.open_session(
+                session.telegram_user_id
+            )
+        except Exception as exc:
+            LOGGER.warning("Failed to open analytics session: %s", exc)
 
     tenant_image_bytes = session.tenant_image_bytes
     job = SubmissionInput(
@@ -50,5 +69,6 @@ async def trigger_submission(
 
     await message.answer(
         f"⏳ Your form has been queued for portal submission (position {queue_size}).\n"
-        "You will receive a PDF confirmation once it completes."
+        "Once the PDF is ready, a payment link will be sent. The PDF is delivered "
+        "after payment confirmation."
     )

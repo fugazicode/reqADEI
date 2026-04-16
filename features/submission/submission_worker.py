@@ -11,10 +11,29 @@ from playwright.async_api import Playwright, async_playwright
 from features.submission.form_filler import FormFiller
 from features.submission.portal_session import PortalSession
 from infrastructure.analytics_store import AnalyticsStore
+from infrastructure.payment_service import PaymentService
 from infrastructure.submission_snapshot import save_snapshot
+from shared.models.form_payload import FormPayload
 from shared.models.submission_input import SubmissionInput
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _suppress_private_address_fields(payload: FormPayload) -> None:
+    def scrub(addr) -> None:
+        if not addr:
+            return
+        addr.house_no = None
+        addr.street_name = None
+        addr.colony_locality_area = None
+        addr.pincode = None
+        addr.tehsil_block_mandal = None
+
+    if payload.owner:
+        scrub(payload.owner.address)
+    if payload.tenant:
+        scrub(payload.tenant.address)
+        scrub(payload.tenant.tenanted_address)
 
 
 async def execute_playwright_submission(
@@ -31,7 +50,10 @@ async def execute_playwright_submission(
     )
     try:
         page = await session.open()
-        filler = FormFiller(page, job.payload)
+        # Keep extracted address details in storage, but avoid filling them in the portal.
+        payload = job.payload.model_copy(deep=True)
+        _suppress_private_address_fields(payload)
+        filler = FormFiller(page, payload)
         request_number = await filler.fill(job.image_bytes)
         if not request_number or request_number == "UNKNOWN":
             raise RuntimeError(
@@ -52,12 +74,14 @@ class SubmissionWorker:
         portal_password: str,
         snapshot_dir: Path | None = None,
         analytics_store: AnalyticsStore | None = None,
+        payment_service: PaymentService | None = None,
     ) -> None:
         self._bot = bot
         self._username = portal_username
         self._password = portal_password
         self._snapshot_dir = snapshot_dir
         self._analytics = analytics_store
+        self._payment_service = payment_service
         self._queue: asyncio.Queue[SubmissionInput] = asyncio.Queue()
 
     async def enqueue(self, job: SubmissionInput) -> int:
@@ -106,6 +130,8 @@ class SubmissionWorker:
                 portal_password=self._password,
                 headless=False,
             )
+            if FormFiller.is_dummy_pdf(pdf_bytes):
+                raise RuntimeError("PDF retrieval failed; received fallback PDF")
             if self._analytics is not None and run_id is not None:
                 try:
                     await self._analytics.log_playwright_finish(
@@ -117,15 +143,37 @@ class SubmissionWorker:
                         job.telegram_user_id,
                         exc,
                     )
-            await self._bot.send_document(
-                job.telegram_user_id,
-                BufferedInputFile(pdf_bytes, "verification.pdf"),
-                caption="Your tenant verification document.",
-            )
-            await self._bot.send_message(
-                job.telegram_user_id,
-                "Send /start to register another tenant.",
-            )
+            if self._payment_service:
+                if job.analytics_session_id is None:
+                    LOGGER.warning("Missing analytics session for user %d; cannot start payment flow", job.telegram_user_id)
+                    await self._bot.send_message(
+                        job.telegram_user_id,
+                        "Payment setup failed due to a missing session. Please restart with /start.",
+                    )
+                    return
+                try:
+                    await self._payment_service.handle_pdf_ready(
+                        session_id=job.analytics_session_id,
+                        telegram_user_id=job.telegram_user_id,
+                        request_number=request_number,
+                        pdf_bytes=pdf_bytes,
+                    )
+                except Exception as exc:
+                    LOGGER.exception("Payment handling failed for user %d: %s", job.telegram_user_id, exc)
+                    await self._bot.send_message(
+                        job.telegram_user_id,
+                        "Payment setup failed. Please try /payment in a few minutes.",
+                    )
+            else:
+                await self._bot.send_document(
+                    job.telegram_user_id,
+                    BufferedInputFile(pdf_bytes, "verification.pdf"),
+                    caption="Your tenant verification document.",
+                )
+                await self._bot.send_message(
+                    job.telegram_user_id,
+                    "Send /start to register another tenant.",
+                )
         except Exception as exc:
             LOGGER.exception(
                 "Submission failed for user %d: %s",

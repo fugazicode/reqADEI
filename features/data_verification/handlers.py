@@ -1,9 +1,9 @@
 """Review & edit FSM handlers.
 
 Flow:
-  REVIEWING_OWNER → (confirm) → ENTERING_TENANTED_ADDRESS → REVIEWING_TENANTED_ADDR
-  → (confirm) → UPLOADING_TENANT_ID → REVIEWING_TENANT → (confirm) → REVIEWING_PERM_ADDR
-  → (confirm) → DONE (submission runs in background worker)
+    REVIEWING_OWNER → (confirm) → UPLOADING_TENANT_ID → REVIEWING_TENANT
+    → (confirm) → REVIEWING_PERM_ADDR → (confirm) → ENTERING_TENANTED_ADDRESS
+    → REVIEWING_TENANTED_ADDR → (confirm) → DONE (submission runs in background worker)
 
   Any overview can trigger an "edit" sub-flow:
   1. User taps "Edit a Field"         → show field selector keyboard
@@ -373,13 +373,13 @@ async def confirm_owner(callback: CallbackQuery, state: FSMContext, session_stor
             + "\n\nPlease fill them before continuing.",
         )
         return
-    await state.set_state(AddressStates.ENTERING_TENANTED_ADDRESS)
+    await state.set_state(IdentityStates.UPLOADING_TENANT_ID)
     session.overview_message_id = None
+    session.current_confirming_person = "tenant"
     session_store.set(user_id, session)
     await callback.message.answer(  # type: ignore[union-attr]
-        "📍 *Tenanted Premises Address*\n\n"
-        "Please type the full address of the *rented property* (in Delhi).\n"
-        "e.g. Flat 12, Block A, Green Park Extension, New Delhi – 110016",
+        "👤 *Tenant ID*\n\nNow upload a clear photo of the *tenant's Aadhaar card*.\n"
+        "You may send multiple photos (front and back). Tap *Extract* on the bot prompt when ready.",
         parse_mode="Markdown",
     )
 
@@ -408,39 +408,9 @@ async def confirm_tenant(callback: CallbackQuery, state: FSMContext, session_sto
 
 @router.callback_query(ReviewStates.REVIEWING_TENANTED_ADDR, F.data == "overview:confirm:tenanted_addr")
 async def confirm_tenanted_addr(
-    callback: CallbackQuery, state: FSMContext, session_store: SessionStore
-) -> None:
-    await callback.answer()
-    user_id = callback.from_user.id
-    session = session_store.get(user_id)
-    if not session:
-        return
-    missing = session.payload.tenanted_addr_missing_mandatory()
-    if missing:
-        labels = [_ALL_FIELDS[p].label if p in _ALL_FIELDS else p for p in missing]
-        await callback.message.answer(  # type: ignore[union-attr]
-            "⚠️ The following tenanted address fields are still empty:\n"
-            + "\n".join(f"• {l}" for l in labels)
-            + "\n\nPlease fill them before continuing.",
-        )
-        return
-    await state.set_state(IdentityStates.UPLOADING_TENANT_ID)
-    session.overview_message_id = None
-    session.current_confirming_person = "tenant"
-    session_store.set(user_id, session)
-    await callback.message.answer(  # type: ignore[union-attr]
-        "👤 *Tenant ID*\n\nNow upload a clear photo of the *tenant's Aadhaar card*.\n"
-        "You may send multiple photos (front and back). Tap *Extract* on the bot prompt when ready.",
-        parse_mode="Markdown",
-    )
-
-
-@router.callback_query(ReviewStates.REVIEWING_PERM_ADDR, F.data == "overview:confirm:perm_addr")
-async def confirm_perm_addr_and_submit(
     callback: CallbackQuery,
     state: FSMContext,
     session_store: SessionStore,
-    bot: Bot,
     submission_worker: SubmissionWorker,
     analytics_store: AnalyticsStore | None = None,
 ) -> None:
@@ -449,7 +419,6 @@ async def confirm_perm_addr_and_submit(
     session = session_store.get(user_id)
     if not session:
         return
-
     missing = (
         session.payload.owner_missing_mandatory()
         + session.payload.tenant_personal_missing_mandatory()
@@ -464,12 +433,45 @@ async def confirm_perm_addr_and_submit(
             + "\n\nPlease fill them before submitting.",
         )
         return
-
     await state.set_state(SubmissionStates.DONE)
+    session.overview_message_id = None
     session_store.set(user_id, session)
     await callback.message.answer("✅ All details confirmed. Starting portal submission…")  # type: ignore[union-attr]
     from features.submission.handlers import trigger_submission
     await trigger_submission(callback.message, session, submission_worker, analytics_store)  # type: ignore[arg-type]
+
+
+@router.callback_query(ReviewStates.REVIEWING_PERM_ADDR, F.data == "overview:confirm:perm_addr")
+async def confirm_perm_addr_and_submit(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session_store: SessionStore,
+) -> None:
+    await callback.answer()
+    user_id = callback.from_user.id
+    session = session_store.get(user_id)
+    if not session:
+        return
+
+    missing = session.payload.tenant_perm_addr_missing_mandatory()
+    if missing:
+        labels = [_ALL_FIELDS[p].label if p in _ALL_FIELDS else p for p in missing]
+        await callback.message.answer(  # type: ignore[union-attr]
+            "⚠️ The following permanent address fields are still empty:\n"
+            + "\n".join(f"• {l}" for l in labels)
+            + "\n\nPlease fill them before continuing.",
+        )
+        return
+
+    await state.set_state(AddressStates.ENTERING_TENANTED_ADDRESS)
+    session.overview_message_id = None
+    session_store.set(user_id, session)
+    await callback.message.answer(  # type: ignore[union-attr]
+        "📍 *Tenanted Premises Address*\n\n"
+        "Please type the full address of the *rented property* (in Delhi).\n"
+        "e.g. Flat 12, Block A, Green Park Extension, New Delhi – 110016",
+        parse_mode="Markdown",
+    )
 
 
 @router.message(SubmissionStates.DONE)

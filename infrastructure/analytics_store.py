@@ -35,7 +35,25 @@ CREATE TABLE IF NOT EXISTS sessions (
     error_message       TEXT,
     total_duration_s    REAL,
     field_edit_count    INTEGER DEFAULT 0,
-    fsm_steps           INTEGER DEFAULT 0
+    fsm_steps           INTEGER DEFAULT 0,
+    payment_status      TEXT DEFAULT 'unpaid',
+    payment_provider    TEXT,
+    payment_currency    TEXT,
+    payment_amount      INTEGER,
+    payment_link_id     TEXT,
+    payment_link_url    TEXT,
+    payment_link_short_url TEXT,
+    payment_link_expiry REAL,
+    payment_created_at  REAL,
+    payment_paid_at     REAL,
+    payment_reference   TEXT,
+    payment_transaction_id TEXT,
+    payment_event_json  TEXT,
+    payment_attempts    INTEGER DEFAULT 0,
+    pdf_request_number  TEXT,
+    pdf_path            TEXT,
+    pdf_created_at      REAL,
+    pdf_sent_at         REAL
 );
 
 CREATE TABLE IF NOT EXISTS field_edits (
@@ -103,9 +121,40 @@ class AnalyticsStore:
         except Exception:
             pass
 
+        await self._try_add_column(
+            "ALTER TABLE sessions ADD COLUMN payment_status TEXT DEFAULT 'unpaid'"
+        )
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_provider TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_currency TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_amount INTEGER")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_link_id TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_link_url TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_link_short_url TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_link_expiry REAL")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_created_at REAL")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_paid_at REAL")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_reference TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_transaction_id TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN payment_event_json TEXT")
+        await self._try_add_column(
+            "ALTER TABLE sessions ADD COLUMN payment_attempts INTEGER DEFAULT 0"
+        )
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN pdf_request_number TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN pdf_path TEXT")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN pdf_created_at REAL")
+        await self._try_add_column("ALTER TABLE sessions ADD COLUMN pdf_sent_at REAL")
+
     async def close(self) -> None:
         if self._db:
             await self._db.close()
+
+    async def _try_add_column(self, statement: str) -> None:
+        assert self._db
+        try:
+            await self._db.execute(statement)
+            await self._db.commit()
+        except Exception:
+            pass
 
     # ── Sessions ─────────────────────────────────────────────────────────────
 
@@ -296,6 +345,125 @@ class AnalyticsStore:
                 json.dumps(payload_snapshot) if payload_snapshot else None,
                 run_id,
             ),
+        )
+        await self._db.commit()
+
+    # ── Payments / PDFs ─────────────────────────────────────────────────────
+
+    async def get_payment_snapshot(self, session_id: int) -> Optional[aiosqlite.Row]:
+        assert self._db
+        async with self._db.execute(
+            """SELECT
+                   id,
+                   telegram_user_id,
+                   payment_status,
+                   payment_link_id,
+                   payment_link_url,
+                   payment_link_short_url,
+                   payment_link_expiry,
+                   payment_created_at,
+                   payment_paid_at,
+                   payment_attempts,
+                   pdf_request_number,
+                   pdf_path,
+                   pdf_created_at,
+                   pdf_sent_at
+               FROM sessions WHERE id = ?""",
+            (session_id,),
+        ) as cur:
+            row = await cur.fetchone()
+        return row
+
+    async def find_session_by_payment_link_id(self, link_id: str) -> Optional[aiosqlite.Row]:
+        assert self._db
+        async with self._db.execute(
+            """SELECT
+                   id,
+                   telegram_user_id,
+                   payment_status,
+                   pdf_path,
+                   pdf_request_number,
+                   pdf_sent_at
+               FROM sessions WHERE payment_link_id = ?""",
+            (link_id,),
+        ) as cur:
+            row = await cur.fetchone()
+        return row
+
+    async def find_latest_payment_session_for_user(
+        self, telegram_user_id: int
+    ) -> Optional[aiosqlite.Row]:
+        assert self._db
+        async with self._db.execute(
+            """SELECT
+                   id,
+                   telegram_user_id,
+                   payment_status,
+                   payment_link_id,
+                   payment_link_url,
+                   payment_link_short_url,
+                   payment_link_expiry,
+                   payment_created_at,
+                   payment_attempts,
+                   pdf_request_number,
+                   pdf_path,
+                   pdf_created_at,
+                   pdf_sent_at
+               FROM sessions
+               WHERE telegram_user_id = ? AND pdf_path IS NOT NULL
+               ORDER BY started_at DESC LIMIT 1""",
+            (telegram_user_id,),
+        ) as cur:
+            row = await cur.fetchone()
+        return row
+
+    async def list_paid_unsent_sessions(self) -> list[aiosqlite.Row]:
+        assert self._db
+        async with self._db.execute(
+            """SELECT id, telegram_user_id, pdf_path, pdf_request_number, pdf_sent_at
+               FROM sessions
+               WHERE payment_status = 'paid' AND pdf_path IS NOT NULL AND pdf_sent_at IS NULL"""
+        ) as cur:
+            rows = await cur.fetchall()
+        return rows
+
+    async def list_pending_payment_links(self) -> list[aiosqlite.Row]:
+        assert self._db
+        async with self._db.execute(
+            """SELECT
+                   id,
+                   telegram_user_id,
+                   payment_status,
+                   payment_link_id,
+                   payment_link_expiry,
+                   payment_event_json,
+                   pdf_path,
+                   pdf_request_number,
+                   pdf_sent_at
+               FROM sessions
+               WHERE payment_status = 'awaiting_payment'
+                 AND payment_link_id IS NOT NULL"""
+        ) as cur:
+            rows = await cur.fetchall()
+        return rows
+
+    async def mark_pdf_sent(self, session_id: int) -> bool:
+        assert self._db
+        now = time.time()
+        cur = await self._db.execute(
+            """UPDATE sessions
+               SET pdf_sent_at = ?
+               WHERE id = ? AND pdf_sent_at IS NULL""",
+            (now, session_id),
+        )
+        await self._db.commit()
+        return cur.rowcount > 0
+
+    async def increment_payment_attempts(self, session_id: int) -> None:
+        assert self._db
+        await self._db.execute(
+            "UPDATE sessions SET payment_attempts = payment_attempts + 1 WHERE id = ?",
+            (session_id,),
         )
         await self._db.commit()
 

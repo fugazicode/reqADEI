@@ -1389,6 +1389,10 @@ class FormFiller:
         b'4 0 obj\n<< /Length 9 >>\nstream\nBT\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000015 00000 n \n0000000062 00000 n \n0000000111 00000 n \n0000000220 00000 n \ntrailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n273\n%%EOF\n'
     )
 
+    @staticmethod
+    def is_dummy_pdf(pdf_bytes: bytes) -> bool:
+        return pdf_bytes == FormFiller._DUMMY_PDF_BYTES
+
     async def _save_download(self, download) -> bytes:
         """Save a Playwright Download object to a temp file and return its bytes."""
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
